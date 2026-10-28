@@ -4,10 +4,10 @@ import { Hero, ParallaxBand, Reveal, SectionHead, TiltCard } from '../components
 
 const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
 
-const CHAPTERS: { tab: Tab; n: string; title: string; text: string; img: string }[] = [
-  { tab: 'rent', n: '02', title: 'Rent', text: 'GT-R am Fuji buchen, Hakone bei Sonnenaufgang fahren, Trackday auf der Privatstrecke.', img: img('rent-supra') },
-  { tab: 'import', n: '03', title: 'Import', text: 'Vom Auktionshammer in Yen bis vor deine Haustür, jeder Posten offengelegt.', img: img('import-ship') },
-  { tab: 'parts', n: '04', title: 'Parts', text: 'HKS, Nismo, RAYS, ADVAN: Teile und Gadgets direkt aus Japan.', img: img('parts-show') },
+const CHAPTERS: { tab: Tab; title: string; text: string; img: string }[] = [
+  { tab: 'rent', title: 'Rent', text: 'JDM mieten in Japan.', img: img('rent-supra') },
+  { tab: 'import', title: 'Import', text: 'Kosten bis vor die Tür berechnen.', img: img('import-ship') },
+  { tab: 'parts', title: 'Parts', text: 'Teile und Gadgets aus Japan.', img: img('parts-show') },
 ]
 
 export function Spots({ go }: { go: (t: Tab) => void }) {
@@ -22,22 +22,15 @@ export function Spots({ go }: { go: (t: Tab) => void }) {
             <span className="tagline">Rent it. Import it. <em>Build it.</em></span>
           </>
         }
-        sub="Japans legendäre Strecken, JDM-Vermietung vor Ort, Import nach Deutschland und Teile direkt aus Tokio. Alles an einem Ort."
-        chips={['Daikoku PA', 'Hakone', 'Wangan', 'Fuji Speedway']}
       />
 
       <section className="section">
-        <SectionHead
-          eyebrow={`Chapter 01 · Spots · ${SPOTS.length} Orte`}
-          title={<>Wo Japans Autokultur <em>lebt.</em></>}
-          text="Von Nacht-Treffs auf Autobahnparkplätzen bis zu Bergstraßen bei Sonnenaufgang: die Orte, an die jeder JDM-Fan einmal will."
-        />
+        <SectionHead eyebrow="Spots" title={<>Wo Japans Autokultur <em>lebt.</em></>} />
         <div className="spots">
           {SPOTS.map((s, k) => (
             <TiltCard key={s.name} className={'spot' + (k === 0 ? ' wide' : '')}>
               <img src={s.img} alt={s.name} loading="lazy" />
               <div className="spot-veil" />
-              <span className="spot-n">{String(k + 1).padStart(2, '0')}</span>
               <div className="spot-body">
                 <span className="spot-jp">{s.jp}</span>
                 <h3>{s.name}</h3>
@@ -54,19 +47,18 @@ export function Spots({ go }: { go: (t: Tab) => void }) {
       <ParallaxBand src={img('wangan')}>
         <Reveal>
           <p className="eyebrow">TŌMEI · 透明</p>
-          <h2 className="band-title">„Tōmei“ heißt durchsichtig. So wie jeder Yen in deinem Import.</h2>
+          <h2 className="band-title">„Tōmei“ heißt durchsichtig.</h2>
         </Reveal>
       </ParallaxBand>
 
       <section className="section">
-        <SectionHead eyebrow="Weiter" title={<>Drei Wege, Japan <em>zu fahren.</em></>} />
+        <SectionHead eyebrow="Mehr" title={<>Mieten, importieren, <em>tunen.</em></>} />
         <div className="chapters">
           {CHAPTERS.map((c) => (
             <TiltCard key={c.tab} className="chapter" onClick={() => go(c.tab)}>
               <img src={c.img} alt="" loading="lazy" />
               <div className="chapter-veil" />
               <div className="chapter-body">
-                <span className="chapter-n">Chapter {c.n}</span>
                 <h3>{c.title}</h3>
                 <p>{c.text}</p>
                 <span className="chapter-go">

@@ -32,13 +32,12 @@ export function Parts() {
     <>
       <Hero
         slides={HERO.parts}
-        eyebrow="Chapter 04 · Parts · Tokyo Auto Salon Energy"
+        eyebrow="Parts"
         title={<>Wheels, kits, <em>gadgets — direct.</em></>}
-        sub="HKS. Nismo. GReddy. RAYS. ADVAN. Der Katalog, aus dem jeder Widebody-Build bestellt, weltweit verschickt."
-        chips={['HKS', 'RAYS', 'Nismo', 'BRIDE']}
+        sub="Teile und Gadgets direkt aus Japan."
       />
       <section className="section">
-        <SectionHead eyebrow="Shops" title={<>Teile direkt <em>aus Japan.</em></>} text="Shops, die nach Europa liefern. Zoll und Einfuhrumsatzsteuer kommen beim Empfang dazu." />
+        <SectionHead eyebrow="Shops" title={<>Teile direkt <em>aus Japan.</em></>} />
         <ProviderGrid items={PARTS} />
       </section>
 
@@ -48,7 +47,7 @@ export function Parts() {
           <Mochi />
         </motion.div>
         <motion.div className="mochi-copy" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: EASE }}>
-          <p className="eyebrow">Featured · Dasai Mochi</p>
+          <p className="eyebrow">Dasai Mochi</p>
           <h2>Dein Auto bekommt <em>ein Gesicht.</em></h2>
           <p className="sec-text">Der kleine animierte Begleiter fürs Armaturenbrett reagiert auf Fahrt, Gas und Kurven.</p>
           <motion.a className="btn red" href={DASAI_URL} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>

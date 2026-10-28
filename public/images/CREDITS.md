@@ -20,3 +20,14 @@ Die Spot-Fotos sind teils Symbolbilder: Sie zeigen ähnliche Motive, nicht unbed
 | parts-show.jpg | Auto auf einer Automesse | https://unsplash.com/photos/QJhDMrzQGiE |
 | parts-wheel.jpg | Felge mit rotem Bremssattel | https://unsplash.com/photos/ZTl9vrLc-Bo |
 | parts-engine.jpg | Motorraum | https://unsplash.com/photos/6Xy6DH6X830 |
+
+## Autos im Rechner (public/images/cars)
+
+| Datei | Motiv | Quelle |
+|---|---|---|
+| r34.jpg | Nissan Skyline GT-R R34 in Shibuya (Kevin Woblick) | https://unsplash.com/photos/k055eAqGh3k |
+| fd.jpg | Weißer Mazda RX-7 FD | https://unsplash.com/photos/TJ-1IUERnH8 |
+| s15.jpg | Nissan Silvia S15 auf der Rennstrecke (Luca Hooijer) | https://unsplash.com/photos/tiExoZa8CbM |
+| evo.jpg | Weißer Mitsubishi Lancer Evolution VI in Japan | https://unsplash.com/photos/KOpKVs_YHRI |
+| ek9.jpg | Gelber Honda Civic (EK) auf der Rennstrecke (Chris Hristov) | https://unsplash.com/photos/d_hh806CGsQ |
+| kei.jpg | Weißer Kei-Truck in Takayama | https://unsplash.com/photos/1lo131A_OEA |

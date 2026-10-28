@@ -7,19 +7,17 @@ export function Rent() {
     <>
       <Hero
         slides={HERO.rent}
-        eyebrow="Chapter 02 · Rent"
+        eyebrow="Rent"
         title={<>Drive it on <em>its home ground.</em></>}
-        sub="GT-R am Fuß des Fuji buchen. Hakone bei Sonnenaufgang fahren. Oder Japans neueste Privatstrecke in einem weißen Supra umrunden."
-        chips={['GT-R R35', 'Supra 2JZ', 'RX-7 FD', 'NSX']}
+        sub="JDM mieten, direkt in Japan."
       />
       <section className="section">
-        <SectionHead eyebrow="Vermieter" title={<>Such dir deinen <em>Anbieter</em> aus.</>} text="Kurzzeit-Miete direkt in Japan, von Tokio bis Hakone. Alle Links führen zu den Anbietern selbst." />
+        <SectionHead eyebrow="Vermieter" title={<>Such dir deinen <em>Anbieter</em> aus.</>} />
         <ProviderGrid items={RENT} />
         <Reveal className="note glass">
           <Info size={18} />
           <p>
-            Zum Fahren in Japan brauchst du eine gültige Fahrerlaubnis. Wer einen <strong>deutschen Führerschein</strong> hat, braucht eine offizielle
-            <strong> JAF-Übersetzung</strong>, keinen Internationalen Führerschein (IDP). Fahrer aus vielen anderen Ländern brauchen den IDP nach dem Genfer Abkommen.
+            Mit <strong>deutschem Führerschein</strong> brauchst du eine offizielle <strong>JAF-Übersetzung</strong>, keinen Internationalen Führerschein. Fahrer aus vielen anderen Ländern brauchen den IDP.
           </p>
         </Reveal>
       </section>

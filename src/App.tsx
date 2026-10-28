@@ -63,7 +63,6 @@ export default function App() {
             </a>
           ))}
         </nav>
-        <span className="nav-meta mono">JP · DE · EU</span>
         <motion.div className="progress" style={{ scaleX: progress }} />
       </header>
 
@@ -74,40 +73,22 @@ export default function App() {
       </AnimatePresence>
 
       <footer className="footer" id="about">
-        <div className="footer-grid">
-          <div>
-            <a className="brand" href="#/spots">
-              TŌMEI<i />
+        <a className="brand" href="#/spots">
+          TŌMEI<i />
+        </a>
+        <p className="muted small">„Tōmei“ (透明) heißt durchsichtig. Spots, Vermietung, Import und Teile an einem Ort.</p>
+        <nav>
+          <a href="#/import/rechner">Kostenrechner</a>
+          {CONTACT_URL ? <a href={CONTACT_URL}>Kontakt</a> : <span className="muted">Kontakt folgt</span>}
+          {INSTAGRAM_URL ? (
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+              Instagram
             </a>
-            <p>Die japanische Autowelt an einem Ort: Spots, Vermietung, Import und Teile.</p>
-            <p className="muted small">„Tōmei“ (透明) heißt durchsichtig. Darum legt der Rechner jeden Kostenposten offen, statt eine Pauschale zu nennen.</p>
-          </div>
-          <div>
-            <h4>Chapters</h4>
-            {TABS.map((t) => (
-              <a key={t.id} href={'#/' + t.id}>
-                {t.label}
-              </a>
-            ))}
-          </div>
-          <div>
-            <h4>Mehr</h4>
-            <a href="#/import/rechner">Kostenrechner</a>
-            <a href={`#/${route.tab}/about`}>About</a>
-            {CONTACT_URL ? <a href={CONTACT_URL}>Kontakt</a> : <span className="muted">Kontakt (folgt)</span>}
-            {INSTAGRAM_URL ? (
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
-                Instagram
-              </a>
-            ) : (
-              <span className="muted">Instagram (folgt)</span>
-            )}
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} TŌMEI</span>
-          <span>Nicht verbunden mit den genannten Herstellern oder Shops. Marken nur zur Orientierung. Fotos: Unsplash.</span>
-        </div>
+          ) : (
+            <span className="muted">Instagram folgt</span>
+          )}
+        </nav>
+        <p className="muted small">© {new Date().getFullYear()} TŌMEI · Nicht verbunden mit den genannten Herstellern oder Shops · Fotos: Unsplash</p>
       </footer>
 
       <nav className="bottom-tabs glass">

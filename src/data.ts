@@ -136,16 +136,18 @@ export const DEST: Record<DestKey, Dest> = {
 // JPY → Zielwährung (EZB-Kurs vom 27.10.2026), wird beim Laden durch den Tageskurs ersetzt (Frankfurter-API)
 export const FX_FALLBACK: Record<string, number> = { EUR: 0.0056828, USD: 0.0063363, GBP: 0.0047541, AUD: 0.0090106, CAD: 0.0088856, NZD: 0.011111 }
 
-export type Car = { id: string; model: string; chassis: string; year: number; grade: string; km: number; jpy: number; body: 'coupe' | 'sedan' | 'hatch' | 'kei'; tag: string }
+export type Car = { id: string; model: string; chassis: string; year: number; grade: string; km: number; jpy: number; img: string; tag: string }
 
-// Beispiel-Listings mit realistischen Marktpreisen, keine Live-Auktionsdaten
+const car = (name: string) => `${import.meta.env.BASE_URL}images/cars/${name}.jpg`
+
+// Beispiel-Listings mit realistischen Marktpreisen, keine Live-Auktionsdaten. Echte Fotos (CREDITS.md)
 export const CARS: Car[] = [
-  { id: 'r34', model: 'Nissan Skyline GT-R', chassis: 'BNR34', year: 1999, grade: '4.5', km: 78000, jpy: 14500000, body: 'coupe', tag: 'Holy Grail' },
-  { id: 'fd', model: 'Mazda RX-7 Type RS', chassis: 'FD3S', year: 1998, grade: '4', km: 95000, jpy: 5200000, body: 'coupe', tag: 'Rotary' },
-  { id: 's15', model: 'Nissan Silvia Spec-R', chassis: 'S15', year: 2000, grade: '4', km: 88000, jpy: 4100000, body: 'coupe', tag: 'Drift' },
-  { id: 'evo', model: 'Mitsubishi Lancer Evo VI', chassis: 'CP9A', year: 1999, grade: '4', km: 102000, jpy: 3800000, body: 'sedan', tag: 'Rally' },
-  { id: 'ek9', model: 'Honda Civic Type R', chassis: 'EK9', year: 1998, grade: '4', km: 110000, jpy: 2600000, body: 'hatch', tag: 'VTEC' },
-  { id: 'kei', model: 'Honda Acty Kei-Truck', chassis: 'HA4', year: 1995, grade: '3.5', km: 64000, jpy: 950000, body: 'kei', tag: 'Kei' },
+  { id: 'r34', model: 'Nissan Skyline GT-R', chassis: 'BNR34', year: 1999, grade: '4.5', km: 78000, jpy: 14500000, img: car('r34'), tag: 'Holy Grail' },
+  { id: 'fd', model: 'Mazda RX-7 Type RS', chassis: 'FD3S', year: 1998, grade: '4', km: 95000, jpy: 5200000, img: car('fd'), tag: 'Rotary' },
+  { id: 's15', model: 'Nissan Silvia Spec-R', chassis: 'S15', year: 2000, grade: '4', km: 88000, jpy: 4100000, img: car('s15'), tag: 'Drift' },
+  { id: 'evo', model: 'Mitsubishi Lancer Evo VI', chassis: 'CP9A', year: 1999, grade: '4', km: 102000, jpy: 3800000, img: car('evo'), tag: 'Rally' },
+  { id: 'ek9', model: 'Honda Civic Type R', chassis: 'EK9', year: 1998, grade: '4', km: 110000, jpy: 2600000, img: car('ek9'), tag: 'VTEC' },
+  { id: 'kei', model: 'Daihatsu Hijet Truck', chassis: 'S500P', year: 2016, grade: '4', km: 42000, jpy: 750000, img: car('kei'), tag: 'Kei' },
 ]
 
 /* ---------------- Hero-Bilder je Reiter ---------------- */

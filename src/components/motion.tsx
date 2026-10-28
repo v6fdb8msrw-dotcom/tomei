@@ -24,12 +24,11 @@ export function Reveal({ children, delay = 0, className, y = 28 }: { children: R
  * Vollbild-Hero: Bilder blenden ineinander und zoomen langsam (Ken Burns),
  * folgen leicht der Maus, und der Text gleitet beim Scrollen weg.
  */
-export function Hero({ slides, eyebrow, title, sub, chips = [], children, interval = 6000 }: {
+export function Hero({ slides, eyebrow, title, sub, children, interval = 6000 }: {
   slides: Slide[]
   eyebrow: string
   title: ReactNode
   sub?: ReactNode
-  chips?: string[]
   children?: ReactNode
   interval?: number
 }) {
@@ -41,8 +40,6 @@ export function Hero({ slides, eyebrow, title, sub, chips = [], children, interv
   const sy = useSpring(my, { stiffness: 40, damping: 18 })
   const imgX = useTransform(sx, (v) => v * -18)
   const imgY = useTransform(sy, (v) => v * -12)
-  const chipX = useTransform(sx, (v) => v * 24)
-  const chipY = useTransform(sy, (v) => v * 16)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const textY = useTransform(scrollYProgress, [0, 1], [0, 140])
   const textO = useTransform(scrollYProgress, [0, 0.7], [1, 0])
@@ -78,22 +75,6 @@ export function Hero({ slides, eyebrow, title, sub, chips = [], children, interv
       </motion.div>
       <div className="hero-veil" />
 
-      {chips.length > 0 && (
-        <motion.div className="hero-chips" style={{ x: chipX, y: chipY }} aria-hidden>
-          {chips.map((c, k) => (
-            <motion.span
-              key={c}
-              className="chip"
-              style={{ left: CHIP_POS[k % CHIP_POS.length][0], top: CHIP_POS[k % CHIP_POS.length][1] }}
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }}
-              transition={{ opacity: { delay: 0.9 + k * 0.2 }, scale: { delay: 0.9 + k * 0.2 }, y: { duration: 5 + k, repeat: Infinity, ease: 'easeInOut', delay: k * 0.5 } }}
-            >
-              <i /> {c}
-            </motion.span>
-          ))}
-        </motion.div>
-      )}
 
       <motion.div className="hero-content" style={{ y: textY, opacity: textO }}>
         <motion.p className="eyebrow" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.8 }}>
@@ -127,20 +108,11 @@ export function Hero({ slides, eyebrow, title, sub, chips = [], children, interv
             {slide.caption}
           </motion.span>
         </AnimatePresence>
-        <span className="scroll-hint">
-          Scrollen <motion.i animate={{ y: [0, 6, 0] }} transition={{ duration: 1.8, repeat: Infinity }}>↓</motion.i>
-        </span>
       </div>
     </section>
   )
 }
 
-const CHIP_POS: [string, string][] = [
-  ['4%', '22%'],
-  ['80%', '16%'],
-  ['84%', '64%'],
-  ['6%', '70%'],
-]
 
 /** Karte, die sich zur Maus neigt. */
 export function TiltCard({ children, className = '', onClick, href }: { children: ReactNode; className?: string; onClick?: () => void; href?: string }) {
@@ -218,7 +190,6 @@ export function ProviderGrid({ items }: { items: Provider[] }) {
             {p.tag && <span className="tag">{p.tag}</span>}
           </h3>
           <p>{p.text}</p>
-          <span className="prov-host">{new URL(p.url).hostname.replace('www.', '')}</span>
         </motion.a>
       ))}
     </div>

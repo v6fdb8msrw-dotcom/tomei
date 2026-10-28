@@ -14,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Läuft auf http://localhost:5193.
+Läuft auf http://localhost:5193. Online stellen: `npm run deploy` (Zweig gh-pages).
 
 ## Inhalt
 
