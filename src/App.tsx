@@ -24,6 +24,19 @@ export default function App() {
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 24 })
 
+  // Lichtreflex: die Glaskarte unter dem Zeiger bekommt dessen Position als CSS-Variable
+  useEffect(() => {
+    const on = (e: PointerEvent) => {
+      const card = (e.target as Element | null)?.closest?.('.gcard, .glass') as HTMLElement | null
+      if (!card) return
+      const r = card.getBoundingClientRect()
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`)
+      card.style.setProperty('--my', `${e.clientY - r.top}px`)
+    }
+    addEventListener('pointermove', on, { passive: true })
+    return () => removeEventListener('pointermove', on)
+  }, [])
+
   useEffect(() => {
     const on = () => setRoute(readHash())
     addEventListener('hashchange', on)
@@ -53,6 +66,11 @@ export default function App() {
 
   return (
     <>
+      <div className="ambient" aria-hidden>
+        <i />
+        <i />
+        <i />
+      </div>
       <header className="nav glass">
         <a className="brand" href="#/spots">
           TŌMEI<i />

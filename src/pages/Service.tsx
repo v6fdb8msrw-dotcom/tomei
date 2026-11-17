@@ -3,7 +3,7 @@
 import { Anchor, Check, ClipboardCopy, FileSearch, Gavel, Mail, ShieldCheck, Ship, Truck, Wrench } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
-import { CONTACT_EMAIL, DEST, FX_FALLBACK, MARKETS } from '../data.ts'
+import { AGENTS, CONTACT_EMAIL, DEST, FX_FALLBACK, MARKETS, agentAverage } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack } from '../components/depth.tsx'
 import { landedCost, money } from '../lib/calc.ts'
@@ -49,7 +49,7 @@ export function Service() {
     () =>
       landedCost({
         vehicle: price,
-        japanFees: Math.round(180000 * FX_FALLBACK.EUR),
+        japanFees: Math.round(agentAverage(price / FX_FALLBACK.EUR) * FX_FALLBACK.EUR),
         freight: de.freight[ship],
         insureOn: true,
         insurePct: 1.5,
@@ -140,7 +140,7 @@ export function Service() {
             ))}
           </div>
           <div className="sv-ledger">
-            <span>Auto + Gebühren vor Ort</span>
+            <span>Auto + Ø Export-Agent ({AGENTS.length} Firmen)</span>
             <b>{money(cost.fob, 'EUR')}</b>
             <span>Fracht + Versicherung</span>
             <b>{money(de.freight[ship] + cost.insurance, 'EUR')}</b>

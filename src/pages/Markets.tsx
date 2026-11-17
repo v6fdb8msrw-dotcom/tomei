@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AUCTIONS, MARKETS, type MarketQuery } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack, RouteMap } from '../components/depth.tsx'
+import { Finds } from '../components/Finds.tsx'
 
 const MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru', 'Mitsubishi', 'Lexus', 'Suzuki', 'Daihatsu', 'Hyundai', 'Kia', 'Genesis']
 const IDEAS: MarketQuery[] = [
@@ -127,6 +128,11 @@ export function Markets() {
         <p className="disclaimer">
           <Search size={13} /> TŌMEI öffnet die öffentlichen Suchseiten der jeweiligen Portale. Die Angebote, Preise und Bilder gehören den Portalen und Händlern; TŌMEI speichert oder zeigt sie nicht selbst an.
         </p>
+      </section>
+
+      <section className="section tight" id="merkliste">
+        <SectionHead eyebrow="Merkliste" title={<>Gefunden? <em>Durchrechnen.</em></>} text="Halte Inserate aus allen Märkten mit Link und Preis fest. Jedes Auto geht mit einem Klick in den Import-Rechner, mit den Durchschnittsgebühren der Export-Agenten." />
+        <Finds defaultTitle={label} />
       </section>
 
       <section className="section">

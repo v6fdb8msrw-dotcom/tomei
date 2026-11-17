@@ -1,9 +1,10 @@
 import { ArrowUpRight, ChevronDown, RotateCcw, Sparkles } from 'lucide-react'
 import { animate, AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { BROKERS, CARS, DEST, FX_FALLBACK, HERO, IMPORTERS, type DestKey } from '../data.ts'
+import { AGENTS, CALC_LOAD_KEY, CARS, DEST, FX_FALLBACK, HERO, IMPORT_FLAT, IMPORTERS, agentAverage, agentTotal, loadFinds, toJpy, type DestKey, type Find } from '../data.ts'
 import { EASE, Hero, ProviderGrid, Reveal, SectionHead } from '../components/motion.tsx'
 import { int, landedCost, money, yen } from '../lib/calc.ts'
+import { useFx } from '../lib/fx.ts'
 
 const COLORS = {
   vehicle: '#8b93a1',
@@ -18,24 +19,6 @@ const COLORS = {
 type Fees = { clearance: number; agent: number; inland: number; inspection: number; reg: number }
 
 const DEFAULT_JAPAN_FEES = 180000
-
-function useFx() {
-  const [rates, setRates] = useState<Record<string, number>>(FX_FALLBACK)
-  const [live, setLive] = useState<{ date: string } | null>(null)
-  useEffect(() => {
-    // Tageskurs der EZB, ohne Schlüssel und CORS-freundlich (frankfurter.app ist nicht mehr erreichbar)
-    fetch('https://api.frankfurter.dev/v1/latest?base=JPY&symbols=EUR,USD,GBP,AUD,CAD,NZD')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.rates) {
-          setRates(d.rates)
-          setLive({ date: d.date })
-        }
-      })
-      .catch(() => setLive(null))
-  }, [])
-  return { rates, live }
-}
 
 /** Zahl, die zum neuen Wert hochzählt. */
 function Counter({ value, format }: { value: number; format: (v: number) => string }) {
@@ -134,7 +117,7 @@ export function Import() {
   const [lastCar, setLastCar] = useState(CARS[0].id) // Foto bleibt stehen, wenn ein eigener Preis getippt wird
   const [price, setPrice] = useState(CARS[0].jpy)
   const [priceIn, setPriceIn] = useState<'JPY' | 'LOCAL'>('JPY')
-  const [japanFees, setJapanFees] = useState(DEFAULT_JAPAN_FEES)
+  const [manualJapanFees, setJapanFees] = useState(DEFAULT_JAPAN_FEES)
   const [ship, setShip] = useState<'roro' | 'container'>('roro')
   const [freight, setFreight] = useState(dest.freight.roro)
   const [insureOn, setInsureOn] = useState(true)
@@ -144,6 +127,10 @@ export function Import() {
   const [epa, setEpa] = useState(false)
   const [fees, setFees] = useState<Fees>(dest.fees)
   const [manualRate, setManualRate] = useState(0) // 1 Zielwährung = … ¥, 0 = Tageskurs
+  // Export-Agent in Japan: Durchschnitt aller Agenten mit veröffentlichten Preisen, ein bestimmter Agent oder eigene Zahl
+  const [agent, setAgent] = useState<string>('avg')
+  const [find, setFind] = useState<Find | null>(null)
+  const [finds] = useState<Find[]>(loadFinds)
 
   const liveRate = rates[cur] ?? FX_FALLBACK[cur]
   const rate = manualRate > 0 ? 1 / manualRate : liveRate // JPY → Zielwährung
@@ -159,7 +146,26 @@ export function Import() {
     setEpa(false)
     setManualRate(0)
   }
+  function loadFind(f: Find) {
+    setFind(f)
+    setCarId('')
+    setPriceIn('JPY')
+    setPrice(toJpy(f.price, f.cur, rates))
+  }
+  // Fundstück aus den Märkten übernehmen (einmalig beim Öffnen des Rechners)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CALC_LOAD_KEY)
+      if (raw) {
+        localStorage.removeItem(CALC_LOAD_KEY)
+        loadFind(JSON.parse(raw))
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   function reset() {
+    setFind(null)
+    setAgent('avg')
     setCarId(CARS[0].id)
     setLastCar(CARS[0].id)
     setPrice(CARS[0].jpy)
@@ -176,6 +182,8 @@ export function Import() {
     setPriceIn('JPY')
     setPrice(7500000)
     setJapanFees(300000)
+    setAgent('manual')
+    setFind(null)
     setShip('container')
     setFreight(dest.freight.container)
     setInsureOn(true)
@@ -186,6 +194,7 @@ export function Import() {
     const c = CARS.find((x) => x.id === id)!
     setCarId(id)
     setLastCar(id)
+    setFind(null)
     setPriceIn('JPY')
     setPrice(c.jpy)
   }
@@ -197,6 +206,10 @@ export function Import() {
 
   const shownCar = CARS.find((c) => c.id === (carId || lastCar)) ?? CARS[0]
   const vehicle = priceIn === 'JPY' ? price * rate : price
+  const hammer = priceIn === 'JPY' ? price : price / rate
+  const avgFees = agentAverage(hammer)
+  const picked = AGENTS.find((a) => a.id === agent)
+  const japanFees = agent === 'manual' ? manualJapanFees : picked ? (agentTotal(picked, hammer) ?? avgFees) : avgFees
   const dutyPct = dest.epa && epa ? 0 : duty
   const calc = useMemo(
     () => landedCost({ vehicle, japanFees: japanFees * rate, freight, insureOn, insurePct, dutyPct, vatPct: vat, fees }),
@@ -215,7 +228,7 @@ export function Import() {
 
   const ledger: ({ label: string; val: number; sub?: string } | { divider: string; val: number })[] = [
     { label: 'Fahrzeugwert (Auktion)', val: vehicle, sub: priceIn === 'JPY' ? yen(price) : undefined },
-    { label: 'Japan-Gebühren & Export', val: japanFees * rate, sub: yen(japanFees) },
+    { label: agent === 'manual' ? 'Japan-Gebühren & Export' : `Agent & Export (${picked ? picked.name : 'Ø ' + AGENTS.length + ' Agenten'})`, val: japanFees * rate, sub: yen(japanFees) },
     { label: `Seefracht (${ship === 'roro' ? 'RoRo' : 'Container'})`, val: freight },
     { label: 'Transportversicherung', val: calc.insurance },
     { divider: 'Zollwert (CIF)', val: calc.cif },
@@ -228,14 +241,22 @@ export function Import() {
     { label: 'Zulassung & Umbau', val: fees.reg },
   ]
 
-  // Broker-Vergleich: gleiche Rechnung, nur deren typische Gebühr statt „Agent“
-  const usdToLocal = rates.USD ? liveRate / rates.USD : 1
-  const brokers = BROKERS.map((b) => {
-    const fee = b.fee * usdToLocal
-    const r = landedCost({ vehicle, japanFees: japanFees * rate, freight, insureOn, insurePct, dutyPct, vatPct: vat, fees: { ...fees, agent: fee } })
-    return { ...b, landed: r.landed }
-  }).sort((a, b) => a.landed - b.landed)
+  // Agenten-Vergleich: gleiche Rechnung, nur mit den veröffentlichten Gebühren der jeweiligen Firma
+  const base = { vehicle, freight, insureOn, insurePct, dutyPct, vatPct: vat }
+  const brokers = [
+    ...AGENTS.map((a) => {
+      const t = agentTotal(a, hammer)
+      return { id: a.id, name: a.name, url: a.url, source: a.source, type: a.kind, text: a.text, jp: t, landed: t === null ? null : landedCost({ ...base, japanFees: t * rate, fees }).landed }
+    }),
+    ...IMPORT_FLAT.map((f) => {
+      const eur = rates.EUR ?? FX_FALLBACK.EUR
+      const agentLocal = (f.eur / eur) * rate // € → ¥ → Zielwährung
+      return { id: f.id, name: f.name, url: f.url, source: f.source, type: 'Komplett-Import DE', text: f.text, jp: avgFees, landed: landedCost({ ...base, japanFees: avgFees * rate, fees: { ...fees, agent: agentLocal } }).landed }
+    }),
+  ]
+    .sort((a, b) => (a.landed ?? Infinity) - (b.landed ?? Infinity))
   const cheapest = brokers[0]?.landed ?? 0
+  const avgLanded = landedCost({ ...base, japanFees: avgFees * rate, fees }).landed
 
   const rateNote = manualRate > 0 ? 'eigener Kurs' : live ? `EZB-Kurs vom ${new Date(live.date).toLocaleDateString('de-DE')}` : 'Ersatzkurs vom 27.10.2026'
 
@@ -254,9 +275,9 @@ export function Import() {
           <div className="car-stage">
             <AnimatePresence>
               <motion.img
-                key={shownCar.id}
-                src={shownCar.img}
-                alt={shownCar.model}
+                key={find && !carId ? 'find' : shownCar.id}
+                src={find && !carId ? `${import.meta.env.BASE_URL}images/import-port.jpg` : shownCar.img}
+                alt={find && !carId ? find.title : shownCar.model}
                 initial={{ opacity: 0, scale: 1.12 }}
                 animate={{ opacity: 1, scale: 1.02 }}
                 exit={{ opacity: 0 }}
@@ -266,8 +287,8 @@ export function Import() {
             <div className="car-stage-veil" />
             <AnimatePresence mode="wait">
               <motion.div key={shownCar.id + (carId ? '' : '-x')} className="car-stage-text" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.5, ease: EASE }}>
-                <span className="tag">{carId ? shownCar.tag : 'Eigener Preis'}</span>
-                <strong>{carId ? shownCar.model : 'Dein Auto'}</strong>
+                <span className="tag">{carId ? shownCar.tag : find ? 'Merkliste' : 'Eigener Preis'}</span>
+                <strong>{carId ? shownCar.model : find ? find.title : 'Dein Auto'}</strong>
                 {carId && (
                   <span className="muted mono small">
                     {shownCar.chassis} · {shownCar.year} · {int(shownCar.km)} km · Grade {shownCar.grade}
@@ -312,6 +333,7 @@ export function Import() {
                     const d = e.target.value.replace(/[^\d]/g, '')
                     setPrice(d === '' ? 0 : parseInt(d, 10))
                     setCarId('')
+                    setFind(null)
                   }}
                 />
               </span>
@@ -341,6 +363,39 @@ export function Import() {
               </span>
             ))}
           </div>
+
+          <div className="agent-pick">
+            <span className="step-label">Export-Agent in Japan</span>
+            <div className="mk-ideas">
+              <button className={'chip' + (agent === 'avg' ? ' on' : '')} onClick={() => setAgent('avg')}>
+                Ø Durchschnitt · {yen(avgFees)}
+              </button>
+              {AGENTS.map((a) => {
+                const t = agentTotal(a, hammer)
+                return (
+                  <button key={a.id} className={'chip' + (agent === a.id ? ' on' : '')} disabled={t === null} onClick={() => setAgent(a.id)} title={a.text}>
+                    {a.name} · {t === null ? 'auf Anfrage' : yen(t)}
+                  </button>
+                )
+              })}
+              {agent === 'manual' && <span className="chip on">Eigene Zahl · {yen(japanFees)}</span>}
+            </div>
+            <p className="hint">Service-Gebühr + feste Posten + Transport zum Hafen ({yen(25000)} typisch), nach den veröffentlichten Preisen der Firmen (Stand 17.11.2026).</p>
+          </div>
+
+          {(finds.length > 0 || find) && (
+            <div className="agent-pick">
+              <span className="step-label">Aus deiner Merkliste</span>
+              <div className="mk-ideas">
+                {finds.map((f) => (
+                  <button key={f.id} className={'chip' + (find?.id === f.id ? ' on' : '')} onClick={() => loadFind(f)}>
+                    {f.title} · {f.cur === 'JPY' ? yen(f.price) : int(f.price) + ' ' + f.cur}
+                  </button>
+                ))}
+              </div>
+              {find && find.market !== 'jp' && <p className="hint">Gerechnet mit Fracht und Gebühren ab Japan. Ab {find.market.toUpperCase()} können Fracht und Exportkosten abweichen; trag sie unter „Kosten anpassen“ ein, sobald du ein Angebot hast.</p>}
+            </div>
+          )}
 
           <Fold title="Aufschlüsselung">
             <div className="ledger">
@@ -401,7 +456,7 @@ export function Import() {
               </label>
             </div>
             <div className="fields">
-              <NumField label="Japan-Gebühren" prefix="¥" value={japanFees} onChange={setJapanFees} hint="Auktion, Recycling, Transport, Export" />
+              <NumField label="Japan-Gebühren" prefix="¥" value={japanFees} onChange={(v) => { setJapanFees(v); setAgent('manual') }} hint="Agent, Auktion, Transport, Export" />
               <NumField label={`Kurs (1 ${cur} = … ¥)`} step={0.1} suffix="¥" value={manualRate > 0 ? manualRate : Math.round((1 / liveRate) * 10) / 10} onChange={setManualRate} hint={rateNote} />
               <NumField label="Seefracht" prefix={cur} value={freight} onChange={setFreight} />
               <NumField label="Versicherung" step={0.1} suffix="%" value={insurePct} onChange={setInsurePct} disabled={!insureOn} />
@@ -426,19 +481,23 @@ export function Import() {
         </Reveal>
       </section>
 
-      <section className="section narrow">
-        <SectionHead eyebrow="Broker" title={<>Am günstigsten <em>über …</em></>} />
+      <section className="section narrow" id="agenten">
+        <SectionHead eyebrow="Agenten & Importeure" title={<>Am günstigsten <em>über …</em></>} text={<>Dein Auto mit den veröffentlichten Gebühren jeder Firma gerechnet. Ø aller Agenten: <b>{money(avgLanded, cur)}</b> bis vor die Tür.</>} />
         <div className="brokers">
           {brokers.map((b, k) => (
-            <motion.a key={b.name} layout className={'broker' + (k === 0 ? ' best' : '')} href={b.url} target="_blank" rel="noopener noreferrer" title={b.text}>
-              <span className="broker-name">{b.name}</span>
+            <motion.div key={b.id} layout className={'broker' + (k === 0 && b.landed !== null ? ' best' : '')} title={b.text}>
+              <a className="broker-name" href={b.url} target="_blank" rel="noopener noreferrer">
+                {b.name}
+              </a>
               <span className="broker-type">{b.type}</span>
-              <span className="broker-cost mono">{k === 0 ? money(b.landed, cur) : '+' + money(b.landed - cheapest, cur)}</span>
-              <ArrowUpRight size={16} className="prov-arrow" />
-            </motion.a>
+              <span className="broker-cost mono">{b.landed === null ? 'auf Anfrage' : k === 0 ? money(b.landed, cur) : '+' + money(b.landed - cheapest, cur)}</span>
+              <a className="broker-src" href={b.source} target="_blank" rel="noopener noreferrer" title="Preisquelle">
+                <ArrowUpRight size={16} />
+              </a>
+            </motion.div>
           ))}
         </div>
-        <p className="small muted">Gleiche Rechnung mit der typischen Service-Gebühr des Brokers. Echte Angebote gibt es beim Anbieter.</p>
+        <p className="small muted">Nur Firmen, die ihre Preise öffentlich nennen; Werte von deren Webseiten, Stand 17.11.2026. Preise können sich ändern, verbindlich ist das Angebot der Firma.</p>
       </section>
 
       <section className="section">

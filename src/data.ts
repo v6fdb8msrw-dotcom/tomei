@@ -62,16 +62,65 @@ export const PARTS: Provider[] = [
   { name: 'JDMDistro', text: 'JDM-Felgen, Motoren und Teile, weltweiter Versand.', url: 'https://jdmdistro.com/' },
 ]
 
-// Broker im Kostenvergleich: fee = typische Service-Gebühr in USD (Schätzung)
-export type Broker = Provider & { type: string; fee: number }
-export const BROKERS: Broker[] = [
-  { name: 'Japan Car Direct', url: 'https://www.japancardirect.com/', type: 'Auktions-Agent', fee: 1500, text: 'Feste Service-Gebühr, 120+ Auktionen, starke Bewertungen für Erst-Importe.' },
-  { name: 'TokyoCarZ', url: 'https://tokyocarz.com/', type: 'Exporteur', fee: 900, text: 'Live-Zugang zu USS/TAA/CAA, über 100.000 Lagerwagen, JUMVEA-verifiziert.' },
-  { name: 'JDM Auction Watch', url: 'https://www.jdmauctionwatch.com/', type: 'EU-Agent', fee: 1300, text: 'EU-basierter Service mit eigenem Team in Japan.' },
-  { name: 'JAP Express', url: 'https://jap-express.com/', type: 'Exporteur', fee: 1000, text: 'JDM-Spezialist (Skyline/Silvia/Supra), SHODAN-Verhandlung.' },
-  { name: 'TCV / tradecarview', url: 'https://www.tradecarview.com/', type: 'Marktplatz', fee: 700, text: 'Riesiges Händler-Inventar, transparente Gebotshistorie.' },
-  { name: 'Goo-net Exchange', url: 'https://www.goonet-exchange.com/', type: 'Marktplatz', fee: 800, text: 'Größtes japanisches Listing-Portal, gut zur Preisrecherche.' },
+/* ---------------- Export-Agenten mit veröffentlichten Gebühren ---------------- */
+// Nur Firmen, die ihre Preise öffentlich nennen. Alle Werte in Yen je Auto, von der jeweiligen Webseite, Stand 17.11.2026.
+// fee(h): Service-Gebühr beim Hammerpreis h; fixed: weitere feste Posten (Auktionshaus, Exportzoll); inland: Transport zum Hafen.
+export type Agent = {
+  id: string
+  name: string
+  url: string
+  source: string
+  kind: string
+  fee: (h: number) => number | null // null = nur auf Anfrage
+  fixed: number
+  inland: number
+  fixedNote: string
+  text: string
+}
+const JP_INLAND = 25000 // typischer Transport Auktion → Hafen laut Integrity Exports (8.000–60.000 ¥)
+export const AGENTS: Agent[] = [
+  {
+    id: 'integrity', name: 'Integrity Exports', url: 'https://integrityexports.com/', source: 'https://integrityexports.com/buying-from-us/charges/', kind: 'Auktions-Agent',
+    fee: (h) => 70000 + 0.05 * h, fixed: 16000, inland: JP_INLAND, fixedNote: 'Exportzoll 16.000 ¥',
+    text: '70.000 ¥ + 5 % vom Hammerpreis (mit Vorkasse bis 1 Mio. ¥: nur 70.000 ¥). Keine Gebühr fürs Bieten, Übersetzen oder Fotos.',
+  },
+  {
+    id: 'brave', name: 'Brave Auto International', url: 'https://braveautoint.com/', source: 'https://braveautoint.com/', kind: 'Auktions-Agent',
+    fee: (h) => 70000 + 0.05 * Math.max(0, h - 1000000), fixed: 40000, inland: JP_INLAND, fixedNote: 'Auktionshaus 20.000 ¥ + Exportzoll 20.000 ¥',
+    text: '70.000 ¥ pauschal, über 1 Mio. ¥ zusätzlich 5 % auf den Teil darüber. Transport zum Hafen zum Selbstkostenpreis.',
+  },
+  {
+    id: 'provide', name: 'Provide Cars', url: 'https://providecars.co.jp/de', source: 'https://providecars.co.jp/bank-info/service-and-commission', kind: 'Auktions-Agent',
+    fee: (h) => 90000 + 0.05 * h, fixed: 0, inland: JP_INLAND, fixedNote: 'Auktionsgebühren und Exportpapiere inklusive',
+    text: 'Privatkunden: 90.000 ¥ + 5 %. USS, TAA, Aucnet und Festpreis-Bestand, deutschsprachig, RoRo nach Bremerhaven.',
+  },
+  {
+    id: 'aaj', name: 'Auction Agent Japan', url: 'https://auctionagentjapan.com/', source: 'https://auctionagentjapan.com/', kind: 'Auktions-Agent',
+    fee: (h) => 115000 + 10000 * Math.ceil(Math.max(0, h - 1000000) / 500000), fixed: 0, inland: JP_INLAND, fixedNote: 'Versandnebenkosten extra',
+    text: '115.000 ¥ bis 1 Mio. ¥ (1–2 Autos im Monat), je weitere 500.000 ¥ plus 10.000 ¥.',
+  },
+  {
+    id: 'jtrade', name: 'Japan Tradings', url: 'https://japan-tradings.com/', source: 'https://japan-tradings.com/agent-fee/', kind: 'Auktions-Agent',
+    fee: (h) => (h <= 1000000 ? 80000 : null), fixed: 0, inland: JP_INLAND, fixedNote: 'Transport zum Hafen je nach Auktion 0–38.000 ¥',
+    text: '80.000 ¥ pauschal für Autos bis 1 Mio. ¥, darüber nur auf Anfrage. 100.000 ¥ Anzahlung.',
+  },
 ]
+/** Deutsche Komplett-Importeure mit veröffentlichtem Festpreis (in €, ersetzt den Agenten in Deutschland) */
+export const IMPORT_FLAT = [
+  {
+    id: 'jpimport', name: 'JP-Importcars.de', url: 'https://www.jp-importcars.de/', source: 'https://www.jp-importcars.de/?lang=en', eur: 1990,
+    text: 'Service-Pauschale 1.990 €: Suche, Kauf in Japan, Versand, Zoll und Hilfe bei der Zulassung. Fracht, Zoll, Steuer und TÜV kommen dazu.',
+  },
+]
+/** Durchschnitt aller Agenten, die beim Hammerpreis h einen Preis nennen (Service + feste Posten + Hafentransport) */
+export function agentTotal(a: Agent, h: number) {
+  const f = a.fee(h)
+  return f === null ? null : Math.round(f + a.fixed + a.inland)
+}
+export function agentAverage(h: number) {
+  const v = AGENTS.map((a) => agentTotal(a, h)).filter((x): x is number => x !== null)
+  return v.length ? Math.round(v.reduce((s, x) => s + x, 0) / v.length) : 0
+}
 
 /* ---------------- Rechner ---------------- */
 export type DestKey = 'DE' | 'UK' | 'US' | 'AU' | 'CA' | 'NZ'
@@ -136,7 +185,9 @@ export const DEST: Record<DestKey, Dest> = {
 }
 
 // JPY → Zielwährung (EZB-Kurs vom 27.10.2026), wird beim Laden durch den Tageskurs ersetzt (Frankfurter-API)
-export const FX_FALLBACK: Record<string, number> = { EUR: 0.0056828, USD: 0.0063363, GBP: 0.0047541, AUD: 0.0090106, CAD: 0.0088856, NZD: 0.011111 }
+// Ersatzkurse (1 ¥ = …), EZB vom 16.11.2026; AED über die feste Bindung 3,6725 AED je USD
+export const FX_FALLBACK: Record<string, number> = { EUR: 0.0056889, USD: 0.0062658, GBP: 0.0047474, AUD: 0.0092735, CAD: 0.008951, NZD: 0.011361, KRW: 8.364, THB: 0.21234, MYR: 0.025658, SGD: 0.0080754, HKD: 0.049168, AED: 0.0062658 * 3.6725 }
+export const AED_PER_USD = 3.6725
 
 export type Car = { id: string; model: string; chassis: string; year: number; grade: string; km: number; jpy: number; img: string; tag: string }
 
@@ -184,7 +235,7 @@ export const INSTAGRAM_URL = ''
    Ergebnisseiten der Portale mit deinem Fahrzeug, oder eine gezielte Suche, wo die Portale keine festen Adressen haben. */
 export type MarketQuery = { make: string; model: string; from?: number; to?: number }
 export type Portal = { name: string; kind: string; url: (q: MarketQuery) => string }
-export type Market = { id: string; code: string; country: string; hub: string; text: string; x: number; y: number; portals: Portal[] }
+export type Market = { id: string; cur: string; code: string; country: string; hub: string; text: string; x: number; y: number; portals: Portal[] }
 
 const slug = (v: string) => v.trim().toLowerCase().replace(/\s+/g, '-')
 const site = (domain: string) => (q: MarketQuery) =>
@@ -194,7 +245,7 @@ const path = (base: string, f: (make: string, model: string) => string) => (q: M
 
 export const MARKETS: Market[] = [
   {
-    id: 'jp', code: 'JP', country: 'Japan', hub: 'Yokohama · Nagoya · Kobe', x: 92, y: 36,
+    id: 'jp', cur: 'JPY', code: 'JP', country: 'Japan', hub: 'Yokohama · Nagoya · Kobe', x: 92, y: 36,
     text: 'Der größte Markt für JDM: Hunderttausende Autos pro Woche über USS, TAA, JU und Co. Rechtslenker, oft wenig Kilometer.',
     portals: [
       { name: 'TCV', kind: 'Export-Marktplatz', url: path('https://www.tc-v.com/used_car/', (m, o) => `${m}/${o}/`) },
@@ -204,7 +255,7 @@ export const MARKETS: Market[] = [
     ],
   },
   {
-    id: 'kr', code: 'KR', country: 'Südkorea', hub: 'Incheon · Busan', x: 84, y: 34,
+    id: 'kr', cur: 'KRW', code: 'KR', country: 'Südkorea', hub: 'Incheon · Busan', x: 84, y: 34,
     text: 'Stark bei Hyundai, Kia und Genesis, dazu viele junge Importwagen. Linkslenker, gute Ausstattung.',
     portals: [
       { name: 'Autowini', kind: 'Export-Marktplatz', url: (q) => `https://www.autowini.com/search?keyword=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
@@ -212,27 +263,27 @@ export const MARKETS: Market[] = [
     ],
   },
   {
-    id: 'th', code: 'TH', country: 'Thailand', hub: 'Bangkok · Laem Chabang', x: 66, y: 62,
+    id: 'th', cur: 'THB', code: 'TH', country: 'Thailand', hub: 'Bangkok · Laem Chabang', x: 66, y: 62,
     text: 'Viele Rechtslenker, Pick-ups und gepflegte Toyota/Honda. Preise oft günstiger, Zustand genau prüfen.',
     portals: [{ name: 'One2car', kind: 'Marktplatz', url: path('https://www.one2car.com/en/cars-for-sale/', (m, o) => `${m}/${o}`) }],
   },
   {
-    id: 'my', code: 'MY', country: 'Malaysia', hub: 'Port Klang', x: 64, y: 74,
+    id: 'my', cur: 'MYR', code: 'MY', country: 'Malaysia', hub: 'Port Klang', x: 64, y: 74,
     text: '„Recon“-Fahrzeuge: aus Japan reimportiert und aufbereitet. Interessant für jüngere JDM-Modelle.',
     portals: [{ name: 'Carlist', kind: 'Marktplatz', url: path('https://www.carlist.my/cars-for-sale/', (m, o) => (o ? `${m}/${o}/malaysia` : `${m}/malaysia`)) }],
   },
   {
-    id: 'sg', code: 'SG', country: 'Singapur', hub: 'Singapur', x: 67, y: 80,
+    id: 'sg', cur: 'SGD', code: 'SG', country: 'Singapur', hub: 'Singapur', x: 67, y: 80,
     text: 'Wegen der strengen Zulassungsregeln oft junge, top gepflegte Autos mit wenig Kilometern.',
     portals: [{ name: 'sgCarMart', kind: 'Marktplatz', url: site('sgcarmart.com') }],
   },
   {
-    id: 'hk', code: 'HK', country: 'Hongkong', hub: 'Hongkong', x: 76, y: 52,
+    id: 'hk', cur: 'HKD', code: 'HK', country: 'Hongkong', hub: 'Hongkong', x: 76, y: 52,
     text: 'Rechtslenker, viele Japan-Importe und Sportwagen. Gute Quelle für seltene Ausstattungen.',
     portals: [{ name: '28Car', kind: 'Marktplatz', url: site('28car.com') }],
   },
   {
-    id: 'ae', code: 'AE', country: 'Dubai (VAE)', hub: 'Jebel Ali', x: 34, y: 52,
+    id: 'ae', cur: 'AED', code: 'AE', country: 'Dubai (VAE)', hub: 'Jebel Ali', x: 34, y: 52,
     text: 'Westasiens Drehkreuz: Sportwagen, GCC-Ausführungen mit Klimapaket, schnelle Verschiffung nach Europa.',
     portals: [{ name: 'DubiCars', kind: 'Marktplatz', url: path('https://www.dubicars.com/uae/used/', (m, o) => `${m}/${o}`) }],
   },
@@ -251,3 +302,34 @@ export const AUCTIONS: { name: string; country: string; text: string }[] = [
 
 /** Kontakt für Service-Anfragen. [REPLACE] Öffentliche Adresse eintragen, dann öffnet „Anfrage senden“ eine fertige E-Mail. */
 export const CONTACT_EMAIL = ''
+
+/* ---------------- Merkliste: Fundstücke aus den Portalen, verbunden mit dem Rechner ---------------- */
+export type Find = { id: string; title: string; url: string; price: number; cur: string; market: string; added: string }
+export const FINDS_KEY = 'tomei.finds'
+export const CALC_LOAD_KEY = 'tomei.calc.load'
+export function loadFinds(): Find[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(FINDS_KEY) || '[]')
+    return Array.isArray(v) ? v : []
+  } catch {
+    return []
+  }
+}
+export function saveFinds(f: Find[]) {
+  try {
+    localStorage.setItem(FINDS_KEY, JSON.stringify(f))
+  } catch {}
+}
+/** Preis in Yen (rates: 1 ¥ = … Fremdwährung) */
+export function toJpy(price: number, cur: string, rates: Record<string, number>) {
+  if (cur === 'JPY') return price
+  const r = cur === 'AED' ? (rates.USD ?? FX_FALLBACK.USD) * AED_PER_USD : (rates[cur] ?? FX_FALLBACK[cur])
+  return r ? Math.round(price / r) : 0
+}
+/** Fundstück an den Rechner übergeben und hinspringen */
+export function sendToCalc(f: Find) {
+  try {
+    localStorage.setItem(CALC_LOAD_KEY, JSON.stringify(f))
+  } catch {}
+  location.hash = '/import/rechner'
+}
