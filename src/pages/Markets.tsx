@@ -1,4 +1,4 @@
-// Märkte: eine Suche für ganz Asien. TŌMEI öffnet die öffentlichen Ergebnisseiten der Portale je Land
+// Märkte: eine Suche für Asien, Amerika, Großbritannien und Australien, dazu der Modell-Finder für ältere Autos. TŌMEI öffnet die öffentlichen Ergebnisseiten der Portale je Land
 // (kein Auslesen fremder Inserate). Auktionshäuser sind nur für Händler zugänglich → Weg über Agent oder TŌMEI Service.
 import { ArrowUpRight, Gavel, Search, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -6,15 +6,17 @@ import { AUCTIONS, MARKETS, type MarketQuery } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack, RouteMap } from '../components/depth.tsx'
 import { Finds } from '../components/Finds.tsx'
+import { ClassicFinder } from '../components/ClassicFinder.tsx'
 
-const MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru', 'Mitsubishi', 'Lexus', 'Suzuki', 'Daihatsu', 'Hyundai', 'Kia', 'Genesis']
+const MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru', 'Mitsubishi', 'Lexus', 'Suzuki', 'Ford', 'Chevrolet', 'Dodge', 'Pontiac', 'Jeep', 'Holden', 'TVR', 'Lotus', 'Jaguar', 'Hyundai', 'Kia']
 const IDEAS: MarketQuery[] = [
   { make: 'Toyota', model: 'Supra' },
   { make: 'Nissan', model: 'Skyline' },
   { make: 'Mazda', model: 'RX-7' },
-  { make: 'Honda', model: 'Civic' },
   { make: 'Nissan', model: 'Silvia' },
-  { make: 'Kia', model: 'Stinger' },
+  { make: 'Ford', model: 'Bronco' },
+  { make: 'Chevrolet', model: 'Corvette' },
+  { make: 'Holden', model: 'Monaro' },
 ]
 const KEY = 'tomei.markets.q'
 
@@ -36,25 +38,35 @@ export function Markets() {
   }, [q])
   const list = useMemo(() => MARKETS.filter((m) => !active || m.id === active), [active])
   const label = `${q.make} ${q.model}`.trim()
+  const search = (next: MarketQuery, origin: string) => {
+    setQ(next)
+    setActive(origin)
+    requestAnimationFrame(() => document.getElementById('angebote')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
 
   return (
     <>
       <section className="section mk-hero">
         <div className="mk-hero-text">
           <Reveal>
-            <p className="eyebrow">Märkte · Asien</p>
+            <p className="eyebrow">Märkte · weltweit</p>
             <h1 className="display">
               Eine Suche.
               <br />
-              <em>Sieben Märkte.</em>
+              <em>Elf Märkte.</em>
             </h1>
-            <p className="lead">Japan, Korea, Thailand, Malaysia, Singapur, Hongkong und Dubai: Sag TŌMEI, was du suchst, und spring direkt zu den aktuellen Angeboten in jedem Land.</p>
+            <p className="lead">Für Autos, die es hier kaum gibt: JDM aus Japan, Muscle-Cars aus den USA, Klassiker aus England und Australien. Sag TŌMEI, was du suchst, und spring direkt zu den Angeboten und Auktionen in jedem Land.</p>
           </Reveal>
         </div>
         <CarStack />
       </section>
 
-      <section className="section tight">
+      <section className="section tight" id="modelle">
+        <SectionHead eyebrow="Modell-Finder" title={<>Selten hier. <em>Zu finden dort.</em></>} text="Ältere, besondere Autos, die du in Deutschland kaum oder nur teuer bekommst. Filtere nach Land, Jahrzehnt und Oldtimer-Status." />
+        <ClassicFinder onSearch={search} />
+      </section>
+
+      <section className="section tight" id="suche">
         <div className="gcard mk-search">
           <div className="mk-fields">
             <label className="field">
@@ -86,7 +98,7 @@ export function Markets() {
       </section>
 
       <section className="section tight">
-        <SectionHead eyebrow="Netzwerk" title={<>Von dort <em>bis Bremerhaven.</em></>} text="Tippe auf ein Land, um nur dessen Angebote zu sehen. Die Linien zeigen den Seeweg nach Europa." />
+        <SectionHead eyebrow="Netzwerk" title={<>Von dort <em>bis Bremerhaven.</em></>} text="Tippe auf ein Land, um nur dessen Angebote zu sehen. Die Linien zeigen den Seeweg nach Bremerhaven." />
         <RouteMap markets={MARKETS} active={active} onPick={(id) => setActive((a) => (a === id ? undefined : id))} />
         {active && (
           <button className="link mk-all" onClick={() => setActive(undefined)}>
@@ -95,7 +107,7 @@ export function Markets() {
         )}
       </section>
 
-      <section className="section tight">
+      <section className="section tight" id="angebote">
         <div className="mk-grid">
           {list.map((m, k) => (
             <Reveal key={m.id} delay={k * 0.05}>
@@ -139,20 +151,34 @@ export function Markets() {
         <SectionHead
           eyebrow="Auktionen"
           title={<>Die echten Preise <em>entstehen hier.</em></>}
-          text="In Japan und Korea laufen die meisten Autos über Händlerauktionen. Bieten dürfen nur registrierte Händler, deshalb geht der Weg über einen Auktions-Agenten oder den TŌMEI Service."
+          text="In den USA, England und Australien darf jeder mitbieten, die Ergebnisse sind meist öffentlich. In Japan und Korea laufen die meisten Autos über Händlerauktionen, dort geht der Weg über einen Auktions-Agenten oder den TŌMEI Service."
         />
-        <div className="mk-auctions">
-          {AUCTIONS.map((a, k) => (
-            <Reveal key={a.name} delay={k * 0.04}>
-              <div className="gcard mk-auction">
-                <Gavel size={18} className="red" />
-                <b>{a.name}</b>
-                <span className="muted small">{a.country}</span>
-                <p>{a.text}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        {[
+          { t: 'Offene Auktionen', l: AUCTIONS.filter((a) => a.open) },
+          { t: 'Händlerauktionen Japan & Korea', l: AUCTIONS.filter((a) => !a.open) },
+        ].map((g) => (
+          <div key={g.t} className="mk-auction-group">
+            <p className="f-label">{g.t}</p>
+            <div className="mk-auctions">
+              {g.l.map((a, k) => (
+                <Reveal key={a.name} delay={k * 0.04}>
+                  <div className="gcard mk-auction">
+                    <Gavel size={18} className="red" />
+                    {a.url ? (
+                      <a className="mk-auction-name" href={a.url} target="_blank" rel="noopener noreferrer">
+                        {a.name} <ArrowUpRight size={14} />
+                      </a>
+                    ) : (
+                      <b>{a.name}</b>
+                    )}
+                    <span className="muted small">{a.country}</span>
+                    <p>{a.text}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        ))}
         <div className="mk-cta">
           <a className="btn red" href="#/service">
             <ShieldCheck size={18} /> Über TŌMEI ersteigern lassen

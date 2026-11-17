@@ -441,3 +441,30 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Modell-Finder */
+.cf { display: flex; flex-direction: column; gap: 20px; }
+.cf-filters { display: flex; flex-direction: column; gap: 14px; }
+.cf-row { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 22px; }
+.cf-toggle { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.cf-sort { margin: 0; }
+.cf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+.cf-card { display: flex; flex-direction: column; gap: 8px; padding: 24px; }
+.cf-card header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.cf-card h3 { font-size: 21px; margin: 0; }
+.cf-card .mono { margin: 0; }
+.cf-kind { font-size: 12px; color: var(--text-2); }
+.cf-badge { margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--field); color: var(--text-2); }
+.cf-badge.ok { background: var(--accent-soft); color: var(--accent); }
+.cf-why { font-size: 14.5px; color: var(--text-2); margin: 2px 0 6px; }
+.cf-price { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 14px; background: var(--field); margin-top: auto; }
+.cf-price span { font-size: 12px; color: var(--text-3); }
+.cf-price b { font-size: 24px; letter-spacing: -.01em; }
+.cf-price small { font-size: 12.5px; color: var(--text-2); }
+.cf-price.none small { font-size: 13px; }
+.cf-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.mk-auction-group { margin-top: 26px; }
+.mk-auction-group:first-of-type { margin-top: 0; }
+.mk-auction-group .f-label { margin-bottom: 12px; }
+.mk-auction-name { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--text); text-decoration: none; }
+.mk-auction-name:hover { color: var(--accent); }

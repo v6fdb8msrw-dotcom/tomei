@@ -47,12 +47,12 @@ function Hero() {
           TŌMEI
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.9, ease: EASE }}>
-          Dein Auto aus Asien.
+          Dein Traumauto aus Übersee.
           <br />
           <em>Klar gerechnet.</em>
         </motion.h1>
         <motion.p className="h-sub" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }}>
-          Sieben Märkte durchsuchen, jeden Yen bis vor die Tür rechnen, mit echten Gebühren der Export-Agenten.
+          Seltene Autos aus Japan, den USA, England und Australien finden und bis vor die Tür rechnen, mit echten Gebühren und Marktpreisen.
         </motion.p>
         <motion.form className="h-search" onSubmit={submit} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.8, ease: EASE }}>
           <Search size={19} />
@@ -97,7 +97,7 @@ function Tile({ href, src, title, text, delay }: { href: string; src: string; ti
 }
 
 const AREAS = [
-  { href: '#/markets', src: img('cars/r34'), icon: Globe, title: 'Märkte', text: 'Eine Suche für Japan, Korea, Thailand, Malaysia, Singapur, Hongkong und Dubai.', items: ['Direkt zu den Angeboten', 'Auktionshäuser erklärt', 'Merkliste'] },
+  { href: '#/markets', src: img('cars/r34'), icon: Globe, title: 'Märkte', text: 'Elf Länder von Japan bis USA, mit Modell-Finder für ältere, besondere Autos.', items: ['Modell-Finder mit Ø-Preisen', 'Offene Auktionshäuser', 'Merkliste'] },
   { href: '#/import/rechner', src: img('import-ship'), icon: Calculator, title: 'Import-Rechner', text: 'Was dein Auto bis vor die Tür kostet, für sechs Zielländer.', items: ['Tageskurs der EZB', 'Zoll und Steuern', 'Echte Agenten-Gebühren'] },
   { href: '#/service', src: img('import-port'), icon: ShieldCheck, title: 'Service', text: 'Kaufen, verschiffen, zulassen: ein Ansprechpartner für alles.', items: ['Auktionsblatt prüfen', 'Verschiffung und Zoll', 'TÜV und Zulassung'] },
   { href: '#/spots', src: img('daikoku'), icon: MapPin, title: 'Spots', text: 'Die Orte, an denen Japans Autokultur lebt.', items: ['Daikoku, Tatsumi, Wangan', 'Hakone und Fuji', 'Mit Karte'] },
@@ -106,7 +106,7 @@ const AREAS = [
 ]
 
 const STORY = [
-  { icon: Search, title: 'Finden', text: 'Gib Marke und Modell ein. TŌMEI öffnet die aktuellen Angebote in sieben Ländern.', src: img('wangan') },
+  { icon: Search, title: 'Finden', text: 'Gib Marke und Modell ein. TŌMEI öffnet die aktuellen Angebote und Auktionen in elf Ländern.', src: img('wangan') },
   { icon: Bookmark, title: 'Merken', text: 'Link und Preis in die Merkliste. Fremdwährung rechnet TŌMEI zum Tageskurs in Yen um.', src: img('cars/fd') },
   { icon: Calculator, title: 'Durchrechnen', text: 'Ein Klick, und der Rechner zeigt alles bis vor die Tür, mit dem Durchschnitt echter Agenten-Gebühren.', src: img('import-ship') },
   { icon: Ship, title: 'Ankommen', text: 'Selbst importieren oder den TŌMEI Service beauftragen: verschiffen, verzollen, zulassen.', src: img('import-port') },
@@ -177,7 +177,7 @@ function Stats() {
   const { rates, live } = useFx()
   const eurYen = rates.EUR ? 1 / rates.EUR : 0
   const items = [
-    { to: MARKETS.length, f: undefined, label: 'Märkte in Asien' },
+    { to: MARKETS.length, f: undefined, label: 'Märkte weltweit' },
     { to: AGENTS.length, f: undefined, label: 'Agenten mit offenen Preisen' },
     { to: agentAverage(1500000), f: (v: number) => yen(v), label: 'Ø Agent bei 1,5 Mio. ¥' },
     { to: eurYen, f: (v: number) => v.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' ¥', label: `für 1 € ${live ? `(EZB, ${new Date(live.date).toLocaleDateString('de-DE')})` : '(Ersatzkurs)'}` },

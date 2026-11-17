@@ -290,7 +290,7 @@ export function Import() {
             <div className="car-stage-veil" />
             <AnimatePresence mode="wait">
               <motion.div key={shownCar.id + (carId ? '' : '-x')} className="car-stage-text" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.5, ease: EASE }}>
-                <span className="tag">{carId ? shownCar.tag : find ? 'Merkliste' : 'Eigener Preis'}</span>
+                <span className="tag">{carId ? shownCar.tag : find ? (find.id.startsWith('cf-') ? 'Modell-Finder' : 'Merkliste') : 'Eigener Preis'}</span>
                 <strong>{carId ? shownCar.model : find ? find.title : 'Dein Auto'}</strong>
                 {carId && (
                   <span className="muted mono small">

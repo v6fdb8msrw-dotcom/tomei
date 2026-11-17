@@ -93,7 +93,7 @@ export function Service() {
               <br />
               <em>Zulassen.</em>
             </h1>
-            <p className="lead">Ein Ansprechpartner von der Auktion in Asien bis zur Zulassung in Deutschland. Du sagst, was du suchst, wir kümmern uns um den Rest.</p>
+            <p className="lead">Ein Ansprechpartner von der Auktion in Übersee bis zur Zulassung in Deutschland. Du sagst, was du suchst, wir kümmern uns um den Rest.</p>
             <a className="btn red" href="#/service/anfrage">
               Anfrage starten
             </a>

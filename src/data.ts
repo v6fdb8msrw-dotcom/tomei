@@ -8,7 +8,7 @@ export type Tab = 'home' | 'spots' | 'markets' | 'import' | 'service' | 'rent' |
 export const TABS: { id: Tab; label: string; long: string }[] = [
   { id: 'home', label: 'Start', long: 'Alles über TŌMEI' },
   { id: 'spots', label: 'Spots', long: 'Top Car Spots in Japan' },
-  { id: 'markets', label: 'Märkte', long: 'Fahrzeugmärkte in ganz Asien durchsuchen' },
+  { id: 'markets', label: 'Märkte', long: 'Fahrzeugmärkte und Auktionen weltweit durchsuchen' },
   { id: 'import', label: 'Import', long: 'JDM nach Deutschland/EU' },
   { id: 'service', label: 'Service', long: 'Kaufen, verschiffen, zulassen: das Komplettpaket' },
   { id: 'rent', label: 'Rent', long: 'JDM mieten in Japan' },
@@ -231,7 +231,7 @@ export const CONTACT_URL = ''
 export const INSTAGRAM_URL = ''
 
 
-/* ---------------- Märkte in Asien (Such-Zentrale) ----------------
+/* ---------------- Märkte weltweit (Such-Zentrale) ----------------
    TŌMEI liest keine Inserate aus (Auslesen verbieten die Portale). Die Suche öffnet die öffentlichen
    Ergebnisseiten der Portale mit deinem Fahrzeug, oder eine gezielte Suche, wo die Portale keine festen Adressen haben. */
 export type MarketQuery = { make: string; model: string; from?: number; to?: number }
@@ -246,17 +246,19 @@ const path = (base: string, f: (make: string, model: string) => string) => (q: M
 
 export const MARKETS: Market[] = [
   {
-    id: 'jp', cur: 'JPY', code: 'JP', country: 'Japan', hub: 'Yokohama · Nagoya · Kobe', x: 92, y: 36,
+    id: 'jp', cur: 'JPY', code: 'JP', country: 'Japan', hub: 'Yokohama · Nagoya · Kobe', x: 94, y: 36,
     text: 'Der größte Markt für JDM: Hunderttausende Autos pro Woche über USS, TAA, JU und Co. Rechtslenker, oft wenig Kilometer.',
     portals: [
       { name: 'TCV', kind: 'Export-Marktplatz', url: path('https://www.tc-v.com/used_car/', (m, o) => `${m}/${o}/`) },
       { name: 'Goo-net Exchange', kind: 'Export-Marktplatz', url: path('https://www.goo-net-exchange.com/usedcars/', (m, o) => `${m.toUpperCase()}/${o.toUpperCase()}/`) },
       { name: 'SBT Japan', kind: 'Exporteur', url: path('https://www.sbtjapan.com/used-cars/', (m, o) => `${m}/${o}/`) },
       { name: 'Carsensor', kind: 'Inlandsmarkt (Japanisch)', url: site('carsensor.net') },
+      { name: 'Yahoo! Auctions', kind: 'Online-Auktion (Japanisch)', url: (q) => `https://auctions.yahoo.co.jp/search/search?p=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'JDMBUYSELL', kind: 'Marktplatz für JDM-Klassiker', url: site('jdmbuysell.com') },
     ],
   },
   {
-    id: 'kr', cur: 'KRW', code: 'KR', country: 'Südkorea', hub: 'Incheon · Busan', x: 84, y: 34,
+    id: 'kr', cur: 'KRW', code: 'KR', country: 'Südkorea', hub: 'Incheon · Busan', x: 88, y: 34,
     text: 'Stark bei Hyundai, Kia und Genesis, dazu viele junge Importwagen. Linkslenker, gute Ausstattung.',
     portals: [
       { name: 'Autowini', kind: 'Export-Marktplatz', url: (q) => `https://www.autowini.com/search?keyword=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
@@ -264,34 +266,82 @@ export const MARKETS: Market[] = [
     ],
   },
   {
-    id: 'th', cur: 'THB', code: 'TH', country: 'Thailand', hub: 'Bangkok · Laem Chabang', x: 66, y: 62,
+    id: 'th', cur: 'THB', code: 'TH', country: 'Thailand', hub: 'Bangkok · Laem Chabang', x: 74, y: 62,
     text: 'Viele Rechtslenker, Pick-ups und gepflegte Toyota/Honda. Preise oft günstiger, Zustand genau prüfen.',
     portals: [{ name: 'One2car', kind: 'Marktplatz', url: path('https://www.one2car.com/en/cars-for-sale/', (m, o) => `${m}/${o}`) }],
   },
   {
-    id: 'my', cur: 'MYR', code: 'MY', country: 'Malaysia', hub: 'Port Klang', x: 64, y: 74,
+    id: 'my', cur: 'MYR', code: 'MY', country: 'Malaysia', hub: 'Port Klang', x: 72, y: 74,
     text: '„Recon“-Fahrzeuge: aus Japan reimportiert und aufbereitet. Interessant für jüngere JDM-Modelle.',
     portals: [{ name: 'Carlist', kind: 'Marktplatz', url: path('https://www.carlist.my/cars-for-sale/', (m, o) => (o ? `${m}/${o}/malaysia` : `${m}/malaysia`)) }],
   },
   {
-    id: 'sg', cur: 'SGD', code: 'SG', country: 'Singapur', hub: 'Singapur', x: 67, y: 80,
+    id: 'sg', cur: 'SGD', code: 'SG', country: 'Singapur', hub: 'Singapur', x: 75, y: 80,
     text: 'Wegen der strengen Zulassungsregeln oft junge, top gepflegte Autos mit wenig Kilometern.',
     portals: [{ name: 'sgCarMart', kind: 'Marktplatz', url: site('sgcarmart.com') }],
   },
   {
-    id: 'hk', cur: 'HKD', code: 'HK', country: 'Hongkong', hub: 'Hongkong', x: 76, y: 52,
+    id: 'hk', cur: 'HKD', code: 'HK', country: 'Hongkong', hub: 'Hongkong', x: 82, y: 52,
     text: 'Rechtslenker, viele Japan-Importe und Sportwagen. Gute Quelle für seltene Ausstattungen.',
     portals: [{ name: '28Car', kind: 'Marktplatz', url: site('28car.com') }],
   },
   {
-    id: 'ae', cur: 'AED', code: 'AE', country: 'Dubai (VAE)', hub: 'Jebel Ali', x: 34, y: 52,
+    id: 'ae', cur: 'AED', code: 'AE', country: 'Dubai (VAE)', hub: 'Jebel Ali', x: 56, y: 50,
     text: 'Westasiens Drehkreuz: Sportwagen, GCC-Ausführungen mit Klimapaket, schnelle Verschiffung nach Europa.',
     portals: [{ name: 'DubiCars', kind: 'Marktplatz', url: path('https://www.dubicars.com/uae/used/', (m, o) => `${m}/${o}`) }],
   },
+  {
+    id: 'us', cur: 'USD', code: 'US', country: 'USA', hub: 'Baltimore · New York · Houston', x: 10, y: 34,
+    text: 'Muscle-Cars, Corvette, Bronco, Pickups und Sammlerautos. Der größte Klassikermarkt der Welt, viele Autos günstiger als in Europa. Linkslenker.',
+    portals: [
+      { name: 'Bring a Trailer', kind: 'Online-Auktion, offen für alle', url: (q) => `https://bringatrailer.com/search/?s=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Cars & Bids', kind: 'Online-Auktion, offen für alle', url: site('carsandbids.com') },
+      { name: 'Mecum', kind: 'Auktionshaus', url: (q) => `https://www.mecum.com/search/?q=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Barrett-Jackson', kind: 'Auktionshaus', url: site('barrett-jackson.com') },
+      { name: "RM Sotheby's", kind: 'Auktionshaus (Top-Klasse)', url: (q) => `https://rmsothebys.com/search/?q=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'eBay Motors', kind: 'Marktplatz', url: (q) => `https://www.ebay.com/sch/i.html?_sacat=6001&_nkw=${encodeURIComponent(`${q.make} ${q.model}${q.from ? ` ${q.from}` : ''}`.trim())}` },
+    ],
+  },
+  {
+    id: 'ca', cur: 'CAD', code: 'CA', country: 'Kanada', hub: 'Halifax · Montreal', x: 13, y: 16,
+    text: 'Amerikanische Klassiker und Pickups, oft etwas günstiger als in den USA. Wegen Streusalz genau auf Rost prüfen.',
+    portals: [
+      { name: 'AutoTrader.ca', kind: 'Marktplatz', url: (q) => `https://www.autotrader.ca/cars/?kwd=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Kijiji Autos', kind: 'Kleinanzeigen', url: site('kijiji.ca') },
+    ],
+  },
+  {
+    id: 'uk', cur: 'GBP', code: 'UK', country: 'Großbritannien', hub: 'Southampton · Tilbury', x: 33, y: 17,
+    text: 'TVR, Lotus, Ford RS und viele JDM-Importe. Rechtslenker. Kurzer Weg nach Deutschland, seit dem Brexit aber mit Zoll und Einfuhrumsatzsteuer.',
+    portals: [
+      { name: 'Bonhams', kind: 'Auktionshaus', url: (q) => `https://www.bonhams.com/search/?q=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Iconic Auctioneers', kind: 'Auktionshaus', url: (q) => `https://www.iconicauctioneers.com/search?q=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Collecting Cars', kind: 'Online-Auktion, offen für alle', url: site('collectingcars.com') },
+      { name: 'Car & Classic', kind: 'Marktplatz für Klassiker', url: site('carandclassic.com') },
+      { name: 'eBay UK', kind: 'Marktplatz', url: (q) => `https://www.ebay.co.uk/sch/i.html?_nkw=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+    ],
+  },
+  {
+    id: 'au', cur: 'AUD', code: 'AU', country: 'Australien', hub: 'Melbourne · Sydney', x: 88, y: 88,
+    text: 'Eigene Muscle-Car-Kultur: Holden Monaro, Torana, Ford Falcon GT, in Europa kaum zu finden. Dazu viele JDM-Autos. Rechtslenker, lange Verschiffung.',
+    portals: [
+      { name: 'Shannons', kind: 'Auktionshaus für Klassiker', url: site('shannons.com.au') },
+      { name: 'Lloyds Auctions', kind: 'Auktionshaus', url: site('lloydsauctions.com.au') },
+      { name: 'Grays', kind: 'Online-Auktion', url: site('grays.com') },
+      { name: 'carsales', kind: 'Marktplatz', url: site('carsales.com.au') },
+    ],
+  },
 ]
 
-/** Auktionshäuser: nur für registrierte Händler zugänglich. Zugang über einen Auktions-Agenten oder den TŌMEI Service. */
-export const AUCTIONS: { name: string; country: string; text: string }[] = [
+/** Auktionshäuser. Offene Auktionen: jeder darf mitbieten. Händlerauktionen in Japan und Korea: nur registrierte Händler,
+    Zugang über einen Auktions-Agenten oder den TŌMEI Service. */
+export const AUCTIONS: { name: string; country: string; text: string; open?: boolean; url?: string }[] = [
+  { name: 'Bring a Trailer', country: 'USA', open: true, url: 'https://bringatrailer.com/', text: 'Größte Online-Auktion für Klassiker. Alle Ergebnisse sind öffentlich, Käufergebühr 5 % (min. 250 $, max. 7.500 $).' },
+  { name: 'Mecum', country: 'USA', open: true, url: 'https://www.mecum.com/', text: 'Große Saal-Auktionen mit tausenden Muscle-Cars und Klassikern im Jahr.' },
+  { name: 'Barrett-Jackson', country: 'USA', open: true, url: 'https://www.barrett-jackson.com/', text: 'Bekannte Live-Auktionen, z. B. Scottsdale, viele amerikanische Klassiker.' },
+  { name: "RM Sotheby's", country: 'USA · weltweit', open: true, url: 'https://rmsothebys.com/', text: 'Oberste Preisklasse: seltene Sammlerautos mit lückenloser Historie.' },
+  { name: 'Bonhams', country: 'Großbritannien · weltweit', open: true, url: 'https://www.bonhams.com/', text: 'Traditionshaus mit Auktionen in Goodwood, London und den USA.' },
+  { name: 'Shannons', country: 'Australien', open: true, url: 'https://www.shannons.com.au/', text: 'Führendes Klassiker-Auktionshaus Australiens, viele Holden und Ford.' },
   { name: 'USS', country: 'Japan', text: 'Größter Auktionsverbund Japans, rund 20 Standorte, wöchentlich zehntausende Autos.' },
   { name: 'TAA', country: 'Japan', text: 'Toyotas Auktionen, viele Händler-Rückläufer in gutem Zustand.' },
   { name: 'JU', country: 'Japan', text: 'Verbund regionaler Händlerauktionen, breites Angebot.' },

@@ -1,5 +1,5 @@
 // 3D-Elemente nur mit CSS-Perspektive und motion (keine zusätzliche Bibliothek, keine Lizenzfragen).
-// CarStack: schwebender Stapel aus Autokarten, folgt der Maus.  RouteMap: gekippte Karte Asiens → Europa mit Routen.
+// CarStack: schwebender Stapel aus Autokarten, folgt der Maus.  RouteMap: gekippte Weltkarte, Routen aller Märkte nach Bremerhaven.
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react'
 import { useEffect, type ReactNode } from 'react'
 import type { Market } from '../data.ts'
@@ -63,7 +63,7 @@ export function RouteMap({ markets, active, onPick }: { markets: Market[]; activ
   const p = usePointer()
   const rotZ = useTransform(p.x, (v) => -4 + v * 3)
   const rotX = useTransform(p.y, (v) => 52 - v * 4)
-  const de = { x: 6, y: 22 }
+  const de = { x: 41, y: 22 } // Bremerhaven in der Mitte: Amerika links, Asien und Australien rechts
   return (
     <div className="routemap">
       <motion.div className="routemap-plane" style={{ rotateX: rotX, rotateZ: rotZ }}>
@@ -83,7 +83,7 @@ export function RouteMap({ markets, active, onPick }: { markets: Market[]; activ
           ))}
           {markets.map((m, i) => {
             const mx = (m.x + de.x) / 2
-            const d = `M ${m.x} ${m.y} Q ${mx} ${Math.min(m.y, de.y) - 18} ${de.x} ${de.y}`
+            const d = `M ${m.x} ${m.y} Q ${mx} ${Math.max(2, Math.min(m.y, de.y) - 14)} ${de.x} ${de.y}`
             return (
               <g key={m.id}>
                 <path d={d} fill="none" stroke="url(#route)" strokeWidth={active === m.id ? 0.7 : 0.35} opacity={active && active !== m.id ? 0.25 : 1} />

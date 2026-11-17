@@ -79,7 +79,7 @@ export default function App() {
         <a className="brand" href="#/home">
           TŌMEI<i />
         </a>
-        <p className="muted small">„Tōmei“ (透明) heißt durchsichtig. Spots, Märkte in ganz Asien, Import-Service, Vermietung und Teile an einem Ort.</p>
+        <p className="muted small">„Tōmei“ (透明) heißt durchsichtig. Spots, Märkte von Japan bis USA, Import-Service, Vermietung und Teile an einem Ort.</p>
         <nav>
           <a href="#/import/rechner">Kostenrechner</a>
           {CONTACT_URL ? <a href={CONTACT_URL}>Kontakt</a> : <span className="muted">Kontakt folgt</span>}
