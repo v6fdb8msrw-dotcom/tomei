@@ -3,12 +3,14 @@
 
 const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
 
-export type Tab = 'spots' | 'rent' | 'import' | 'parts'
+export type Tab = 'spots' | 'markets' | 'import' | 'service' | 'rent' | 'parts'
 
 export const TABS: { id: Tab; label: string; long: string }[] = [
   { id: 'spots', label: 'Spots', long: 'Top Car Spots in Japan' },
-  { id: 'rent', label: 'Rent', long: 'JDM mieten in Japan' },
+  { id: 'markets', label: 'Märkte', long: 'Fahrzeugmärkte in ganz Asien durchsuchen' },
   { id: 'import', label: 'Import', long: 'JDM nach Deutschland/EU' },
+  { id: 'service', label: 'Service', long: 'Kaufen, verschiffen, zulassen: das Komplettpaket' },
+  { id: 'rent', label: 'Rent', long: 'JDM mieten in Japan' },
   { id: 'parts', label: 'Parts', long: 'Tuning-Teile & Gadgets' },
 ]
 
@@ -152,7 +154,7 @@ export const CARS: Car[] = [
 
 /* ---------------- Hero-Bilder je Reiter ---------------- */
 // [REPLACE] eigene Drohnen-Aufnahmen: einfach weitere Bilder in die Listen setzen
-export const HERO: Record<Tab, Slide[]> = {
+export const HERO: Record<'spots' | 'rent' | 'import' | 'parts', Slide[]> = {
   spots: SPOTS.map((s) => ({ src: s.img, caption: `${s.name} · ${s.jp}` })),
   rent: [
     { src: img('rent-supra'), caption: 'Weißer Supra auf seinem Heimatboden' },
@@ -175,3 +177,77 @@ export const DASAI_URL = 'https://dasai.com.au/'
 // [REPLACE] eigene Kontaktadresse und Instagram-Profil eintragen, leer = „folgt“
 export const CONTACT_URL = ''
 export const INSTAGRAM_URL = ''
+
+
+/* ---------------- Märkte in Asien (Such-Zentrale) ----------------
+   TŌMEI liest keine Inserate aus (Auslesen verbieten die Portale). Die Suche öffnet die öffentlichen
+   Ergebnisseiten der Portale mit deinem Fahrzeug, oder eine gezielte Suche, wo die Portale keine festen Adressen haben. */
+export type MarketQuery = { make: string; model: string; from?: number; to?: number }
+export type Portal = { name: string; kind: string; url: (q: MarketQuery) => string }
+export type Market = { id: string; code: string; country: string; hub: string; text: string; x: number; y: number; portals: Portal[] }
+
+const slug = (v: string) => v.trim().toLowerCase().replace(/\s+/g, '-')
+const site = (domain: string) => (q: MarketQuery) =>
+  `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${q.make} ${q.model}${q.from ? ` ${q.from}` : ''}`.trim())}`
+const path = (base: string, f: (make: string, model: string) => string) => (q: MarketQuery) =>
+  base + f(slug(q.make), slug(q.model)).replace(/\/{2,}/g, '/')
+
+export const MARKETS: Market[] = [
+  {
+    id: 'jp', code: 'JP', country: 'Japan', hub: 'Yokohama · Nagoya · Kobe', x: 92, y: 36,
+    text: 'Der größte Markt für JDM: Hunderttausende Autos pro Woche über USS, TAA, JU und Co. Rechtslenker, oft wenig Kilometer.',
+    portals: [
+      { name: 'TCV', kind: 'Export-Marktplatz', url: path('https://www.tc-v.com/used_car/', (m, o) => `${m}/${o}/`) },
+      { name: 'Goo-net Exchange', kind: 'Export-Marktplatz', url: path('https://www.goo-net-exchange.com/usedcars/', (m, o) => `${m.toUpperCase()}/${o.toUpperCase()}/`) },
+      { name: 'SBT Japan', kind: 'Exporteur', url: path('https://www.sbtjapan.com/used-cars/', (m, o) => `${m}/${o}/`) },
+      { name: 'Carsensor', kind: 'Inlandsmarkt (Japanisch)', url: site('carsensor.net') },
+    ],
+  },
+  {
+    id: 'kr', code: 'KR', country: 'Südkorea', hub: 'Incheon · Busan', x: 84, y: 34,
+    text: 'Stark bei Hyundai, Kia und Genesis, dazu viele junge Importwagen. Linkslenker, gute Ausstattung.',
+    portals: [
+      { name: 'Autowini', kind: 'Export-Marktplatz', url: (q) => `https://www.autowini.com/search?keyword=${encodeURIComponent(`${q.make} ${q.model}`.trim())}` },
+      { name: 'Encar', kind: 'Inlandsmarkt (Koreanisch)', url: site('encar.com') },
+    ],
+  },
+  {
+    id: 'th', code: 'TH', country: 'Thailand', hub: 'Bangkok · Laem Chabang', x: 66, y: 62,
+    text: 'Viele Rechtslenker, Pick-ups und gepflegte Toyota/Honda. Preise oft günstiger, Zustand genau prüfen.',
+    portals: [{ name: 'One2car', kind: 'Marktplatz', url: path('https://www.one2car.com/en/cars-for-sale/', (m, o) => `${m}/${o}`) }],
+  },
+  {
+    id: 'my', code: 'MY', country: 'Malaysia', hub: 'Port Klang', x: 64, y: 74,
+    text: '„Recon“-Fahrzeuge: aus Japan reimportiert und aufbereitet. Interessant für jüngere JDM-Modelle.',
+    portals: [{ name: 'Carlist', kind: 'Marktplatz', url: path('https://www.carlist.my/cars-for-sale/', (m, o) => (o ? `${m}/${o}/malaysia` : `${m}/malaysia`)) }],
+  },
+  {
+    id: 'sg', code: 'SG', country: 'Singapur', hub: 'Singapur', x: 67, y: 80,
+    text: 'Wegen der strengen Zulassungsregeln oft junge, top gepflegte Autos mit wenig Kilometern.',
+    portals: [{ name: 'sgCarMart', kind: 'Marktplatz', url: site('sgcarmart.com') }],
+  },
+  {
+    id: 'hk', code: 'HK', country: 'Hongkong', hub: 'Hongkong', x: 76, y: 52,
+    text: 'Rechtslenker, viele Japan-Importe und Sportwagen. Gute Quelle für seltene Ausstattungen.',
+    portals: [{ name: '28Car', kind: 'Marktplatz', url: site('28car.com') }],
+  },
+  {
+    id: 'ae', code: 'AE', country: 'Dubai (VAE)', hub: 'Jebel Ali', x: 34, y: 52,
+    text: 'Westasiens Drehkreuz: Sportwagen, GCC-Ausführungen mit Klimapaket, schnelle Verschiffung nach Europa.',
+    portals: [{ name: 'DubiCars', kind: 'Marktplatz', url: path('https://www.dubicars.com/uae/used/', (m, o) => `${m}/${o}`) }],
+  },
+]
+
+/** Auktionshäuser: nur für registrierte Händler zugänglich. Zugang über einen Auktions-Agenten oder den TŌMEI Service. */
+export const AUCTIONS: { name: string; country: string; text: string }[] = [
+  { name: 'USS', country: 'Japan', text: 'Größter Auktionsverbund Japans, rund 20 Standorte, wöchentlich zehntausende Autos.' },
+  { name: 'TAA', country: 'Japan', text: 'Toyotas Auktionen, viele Händler-Rückläufer in gutem Zustand.' },
+  { name: 'JU', country: 'Japan', text: 'Verbund regionaler Händlerauktionen, breites Angebot.' },
+  { name: 'HAA Kobe', country: 'Japan', text: 'Große Auktion im Westen Japans, bekannt für Sportwagen.' },
+  { name: 'Aucnet', country: 'Japan', text: 'Online-Auktion mit detaillierten Prüfberichten.' },
+  { name: 'Hyundai Glovis', country: 'Südkorea', text: 'Größte Autoauktion Koreas.' },
+  { name: 'Lotte Auto Auction', country: 'Südkorea', text: 'Zweiter großer Auktionsplatz in Korea.' },
+]
+
+/** Kontakt für Service-Anfragen. [REPLACE] Öffentliche Adresse eintragen, dann öffnet „Anfrage senden“ eine fertige E-Mail. */
+export const CONTACT_EMAIL = ''

@@ -16,8 +16,8 @@
   --radius: 18px;
   --radius-sm: 12px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --font: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', Roboto, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: dark;
 }
 
@@ -286,4 +286,122 @@ em { font-style: normal; color: var(--red); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ================= Apple-Schicht: ruhigere Typografie, Glaskarten, 3D ================= */
+:root { --radius: 24px; --radius-sm: 14px; }
+body { letter-spacing: -0.011em; }
+h1, h2, h3, h4 { letter-spacing: -0.035em; font-weight: 700; }
+.eyebrow { font-family: var(--font); font-size: 13px; letter-spacing: 0.02em; text-transform: none; font-weight: 600; }
+.sec-head h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; }
+.sec-text { font-size: 19px; line-height: 1.45; color: var(--text-2); }
+.nav { height: 52px; background: rgb(10 10 11 / 62%); }
+.tabs a { padding: 7px 15px; font-size: 13.5px; font-weight: 500; }
+.tab-pill { background: rgb(255 255 255 / 12%); box-shadow: none; }
+.btn { height: 46px; font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+.btn.disabled, .btn:disabled { opacity: .4; pointer-events: none; }
+.btn:not(.red) { background: rgb(255 255 255 / 6%); }
+.seg button.on { background: var(--red); }
+.section.tight { padding-top: 40px; }
+
+.display { font-size: clamp(48px, 7.6vw, 104px); line-height: .98; letter-spacing: -0.045em; margin: 0 0 22px; }
+.lead { font-size: clamp(18px, 1.6vw, 22px); line-height: 1.45; color: var(--text-2); max-width: 34ch; margin: 0 0 28px; font-weight: 400; }
+
+/* Glaskarte mit Lichtkante */
+.gcard { position: relative; border-radius: var(--radius); padding: 28px; background: linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%)); border: 1px solid rgb(255 255 255 / 9%); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), 0 30px 80px -40px rgb(0 0 0 / 90%); transition: transform .5s var(--ease), border-color .4s; }
+.gcard::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(120% 60% at 50% -10%, rgb(255 255 255 / 7%), transparent 60%); }
+
+/* Felder ohne Wrapper */
+input.input, textarea.input { display: block; width: 100%; color: var(--text); font: inherit; font-size: 16px; padding: 12px 14px; outline: none; border-radius: var(--radius-sm); }
+input.input:focus, textarea.input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgb(229 50 45 / 16%); }
+textarea.input.area { resize: vertical; min-height: 110px; }
+input[type=range].input { padding: 0; height: 28px; background: none; border: 0; accent-color: var(--red); }
+input[type=range].input:focus { box-shadow: none; }
+.field.small { max-width: 160px; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgb(255 255 255 / 4%); font-size: 13.5px; font-weight: 500; color: var(--text-2); transition: background .25s, color .25s, border-color .25s, transform .25s var(--ease); }
+.chip:hover { color: var(--text); transform: translateY(-1px); }
+.chip.on { background: var(--red-soft); border-color: rgb(229 50 45 / 55%); color: #fff; }
+
+/* Hero mit 3D-Stapel */
+.mk-hero { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: 40px; min-height: 86vh; padding-top: 130px; }
+.carstack { position: relative; height: 460px; perspective: 1400px; }
+.carstack-inner { position: absolute; inset: 0; transform-style: preserve-3d; }
+.carstack-card { position: absolute; left: 0; top: 14%; width: 68%; aspect-ratio: 4 / 3; margin: 0; border-radius: 22px; overflow: hidden; border: 1px solid rgb(255 255 255 / 14%); box-shadow: 0 40px 90px -30px rgb(0 0 0 / 95%), inset 0 1px 0 rgb(255 255 255 / 18%); background: var(--panel-solid); }
+.carstack-card img { width: 100%; height: 100%; object-fit: cover; }
+.carstack-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgb(0 0 0 / 75%)); }
+.carstack-card figcaption { position: absolute; z-index: 1; left: 18px; bottom: 14px; display: flex; flex-direction: column; }
+.carstack-card b { font-size: 17px; letter-spacing: -0.02em; }
+.carstack-card span { font-size: 12.5px; color: rgb(255 255 255 / 70%); }
+
+/* Märkte */
+.mk-search { display: flex; flex-direction: column; gap: 18px; }
+.mk-fields { display: flex; gap: 14px; flex-wrap: wrap; }
+.mk-fields .field { flex: 1 1 200px; }
+.mk-fields .field.small { flex: 0 1 140px; }
+.mk-ideas { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+.mk-grid > div { display: flex; }
+.mk-card { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+.mk-card:hover { transform: translateY(-4px); border-color: rgb(255 255 255 / 16%); }
+.mk-card header { display: flex; align-items: center; gap: 14px; }
+.mk-card h3 { font-size: 22px; }
+.mk-code { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: var(--red-soft); color: var(--red); font-weight: 700; font-size: 15px; letter-spacing: .04em; }
+.mk-text { color: var(--text-2); font-size: 15px; margin: 0; }
+.mk-portals { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.mk-portal { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 14px; text-decoration: none; background: rgb(255 255 255 / 4%); border: 1px solid var(--line); transition: background .25s, border-color .25s; }
+.mk-portal:hover { background: rgb(255 255 255 / 8%); border-color: rgb(229 50 45 / 45%); }
+.mk-portal > span:first-child { display: flex; flex-direction: column; }
+.mk-portal small { color: var(--text-3); font-size: 12px; }
+.mk-go { display: inline-flex; align-items: center; gap: 4px; color: var(--red); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.mk-all { margin-top: 14px; }
+.mk-auctions { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.mk-auction { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 22px; }
+.mk-auction p { margin: 6px 0 0; font-size: 14px; color: var(--text-2); }
+.mk-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.disclaimer { display: flex; gap: 8px; align-items: flex-start; }
+
+/* Routenkarte (gekippte Ebene) */
+.routemap { position: relative; height: 440px; perspective: 1200px; perspective-origin: 50% 20%; }
+.routemap-plane { position: absolute; inset: 0 4% 0; transform-style: preserve-3d; border-radius: 28px; background: radial-gradient(70% 70% at 70% 50%, rgb(229 50 45 / 10%), transparent 70%), linear-gradient(180deg, #121215, #0c0c0e); border: 1px solid rgb(255 255 255 / 9%); box-shadow: 0 60px 120px -50px rgb(0 0 0 / 95%), inset 0 1px 0 rgb(255 255 255 / 8%); }
+.routemap-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.routemap-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; padding: 4px; }
+.routemap-node i { width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 5px rgb(229 50 45 / 20%), 0 0 22px var(--red); transition: transform .3s var(--ease); }
+.routemap-node span { font-size: 11px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; background: rgb(0 0 0 / 55%); border: 1px solid var(--line); }
+.routemap-node:hover i, .routemap-node.on i { transform: scale(1.35); background: #fff; }
+.routemap-node.on span { background: var(--red); border-color: var(--red); }
+.routemap-label { position: absolute; transform: translate(-10%, 60%); font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; }
+
+/* Service */
+.sv-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.sv-steps > div { display: flex; }
+.sv-step { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 24px; }
+.sv-step h3 { font-size: 21px; }
+.sv-step p { margin: 0; color: var(--text-2); font-size: 14.5px; }
+.sv-num { position: absolute; top: 20px; right: 22px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
+.sv-calc, .sv-form { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.sv-price { font-size: 30px; letter-spacing: -0.03em; margin-top: 4px; }
+.sv-ledger { display: grid; grid-template-columns: 1fr auto; gap: 10px 20px; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 15px; }
+.sv-ledger span { color: var(--text-2); }
+.sv-ledger b { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.sv-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.sv-total span { color: var(--text-2); }
+.sv-total b { font-size: clamp(32px, 4.4vw, 48px); letter-spacing: -0.04em; color: #fff; }
+
+@media (max-width: 900px) {
+  .mk-hero { grid-template-columns: 1fr; min-height: auto; gap: 10px; padding-top: 110px; }
+  .carstack { height: 320px; }
+  .routemap { height: 340px; }
+}
+@media (max-width: 720px) {
+  .gcard { padding: 20px; }
+  .display { font-size: clamp(42px, 13vw, 64px); }
+  .carstack { height: 260px; }
+  .carstack-card { width: 70%; }
+  .routemap { height: 280px; }
+  .routemap-plane { inset: 0; }
+  .routemap-node span { font-size: 9.5px; padding: 1px 5px; }
+  .mk-grid { grid-template-columns: 1fr; }
+  .field.small, .mk-fields .field.small { max-width: none; flex: 1 1 120px; }
+  .bottom-tabs a { font-size: 10px; }
 }
