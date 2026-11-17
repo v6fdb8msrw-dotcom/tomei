@@ -185,6 +185,93 @@ export const DEST: Record<DestKey, Dest> = {
   },
 }
 
+/* ---------------- Herkunftsländer außer Japan (Ziel immer Deutschland) ---------------- */
+// Stand 18.11.2026. Nur Gebühren und Frachtpreise, die eine Firma oder eine Übersicht veröffentlicht.
+// Wo es keinen veröffentlichten Preis gibt (Fracht ab Kanada, Australien, Spedition ab England), bleibt das Feld leer.
+export type OriginKey = 'jp' | 'us' | 'uk' | 'ca' | 'au'
+export type House = { id: string; name: string; url: string; source: string; text: string; fee: (h: number) => number }
+export type ShipMode = { id: string; label: string; cost: number | null; cur: string; text: string; source?: string; selfDrive?: boolean }
+export type OriginDef = {
+  name: string
+  flag: string
+  cur: 'USD' | 'GBP' | 'CAD' | 'AUD'
+  houses: House[]
+  ship: ShipMode[]
+  /** Hafen- und Zollabwicklung in Bremerhaven (€), wenn veröffentlicht */
+  destHandling?: { eur: number; text: string; source: string }
+  /** Zollpräferenz, mit der der Zoll entfallen kann */
+  pref?: { label: string; text: string; source: string }
+  note: string
+}
+
+const pct = (p: number, min = 0, max = Infinity) => (h: number) => (h <= 0 ? 0 : Math.min(max, Math.max(min, h * p)))
+const tier = (p1: number, cap: number, p2: number) => (h: number) => Math.min(h, cap) * p1 + Math.max(0, h - cap) * p2
+const CLASSIC_FEES = 'https://support.classic.com/auction-fees-and-prices'
+const PRIVATE: House = { id: 'private', name: 'Privat / Händler', url: '', source: '', text: 'Kauf ohne Auktion: kein Aufgeld.', fee: () => 0 }
+
+export const ORIGIN: Record<Exclude<OriginKey, 'jp'>, OriginDef> = {
+  us: {
+    name: 'USA', flag: '🇺🇸', cur: 'USD',
+    houses: [
+      { id: 'bat', name: 'Bring a Trailer', url: 'https://bringatrailer.com/', source: CLASSIC_FEES, text: '5 % Käufergebühr, mindestens 250 $, höchstens 7.500 $.', fee: pct(0.05, 250, 7500) },
+      { id: 'cab', name: 'Cars & Bids', url: 'https://carsandbids.com/', source: CLASSIC_FEES, text: '5 % Käufergebühr, mindestens 225 $, höchstens 7.500 $.', fee: pct(0.05, 225, 7500) },
+      { id: 'mecum', name: 'Mecum', url: 'https://www.mecum.com/', source: CLASSIC_FEES, text: '10 % Aufgeld vor Ort (12 % am Telefon).', fee: pct(0.1) },
+      { id: 'bj', name: 'Barrett-Jackson', url: 'https://www.barrett-jackson.com/', source: CLASSIC_FEES, text: '10 % Aufgeld vor Ort (12 % schriftlich).', fee: pct(0.1) },
+      { id: 'rm', name: 'RM Sotheby\'s', url: 'https://rmsothebys.com/', source: CLASSIC_FEES, text: '12 % bis 250.000 $, darüber 10 %.', fee: tier(0.12, 250000, 0.1) },
+      { id: 'bonhams-us', name: 'Bonhams (USA)', url: 'https://www.bonhams.com/', source: CLASSIC_FEES, text: '12 % bis 250.000 $, darüber 10 %.', fee: tier(0.12, 250000, 0.1) },
+      PRIVATE,
+    ],
+    ship: [
+      { id: 'east', label: 'Container ab Ostküste', cost: 1100, cur: 'USD', text: 'Sammelcontainer New Jersey → Bremerhaven, ab 1.100 $, 30–33 Tage.', source: 'https://www.wcshipping.com/ship-bring-a-trailer-car-germany' },
+      { id: 'south', label: 'Container ab Florida', cost: 1225, cur: 'USD', text: 'Sammelcontainer Florida → Bremerhaven, 1.225 $, 31–34 Tage.', source: 'https://www.wcshipping.com/ship-bring-a-trailer-car-germany' },
+      { id: 'west', label: 'Container ab Kalifornien', cost: 1850, cur: 'USD', text: 'Sammelcontainer Kalifornien → Bremerhaven, 1.850 $, 40–45 Tage.', source: 'https://www.wcshipping.com/ship-bring-a-trailer-car-germany' },
+      { id: 'roro', label: 'RoRo', cost: 1695, cur: 'USD', text: 'RoRo nach Bremerhaven, Listenpreis 1.695–1.995 $ je Auto.', source: 'https://alltransportdepot.com/ship-a-car-to-germany' },
+    ],
+    destHandling: { eur: 625, text: 'Hafen- und Zollabwicklung in Bremerhaven etwa 600–650 € je Auto, ohne Zoll und EUSt.', source: 'https://www.wcshipping.com/ship-bring-a-trailer-car-germany' },
+    pref: {
+      label: 'US-Ursprung (0 %)',
+      text: 'Seit 1. Juli 2026 erhebt die EU auf Pkw mit US-Ursprung keinen Zoll (VO (EU) 2026/1455, befristet bis 31.12.2029). Gilt nur für in den USA gebaute Autos und braucht einen Ursprungsnachweis, den es bei alten Autos oft nicht gibt; der Zoll entscheidet.',
+      source: 'https://www.wcshipping.com/blog/eu-car-import-duties-turnberry-deal',
+    },
+    note: 'Fracht ab US-Hafen; der Transport zum Hafen kommt dazu. In den USA gebaute Autos können seit Juli 2026 zollfrei sein, Oldtimer ab 30 Jahren ohnehin (0 % Zoll, 7 % EUSt).',
+  },
+  uk: {
+    name: 'Großbritannien', flag: '🇬🇧', cur: 'GBP',
+    houses: [
+      { id: 'bonhams-uk', name: 'Bonhams (UK)', url: 'https://www.bonhams.com/', source: CLASSIC_FEES, text: '15 % bis 500.000 £, darüber 12 %.', fee: tier(0.15, 500000, 0.12) },
+      { id: 'iconic', name: 'Iconic Auctioneers', url: 'https://www.iconicauctioneers.com/', source: CLASSIC_FEES, text: '12,5 % bis 300.000 £, darüber 10 %, jeweils plus 20 % VAT auf das Aufgeld.', fee: (h) => tier(0.125, 300000, 0.1)(h) * 1.2 },
+      { id: 'cc', name: 'Collecting Cars', url: 'https://collectingcars.com/', source: CLASSIC_FEES, text: '7,2 % inkl. VAT, Mindest- und Höchstbetrag je nach Standort.', fee: pct(0.072) },
+      PRIVATE,
+    ],
+    ship: [
+      { id: 'drive', label: 'Selbst fahren (Fähre)', cost: 85, cur: 'EUR', selfDrive: true, text: 'Abholen und selbst über den Kanal fahren: Fähre ab etwa 85 €, Eurotunnel ab etwa 100 €. Sprit, Kurzzeitkennzeichen und Versicherung kommen dazu.', source: 'https://www.ferryscanner.com/de/blog/mit-dem-auto-nach-london' },
+      { id: 'truck', label: 'Spedition', cost: null, cur: 'EUR', text: 'Speditionen nennen für England → Deutschland keine festen Preise. Trag ein Angebot ein.' },
+    ],
+    pref: {
+      label: 'UK-Ursprung (0 %)',
+      text: 'Nach dem Handelsabkommen EU–UK sind Waren mit britischem Ursprung zollfrei, wenn der Ursprung erklärt wird. Bei alten Gebrauchtwagen ist das schwer nachzuweisen; der Zoll entscheidet.',
+      source: 'https://www.zoll.de/DE/Fachthemen/Warenursprung-Praeferenzen/Praeferenzen/Praeferenzraeume/TCA/tca_node.html',
+    },
+    note: 'Großbritannien ist kein EU-Land mehr: Zoll und EUSt fallen an. Rechtslenker brauchen in Deutschland keinen Umbau, aber die Scheinwerfer müssen passen.',
+  },
+  ca: {
+    name: 'Kanada', flag: '🇨🇦', cur: 'CAD',
+    houses: [PRIVATE],
+    ship: [{ id: 'quote', label: 'Container', cost: null, cur: 'CAD', text: 'Für Kanada → Bremerhaven gibt es keine veröffentlichten Preise. Trag ein Angebot ein (Halifax und Montreal sind die üblichen Häfen).' }],
+    note: 'Kanada hat keine großen Klassiker-Auktionshäuser mit festen Gebühren; gekauft wird meist über AutoTrader.ca oder Kijiji.',
+  },
+  au: {
+    name: 'Australien', flag: '🇦🇺', cur: 'AUD',
+    houses: [
+      { id: 'shannons', name: 'Shannons', url: 'https://auctions.shannons.com.au/', source: 'https://auctions.shannons.com.au/auctions/2022-shannons-spring-timed-online-auction/P51QKC10N7BQ6D86/', text: '5 % Aufgeld inkl. GST (Bedingungen einer Online-Auktion von 2022, je Auktion prüfen).', fee: pct(0.05) },
+      { id: 'bonhams-au', name: 'Bonhams (Australien)', url: 'https://www.bonhams.com/', source: CLASSIC_FEES, text: '15 % bis 100.000 A$, darüber 10 %.', fee: tier(0.15, 100000, 0.1) },
+      PRIVATE,
+    ],
+    ship: [{ id: 'quote', label: 'Container', cost: null, cur: 'AUD', text: 'Für Australien → Bremerhaven gibt es keine veröffentlichten Preise. Trag ein Angebot ein (6–10 Wochen Laufzeit).' }],
+    note: 'Australische Klassiker sind oft Rechtslenker. Für die Ausfuhr braucht es meist eine Spedition, die Container und Papiere übernimmt.',
+  },
+}
+
 // JPY → Zielwährung (EZB-Kurs vom 27.10.2026), wird beim Laden durch den Tageskurs ersetzt (Frankfurter-API)
 // Ersatzkurse (1 ¥ = …), EZB vom 16.11.2026; AED über die feste Bindung 3,6725 AED je USD
 export const FX_FALLBACK: Record<string, number> = { EUR: 0.0056889, USD: 0.0062658, GBP: 0.0047474, AUD: 0.0092735, CAD: 0.008951, NZD: 0.011361, KRW: 8.364, THB: 0.21234, MYR: 0.025658, SGD: 0.0080754, HKD: 0.049168, AED: 0.0062658 * 3.6725 }

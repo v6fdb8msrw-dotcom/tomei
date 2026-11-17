@@ -4,7 +4,7 @@ import { ArrowUpRight, Calculator, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { CLASSICS, ORIGINS, PRICE_SOURCE, type Classic, type Origin } from '../classics.ts'
-import { FX_FALLBACK, MARKETS, sendToCalc, type MarketQuery } from '../data.ts'
+import { FX_FALLBACK, MARKETS, ORIGIN, sendToCalc, type MarketQuery } from '../data.ts'
 import { money } from '../lib/calc.ts'
 import { useFx } from '../lib/fx.ts'
 
@@ -108,14 +108,22 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
                   <button className="btn small" onClick={() => onSearch(c.q, c.origin)}>
                     <Search size={14} /> Inserate suchen
                   </button>
-                  {c.price && (
-                    <button
-                      className="btn small red"
-                      onClick={() => sendToCalc({ id: 'cf-' + c.id, title: `${c.name} ${c.chassis}`, url: '', price: c.price!.jp, cur: 'USD', market: 'jp', added: new Date().toISOString() })}
-                    >
-                      <Calculator size={14} /> Durchrechnen
-                    </button>
-                  )}
+                  <button
+                    className="btn small red"
+                    onClick={() =>
+                      sendToCalc({
+                        id: 'cf-' + c.id,
+                        title: `${c.name} ${c.chassis}`,
+                        url: '',
+                        price: c.price ? c.price.jp : 0,
+                        cur: c.price || c.origin === 'jp' ? 'USD' : ORIGIN[c.origin].cur,
+                        market: c.price ? 'jp' : c.origin,
+                        added: new Date().toISOString(),
+                      })
+                    }
+                  >
+                    <Calculator size={14} /> Durchrechnen
+                  </button>
                   {!c.price && results && (
                     <a className="btn small" href={results.url(c.q)} target="_blank" rel="noopener noreferrer">
                       {results.name} <ArrowUpRight size={14} />
@@ -136,7 +144,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
         <a href={PRICE_SOURCE.licenceUrl} target="_blank" rel="noopener noreferrer">
           {PRICE_SOURCE.licence}
         </a>
-        ). Oldtimer-fähig heißt: alt genug für die Einreihung als Sammlungsstück (0 % Zoll, 7 % EUSt), sofern im Originalzustand; die Entscheidung trifft der Zoll. Der Rechner rechnet bisher ab Japan.
+        ). Oldtimer-fähig heißt: alt genug für die Einreihung als Sammlungsstück (0 % Zoll, 7 % EUSt), sofern im Originalzustand; die Entscheidung trifft der Zoll. „Durchrechnen“ ohne Preis öffnet den Rechner mit dem Herkunftsland; trag dort den Preis aus dem Inserat ein.
       </p>
     </div>
   )
