@@ -2,8 +2,8 @@
 // schwebende Chips, Kippkarten für jeden Bereich, ein angehefteter Scroll-Abschnitt „So kommt dein Auto zu dir“,
 // Parallax-Band mit hochzählenden Zahlen und ein Abschluss mit den wichtigsten Wegen.
 import { ArrowRight, Bookmark, Calculator, Car, Globe, MapPin, Search, ShieldCheck, Ship, Wrench } from 'lucide-react'
-import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'motion/react'
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'motion/react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { AGENTS, MARKETS, agentAverage } from '../data.ts'
 import { yen } from '../lib/calc.ts'
 import { useFx } from '../lib/fx.ts'
@@ -21,25 +21,16 @@ const SLIDES = [
 function Hero() {
   const [i, setI] = useState(0)
   const [q, setQ] = useState('')
-  const mx = useMotionValue(0)
-  const my = useMotionValue(0)
-  const sx = useSpring(mx, { stiffness: 40, damping: 18 })
-  const sy = useSpring(my, { stiffness: 40, damping: 18 })
-  const imgX = useTransform(sx, (v) => v * -20)
-  const imgY = useTransform(sy, (v) => v * -14)
-  const chipX = useTransform(sx, (v) => v * 26)
-  const chipY = useTransform(sy, (v) => v * 18)
-  const avg = agentAverage(1500000)
+  const ref = useRef<HTMLDivElement>(null)
+  // Das große Bild wächst beim Scrollen leicht auf volle Breite (wie auf Apples Produktseiten)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start start'] })
+  const scale = useTransform(scrollYProgress, [0, 1], [0.92, 1])
+  const imgY = useTransform(scrollYProgress, [0, 1], ['-4%', '4%'])
 
   useEffect(() => {
-    const t = setInterval(() => setI((x) => (x + 1) % SLIDES.length), 7000)
+    const t = setInterval(() => setI((x) => (x + 1) % SLIDES.length), 6000)
     return () => clearInterval(t)
   }, [])
-  const onMove = (e: MouseEvent) => {
-    const r = e.currentTarget.getBoundingClientRect()
-    mx.set((e.clientX - r.left) / r.width - 0.5)
-    my.set((e.clientY - r.top) / r.height - 0.5)
-  }
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const [make, ...rest] = q.trim().split(/\s+/)
@@ -48,106 +39,58 @@ function Hero() {
     } catch {}
     location.hash = '/markets'
   }
-  const CHIPS = [
-    { icon: Globe, label: `${MARKETS.length} Märkte in Asien`, x: '7%', y: '24%' },
-    { icon: Calculator, label: `Ø Agent ${yen(avg)}`, x: '73%', y: '19%' },
-    { icon: Ship, label: 'Bis Bremerhaven', x: '79%', y: '64%' },
-    { icon: MapPin, label: 'Spots in Japan', x: '4%', y: '68%' },
-  ]
 
   return (
-    <section className="h-hero" onMouseMove={onMove}>
-      <motion.div className="h-hero-media" style={{ x: imgX, y: imgY }}>
-        <AnimatePresence>
-          <motion.img key={SLIDES[i].src} src={SLIDES[i].src} alt={SLIDES[i].caption} initial={{ opacity: 0, scale: 1.12 }} animate={{ opacity: 1, scale: 1.02 }} exit={{ opacity: 0 }} transition={{ opacity: { duration: 1.6 }, scale: { duration: 9, ease: 'linear' } }} />
-        </AnimatePresence>
-      </motion.div>
-      <div className="h-hero-veil" />
-
-      <motion.div className="h-chips" style={{ x: chipX, y: chipY }} aria-hidden>
-        {CHIPS.map((c, k) => (
-          <motion.span key={c.label} className="h-chip" style={{ left: c.x, top: c.y }} initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: [0, -8, 0], scale: 1 }} transition={{ opacity: { delay: 0.8 + k * 0.25 }, scale: { delay: 0.8 + k * 0.25 }, y: { duration: 5 + k, repeat: Infinity, ease: 'easeInOut', delay: k * 0.6 } }}>
-            <c.icon size={15} /> {c.label}
-          </motion.span>
-        ))}
-      </motion.div>
-
-      <div className="h-hero-center">
-        <motion.p className="eyebrow" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.8 }}>
-          TŌMEI · The Japanese Car Experience
+    <section className="h-hero">
+      <div className="h-hero-text">
+        <motion.p className="eyebrow" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.8 }}>
+          TŌMEI
         </motion.p>
-        <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.9, ease: EASE }}>
-          Dein Traumauto aus Asien.
+        <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.9, ease: EASE }}>
+          Dein Auto aus Asien.
           <br />
-          <em>Durchsichtig bis vor die Tür.</em>
+          <em>Klar gerechnet.</em>
         </motion.h1>
-        <motion.p className="h-sub" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.8 }}>
-          Suchen in sieben Märkten, jeden Yen durchrechnen, mit echten Gebühren der Export-Agenten. Und wenn du willst, holen wir es dir.
+        <motion.p className="h-sub" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }}>
+          Sieben Märkte durchsuchen, jeden Yen bis vor die Tür rechnen, mit echten Gebühren der Export-Agenten.
         </motion.p>
-        <motion.form className="h-search" onSubmit={submit} initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.6, duration: 0.8, ease: EASE }}>
-          <div className="pulse" aria-hidden>
-            <i />
-            <i />
-            <i />
-          </div>
-          <Search size={20} />
+        <motion.form className="h-search" onSubmit={submit} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55, duration: 0.8, ease: EASE }}>
+          <Search size={19} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="z. B. Toyota Supra" aria-label="Auto suchen" />
           <button className="btn red" type="submit">
-            Suchen <ArrowRight size={16} />
+            Suchen
           </button>
         </motion.form>
-        <div className="h-dots">
-          {SLIDES.map((s, k) => (
-            <button key={s.src} className={k === i ? 'on' : ''} onClick={() => setI(k)} aria-label={s.caption} />
-          ))}
-          <span>{SLIDES[i].caption}</span>
-        </div>
       </div>
-      <motion.div className="h-scroll" animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }} aria-hidden>
-        <span />
+      <motion.div className="h-stage" ref={ref} style={{ scale }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1, ease: EASE }}>
+        <AnimatePresence>
+          <motion.img key={SLIDES[i].src} src={SLIDES[i].src} alt={SLIDES[i].caption} style={{ y: imgY }} initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1.1 }} exit={{ opacity: 0 }} transition={{ opacity: { duration: 1.2 }, scale: { duration: 7, ease: 'linear' } }} />
+        </AnimatePresence>
+        <div className="h-stage-cap">
+          <div className="h-dots">
+            {SLIDES.map((s, k) => (
+              <button key={s.src} className={k === i ? 'on' : ''} onClick={() => setI(k)} aria-label={s.caption} />
+            ))}
+          </div>
+          {SLIDES[i].caption}
+        </div>
       </motion.div>
     </section>
   )
 }
 
-function TiltCard({ href, src, icon: Icon, title, text, items }: { href: string; src: string; icon: typeof Car; title: string; text: string; items: string[] }) {
-  const rx = useMotionValue(0)
-  const ry = useMotionValue(0)
-  const srx = useSpring(rx, { stiffness: 120, damping: 14 })
-  const sry = useSpring(ry, { stiffness: 120, damping: 14 })
+function Tile({ href, src, title, text, delay }: { href: string; src: string; title: string; text: string; delay: number }) {
   return (
-    <motion.a
-      href={href}
-      className="h-tilt"
-      style={{ rotateX: srx, rotateY: sry }}
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect()
-        ry.set(((e.clientX - r.left) / r.width - 0.5) * 10)
-        rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8)
-      }}
-      onMouseLeave={() => {
-        rx.set(0)
-        ry.set(0)
-      }}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.8, ease: EASE }}
-    >
-      <img src={src} alt="" loading="lazy" />
-      <div className="h-tilt-veil" />
-      <div className="h-tilt-body">
-        <Icon size={20} />
+    <motion.a href={href} className="h-tile" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ duration: 0.8, delay, ease: EASE }}>
+      <div className="h-tile-body">
         <h3>{title}</h3>
         <p>{text}</p>
-        <ul>
-          {items.map((x) => (
-            <li key={x}>{x}</li>
-          ))}
-        </ul>
         <span className="h-go">
-          Öffnen <ArrowRight size={15} />
+          Mehr erfahren <ArrowRight size={15} />
         </span>
+      </div>
+      <div className="h-tile-img">
+        <img src={src} alt="" loading="lazy" />
       </div>
     </motion.a>
   )
@@ -201,11 +144,8 @@ function Story() {
         </div>
         <div className="h-story-media">
           <AnimatePresence mode="popLayout">
-            <motion.figure key={S.src} initial={{ opacity: 0, scale: 1.08, rotateY: -12 }} animate={{ opacity: 1, scale: 1, rotateY: 0 }} exit={{ opacity: 0, scale: 0.94, rotateY: 10 }} transition={{ duration: 0.8, ease: EASE }}>
+            <motion.figure key={S.src} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: EASE }}>
               <img src={S.src} alt="" />
-              <figcaption>
-                <S.icon size={18} /> {S.title}
-              </figcaption>
             </motion.figure>
           </AnimatePresence>
         </div>
@@ -233,33 +173,30 @@ function CountUp({ to, format = (v: number) => Math.round(v).toLocaleString('de-
   return <motion.b onViewportEnter={() => setGo(true)} viewport={{ once: true }}>{format(v)}</motion.b>
 }
 
-function Band() {
-  const ref = useRef<HTMLElement>(null)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], ['-14%', '14%'])
+function Stats() {
   const { rates, live } = useFx()
   const eurYen = rates.EUR ? 1 / rates.EUR : 0
+  const items = [
+    { to: MARKETS.length, f: undefined, label: 'Märkte in Asien' },
+    { to: AGENTS.length, f: undefined, label: 'Agenten mit offenen Preisen' },
+    { to: agentAverage(1500000), f: (v: number) => yen(v), label: 'Ø Agent bei 1,5 Mio. ¥' },
+    { to: eurYen, f: (v: number) => v.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' ¥', label: `für 1 € ${live ? `(EZB, ${new Date(live.date).toLocaleDateString('de-DE')})` : '(Ersatzkurs)'}` },
+  ]
   return (
-    <section className="h-band" ref={ref}>
-      <motion.img src={img('fuji-lakes')} alt="" style={{ y }} />
-      <div className="h-band-veil" />
-      <div className="h-band-inner">
-        <div className="h-stat">
-          <CountUp to={MARKETS.length} />
-          <span>Märkte in Asien</span>
-        </div>
-        <div className="h-stat">
-          <CountUp to={AGENTS.length} />
-          <span>Agenten mit offenen Preisen</span>
-        </div>
-        <div className="h-stat">
-          <CountUp to={agentAverage(1500000)} format={(v) => yen(v)} />
-          <span>Ø Agent bei 1,5 Mio. ¥</span>
-        </div>
-        <div className="h-stat">
-          <CountUp to={eurYen} format={(v) => v.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' ¥'} />
-          <span>für 1 € {live ? `(EZB, ${new Date(live.date).toLocaleDateString('de-DE')})` : '(Ersatzkurs)'}</span>
-        </div>
+    <section className="section">
+      <div className="sec-head">
+        <p className="eyebrow">In Zahlen</p>
+        <h2>
+          Mit Quelle. <em>Zum Tageskurs.</em>
+        </h2>
+      </div>
+      <div className="h-stats">
+        {items.map((s, k) => (
+          <motion.div key={s.label} className="h-stat" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: k * 0.08, ease: EASE }}>
+            <CountUp to={s.to} format={s.f} />
+            <span>{s.label}</span>
+          </motion.div>
+        ))}
       </div>
     </section>
   )
@@ -272,24 +209,24 @@ export function Home() {
 
       <section className="section">
         <motion.div className="sec-head" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }}>
-          <p className="eyebrow">Alles an einem Ort</p>
+          <p className="eyebrow">Entdecken</p>
           <h2>
-            Sechs Wege <em>zu deinem JDM.</em>
+            Alles an einem Ort. <em>Sechs Wege zu deinem JDM.</em>
           </h2>
         </motion.div>
-        <div className="h-tilt-grid">
-          {AREAS.map((a) => (
-            <TiltCard key={a.title} {...a} />
+        <div className="h-tiles">
+          {AREAS.map((a, k) => (
+            <Tile key={a.title} href={a.href} src={a.src} title={a.title} text={a.text} delay={(k % 3) * 0.08} />
           ))}
         </div>
       </section>
 
       <Story />
-      <Band />
+      <Stats />
 
       <section className="h-cta">
         <motion.h2 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE }}>
-          Bereit für <em>dein Auto?</em>
+          Bereit? <em>Los geht's.</em>
         </motion.h2>
         <div className="h-cta-row">
           <a className="btn red" href="#/markets">

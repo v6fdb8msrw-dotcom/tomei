@@ -70,15 +70,15 @@ export function RouteMap({ markets, active, onPick }: { markets: Market[]; activ
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="routemap-svg">
           <defs>
             <linearGradient id="route" x1="1" x2="0">
-              <stop offset="0" stopColor="#8fd0ff" stopOpacity="0.9" />
-              <stop offset="1" stopColor="#8fd0ff" stopOpacity="0.15" />
+              <stop offset="0" stopColor="#0f7b5f" stopOpacity="0.85" />
+              <stop offset="1" stopColor="#0f7b5f" stopOpacity="0.12" />
             </linearGradient>
           </defs>
           {/* Raster */}
           {Array.from({ length: 11 }, (_, i) => (
-            <g key={i} opacity={0.08}>
-              <line x1={i * 10} y1="0" x2={i * 10} y2="100" stroke="#fff" strokeWidth="0.15" />
-              <line x1="0" y1={i * 10} x2="100" y2={i * 10} stroke="#fff" strokeWidth="0.15" />
+            <g key={i} opacity={0.06}>
+              <line x1={i * 10} y1="0" x2={i * 10} y2="100" stroke="#000" strokeWidth="0.15" />
+              <line x1="0" y1={i * 10} x2="100" y2={i * 10} stroke="#000" strokeWidth="0.15" />
             </g>
           ))}
           {markets.map((m, i) => {
@@ -87,11 +87,11 @@ export function RouteMap({ markets, active, onPick }: { markets: Market[]; activ
             return (
               <g key={m.id}>
                 <path d={d} fill="none" stroke="url(#route)" strokeWidth={active === m.id ? 0.7 : 0.35} opacity={active && active !== m.id ? 0.25 : 1} />
-                <motion.path d={d} fill="none" stroke="#fff" strokeWidth="0.5" strokeLinecap="round" strokeDasharray="2 98" initial={{ strokeDashoffset: 0 }} animate={{ strokeDashoffset: -100 }} transition={{ duration: 5 + i * 0.6, repeat: Infinity, ease: 'linear', delay: i * 0.4 }} pathLength={100} opacity={active && active !== m.id ? 0.2 : 0.8} />
+                <motion.path d={d} fill="none" stroke="#1d1d1f" strokeWidth="0.5" strokeLinecap="round" strokeDasharray="2 98" initial={{ strokeDashoffset: 0 }} animate={{ strokeDashoffset: -100 }} transition={{ duration: 5 + i * 0.6, repeat: Infinity, ease: 'linear', delay: i * 0.4 }} pathLength={100} opacity={active && active !== m.id ? 0.2 : 0.8} />
               </g>
             )
           })}
-          <circle cx={de.x} cy={de.y} r="1.6" fill="#fff" />
+          <circle cx={de.x} cy={de.y} r="1.6" fill="#1d1d1f" />
         </svg>
         <span className="routemap-label home" style={{ left: `${de.x}%`, top: `${de.y}%` }}>
           Bremerhaven
