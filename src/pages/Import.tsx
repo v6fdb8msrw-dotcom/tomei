@@ -125,6 +125,7 @@ export function Import() {
   const [duty, setDuty] = useState(dest.duty)
   const [vat, setVat] = useState(dest.vat)
   const [epa, setEpa] = useState(false)
+  const [classic, setClassic] = useState(false) // Oldtimer: Sammlungsstück (Pos. 9705), nur Deutschland
   const [fees, setFees] = useState<Fees>(dest.fees)
   const [manualRate, setManualRate] = useState(0) // 1 Zielwährung = … ¥, 0 = Tageskurs
   // Export-Agent in Japan: Durchschnitt aller Agenten mit veröffentlichten Preisen, ein bestimmter Agent oder eigene Zahl
@@ -210,10 +211,12 @@ export function Import() {
   const avgFees = agentAverage(hammer)
   const picked = AGENTS.find((a) => a.id === agent)
   const japanFees = agent === 'manual' ? manualJapanFees : picked ? (agentTotal(picked, hammer) ?? avgFees) : avgFees
-  const dutyPct = dest.epa && epa ? 0 : duty
+  const classicOn = destKey === 'DE' && classic
+  const dutyPct = classicOn ? 0 : dest.epa && epa ? 0 : duty
+  const vatPct = classicOn ? 7 : vat
   const calc = useMemo(
-    () => landedCost({ vehicle, japanFees: japanFees * rate, freight, insureOn, insurePct, dutyPct, vatPct: vat, fees }),
-    [vehicle, japanFees, rate, freight, insureOn, insurePct, dutyPct, vat, fees],
+    () => landedCost({ vehicle, japanFees: japanFees * rate, freight, insureOn, insurePct, dutyPct, vatPct, fees }),
+    [vehicle, japanFees, rate, freight, insureOn, insurePct, dutyPct, vatPct, fees],
   )
 
   const layers = [
@@ -233,7 +236,7 @@ export function Import() {
     { label: 'Transportversicherung', val: calc.insurance },
     { divider: 'Zollwert (CIF)', val: calc.cif },
     { label: `Zoll · ${dutyPct.toLocaleString('de-DE')} %`, val: calc.duty },
-    { label: `${dest.vatLabel} · ${vat.toLocaleString('de-DE')} %`, val: calc.vat, sub: `auf ${money(calc.vatBase, cur)}` },
+    { label: `${dest.vatLabel} · ${vatPct.toLocaleString('de-DE')} %`, val: calc.vat, sub: `auf ${money(calc.vatBase, cur)}` },
     { label: 'Zollabwicklung', val: fees.clearance },
     { label: 'Agent / Provision', val: fees.agent },
     { label: `Inlandstransport (${dest.port} → Tür)`, val: fees.inland },
@@ -242,7 +245,7 @@ export function Import() {
   ]
 
   // Agenten-Vergleich: gleiche Rechnung, nur mit den veröffentlichten Gebühren der jeweiligen Firma
-  const base = { vehicle, freight, insureOn, insurePct, dutyPct, vatPct: vat }
+  const base = { vehicle, freight, insureOn, insurePct, dutyPct, vatPct }
   const brokers = [
     ...AGENTS.map((a) => {
       const t = agentTotal(a, hammer)
@@ -448,6 +451,16 @@ export function Import() {
                 <Seg value={epa ? 'epa' : 'mfn'} onChange={(v) => setEpa(v === 'epa')} options={[{ v: 'mfn', l: `${duty} % Zoll` }, { v: 'epa', l: '0 %' }]} />
               </div>
             )}
+            {destKey === 'DE' && (
+              <div className="opt-row">
+                <span title="Ab 30 Jahren im Originalzustand kann der Zoll das Auto als Sammlungsstück (Pos. 9705) einreihen: 0 % Zoll, 7 % EUSt. Die Entscheidung trifft der Zoll (Quelle: ADAC Oldtimer-Ratgeber).">Oldtimer (30+ Jahre, Original)</span>
+                <label className="switch">
+                  <input type="checkbox" checked={classic} onChange={(e) => setClassic(e.target.checked)} />
+                  <span />
+                </label>
+              </div>
+            )}
+            {classicOn && <p className="hint">Als Sammlungsstück: 0 % Zoll und 7 % EUSt statt 10 % und 19 %. Nur bei Originalzustand, der Zoll entscheidet bei der Anmeldung.</p>}
             <div className="opt-row">
               <span>Transportversicherung</span>
               <label className="switch">
