@@ -70,8 +70,8 @@ export function RouteMap({ markets, active, onPick }: { markets: Market[]; activ
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="routemap-svg">
           <defs>
             <linearGradient id="route" x1="1" x2="0">
-              <stop offset="0" stopColor="#e5322d" stopOpacity="0.9" />
-              <stop offset="1" stopColor="#e5322d" stopOpacity="0.15" />
+              <stop offset="0" stopColor="#8fd0ff" stopOpacity="0.9" />
+              <stop offset="1" stopColor="#8fd0ff" stopOpacity="0.15" />
             </linearGradient>
           </defs>
           {/* Raster */}

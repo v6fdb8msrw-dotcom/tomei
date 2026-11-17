@@ -12,7 +12,7 @@ const COLORS = {
   freight: '#3a8fb7',
   insurance: '#2dd4bf',
   duty: '#f5a524',
-  vat: '#e5322d',
+  vat: '#f472b6',
   dest: '#b794f6',
 }
 

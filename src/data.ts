@@ -3,9 +3,10 @@
 
 const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
 
-export type Tab = 'spots' | 'markets' | 'import' | 'service' | 'rent' | 'parts'
+export type Tab = 'home' | 'spots' | 'markets' | 'import' | 'service' | 'rent' | 'parts'
 
 export const TABS: { id: Tab; label: string; long: string }[] = [
+  { id: 'home', label: 'Start', long: 'Alles über TŌMEI' },
   { id: 'spots', label: 'Spots', long: 'Top Car Spots in Japan' },
   { id: 'markets', label: 'Märkte', long: 'Fahrzeugmärkte in ganz Asien durchsuchen' },
   { id: 'import', label: 'Import', long: 'JDM nach Deutschland/EU' },

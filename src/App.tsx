@@ -1,8 +1,9 @@
-import { Calculator, Car, Globe, MapPin, ShieldCheck, Wrench } from 'lucide-react'
+import { Calculator, Car, Globe, House, MapPin, ShieldCheck, Wrench } from 'lucide-react'
 import { AnimatePresence, motion, useScroll, useSpring } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import { CONTACT_URL, INSTAGRAM_URL, TABS, type Tab } from './data.ts'
 import { EASE } from './components/motion.tsx'
+import { Home } from './pages/Home.tsx'
 import { Import } from './pages/Import.tsx'
 import { Markets } from './pages/Markets.tsx'
 import { Service } from './pages/Service.tsx'
@@ -13,11 +14,11 @@ import { Spots } from './pages/Spots.tsx'
 // Adresse: #/reiter oder #/reiter/abschnitt (z. B. #/import/rechner)
 function readHash(): { tab: Tab; anchor?: string } {
   const [t, anchor] = location.hash.replace(/^#\/?/, '').split('/')
-  const tab = (TABS.some((x) => x.id === t) ? t : 'spots') as Tab
+  const tab = (TABS.some((x) => x.id === t) ? t : 'home') as Tab
   return { tab, anchor }
 }
 
-const ICONS = { spots: MapPin, markets: Globe, import: Calculator, service: ShieldCheck, rent: Car, parts: Wrench }
+const ICONS = { home: House, spots: MapPin, markets: Globe, import: Calculator, service: ShieldCheck, rent: Car, parts: Wrench }
 
 export default function App() {
   const [route, setRoute] = useState(readHash)
@@ -62,7 +63,7 @@ export default function App() {
     location.hash = '/' + tab
   }
 
-  const Page = { spots: () => <Spots go={go} />, markets: Markets, import: Import, service: Service, rent: Rent, parts: Parts }[route.tab]
+  const Page = { home: Home, spots: () => <Spots go={go} />, markets: Markets, import: Import, service: Service, rent: Rent, parts: Parts }[route.tab]
 
   return (
     <>
@@ -72,7 +73,7 @@ export default function App() {
         <i />
       </div>
       <header className="nav glass">
-        <a className="brand" href="#/spots">
+        <a className="brand" href="#/home">
           TŌMEI<i />
         </a>
         <nav className="tabs">
@@ -93,7 +94,7 @@ export default function App() {
       </AnimatePresence>
 
       <footer className="footer" id="about">
-        <a className="brand" href="#/spots">
+        <a className="brand" href="#/home">
           TŌMEI<i />
         </a>
         <p className="muted small">„Tōmei“ (透明) heißt durchsichtig. Spots, Märkte in ganz Asien, Import-Service, Vermietung und Teile an einem Ort.</p>
