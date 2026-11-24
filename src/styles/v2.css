@@ -779,3 +779,8 @@ main.w-discover > section.section:nth-of-type(2n), main.w-drive > section.sectio
 main.w-discover > section.section:nth-of-type(4n+2), main.w-drive > section.section:nth-of-type(4n+2), main.w-own > section.section:nth-of-type(4n+2) { background-color: var(--band-b); box-shadow: 0 0 0 100vmax var(--band-b); }
 :is(.hglobe, .atlas-globe) .dot.country, :is(.hglobe, .atlas-globe) .dot.road { background: var(--on-dark); }
 
+/* Lesbarkeit auf hellen Fotos */
+.hx::before { background: linear-gradient(to top, rgb(12 14 14 / 92%) 0%, rgb(12 14 14 / 70%) 38%, rgb(12 14 14 / 30%) 70%, rgb(12 14 14 / 40%) 100%), linear-gradient(to right, rgb(12 14 14 / 55%) 0%, rgb(12 14 14 / 0%) 60%); }
+.hx-text, .phead.with-img .phead-text { text-shadow: 0 1px 18px rgb(0 0 0 / 35%); }
+.hx-search { text-shadow: none; }
+.phead.with-img::after { background: linear-gradient(to top, rgb(12 14 14 / 90%) 0%, rgb(12 14 14 / 62%) 40%, rgb(12 14 14 / 22%) 75%, rgb(12 14 14 / 34%) 100%), linear-gradient(to right, rgb(12 14 14 / 45%) 0%, rgb(12 14 14 / 0%) 60%); }
