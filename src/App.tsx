@@ -20,6 +20,7 @@ const Service = named(() => import('./pages/Service.tsx'), 'Service')
 const Rent = named(() => import('./pages/Rent.tsx'), 'Rent')
 const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
 const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
+const Events = named(() => import('./pages/drive/Events.tsx'), 'Events')
 const PartsPage = named(() => import('./pages/Parts.tsx'), 'PartsPage')
 const ModelPage = named(() => import('./pages/discover/ModelPage.tsx'), 'ModelPage')
 const RulesPage = named(() => import('./pages/discover/Rules.tsx'), 'RulesPage')
@@ -61,6 +62,7 @@ function useSub(world: World): SubItem[] {
       { to: 'drive/roads', label: 'Roads' },
       { to: 'drive/builder', label: 'Roadtrip-Builder' },
       { to: 'drive/atlas', label: 'Automotive Atlas' },
+      { to: 'drive/events', label: 'Events' },
       { to: 'drive/rent', label: en ? 'Rent' : 'Mieten' },
     ]
   return [
@@ -96,6 +98,7 @@ function Page({ path }: { path: string[] }): ReactNode {
     if (sub === 'builder') return <Builder tripId={id} />
     if (sub === 'atlas') return <Atlas countryId={id} />
     if (sub === 'rent') return <Rent />
+    if (sub === 'events') return <Events />
   }
   if (w === 'own') {
     if (!sub) return <OwnHub />

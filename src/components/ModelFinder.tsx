@@ -9,7 +9,7 @@ import { sendToCalc, type MarketQuery } from '../data.ts'
 import { DIR_COUNTRY } from '../data/directory.ts'
 import { useT } from '../i18n/i18n.ts'
 import { addVehicle, useStore } from '../store/store.ts'
-import { EASE } from './ui.tsx'
+import { EASE, img } from './ui.tsx'
 import { href } from '../lib/router.ts'
 
 export type CarModel = {
@@ -90,6 +90,11 @@ export function loadCatalogue(): Promise<CarModel[]> {
   return cache
 }
 
+export type ModelPhotos = Record<string, { f: string; a: string; l: string; u?: string }>
+let photoCache: Promise<ModelPhotos> | null = null
+/** Bildnachweise je Modell; ein Eintrag heißt: public/images/models/<id>.jpg gibt es */
+export const loadPhotos = () => (photoCache ??= import('../data/models_photos.json').then((m) => m.default as ModelPhotos))
+
 /** Beste Treffer für eine Eingabe */
 export function suggest(all: CarModel[], text: string, n = 8): CarModel[] {
   const words = norm(text).split(' ').filter(Boolean)
@@ -114,12 +119,14 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
   const [cls, setCls] = useState('all')
   const [shown, setShown] = useState(PAGE)
   const vehicles = useStore((s) => s.vehicles)
+  const [pics, setPics] = useState<ModelPhotos>({})
   const box = useRef<HTMLDivElement>(null)
 
   // Katalog erst laden, wenn der Finder sichtbar wird (eigene Datei, ~100 KB)
   useEffect(() => {
     let alive = true
     loadCatalogue().then((c) => alive && setAll(c))
+    loadPhotos().then((x) => alive && setPics(x))
     return () => {
       alive = false
     }
@@ -249,6 +256,11 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
           const oldOk = (m.y0 ?? 9999) <= YEAR - 30
           return (
             <motion.article key={m.id} className="gcard mf-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: (k % PAGE) * 0.012, ease: EASE }}>
+              {pics[m.id] && (
+                <a className="mf-photo" href={href('discover/models/' + m.id)} tabIndex={-1} aria-hidden>
+                  <img src={img('models/' + m.id)} alt="" loading="lazy" />
+                </a>
+              )}
               <header>
                 <span className="mf-flag">{DIR_COUNTRY[m.cc]?.flag ?? '🌍'}</span>
                 <span className="cf-kind">{m.cl && CLASS_LABEL[m.cl] ? L(CLASS_LABEL[m.cl]) : m.cl ? d(m.cl) : m.mk}</span>

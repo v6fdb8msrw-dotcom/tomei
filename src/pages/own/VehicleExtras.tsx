@@ -141,6 +141,7 @@ function Photos({ v }: { v: Vehicle }) {
   const [photos, setPhotos] = useState<Photo[]>([])
   const [urls, setUrls] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const reload = () => listPhotos(v.id).then(setPhotos)
   useEffect(() => {
@@ -176,6 +177,7 @@ function Photos({ v }: { v: Vehicle }) {
           </figure>
         ))}
       </div>
+      {err && <p className="muted small" role="alert">{tx('Mindestens ein Foto ließ sich nicht speichern (Format, Größe oder Speicher voll).', 'At least one photo could not be saved (format, size or storage full).')}</p>}
       <button className="btn small" disabled={busy} onClick={() => input.current?.click()}>
         <Plus size={14} /> {busy ? tx('Wird gespeichert …', 'Saving …') : tx('Fotos hinzufügen', 'Add photos')}
       </button>
@@ -186,15 +188,19 @@ function Photos({ v }: { v: Vehicle }) {
         multiple
         hidden
         onChange={async (e) => {
-          const files = e.target.files
+          // Erst kopieren: das Zurücksetzen des Feldes leert die lebende Dateiliste
+          const files = Array.from(e.target.files ?? [])
           e.target.value = ''
-          if (!files?.length) return
+          if (!files.length) return
+          setErr(false)
           setBusy(true)
           try {
-            await addPhotos(v.id, files)
+            if ((await addPhotos(v.id, files)) < files.length) setErr(true)
             const now = await listPhotos(v.id)
             setPhotos(now)
             updateVehicle(v.id, { photoCount: now.length })
+          } catch {
+            setErr(true)
           } finally {
             setBusy(false)
           }

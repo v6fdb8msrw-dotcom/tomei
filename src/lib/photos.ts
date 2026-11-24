@@ -51,9 +51,14 @@ export async function addPhotos(vehicleId: string, files: FileList | File[]): Pr
   let n = 0
   for (const f of Array.from(files).slice(0, 20)) {
     if (!f.type.startsWith('image/') || f.size > 40 * 1024 * 1024) continue
-    const blob = await shrink(f)
-    await tx('readwrite', (s) => s.put({ id: `${vehicleId}-${Date.now()}-${n}`, vehicleId, blob, createdAt: new Date().toISOString() } satisfies Photo))
-    n++
+    // Ein nicht lesbares Bild (z. B. HEIC in manchen Browsern) darf die übrigen nicht verhindern
+    try {
+      const blob = await shrink(f)
+      await tx('readwrite', (s) => s.put({ id: `${vehicleId}-${Date.now()}-${n}`, vehicleId, blob, createdAt: new Date().toISOString() } satisfies Photo))
+      n++
+    } catch {
+      /* zählt als nicht gespeichert */
+    }
   }
   return n
 }

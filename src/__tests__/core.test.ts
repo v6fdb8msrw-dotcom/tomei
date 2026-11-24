@@ -136,3 +136,29 @@ describe('Speicher', () => {
     expect(m.vehicles).toHaveLength(2)
   })
 })
+
+import ev from '../data/events.json'
+import { eventsBetween, weekOf, type CarEvent } from '../lib/events.ts'
+describe('Events der Woche', () => {
+  const all = ev as CarEvent[]
+  it('Woche läuft Montag bis Sonntag, auch an den Rändern und zum Jahreswechsel', () => {
+    expect(weekOf('2026-11-24')).toEqual({ from: '2026-11-23', to: '2026-11-29' })
+    expect(weekOf('2026-11-29')).toEqual({ from: '2026-11-23', to: '2026-11-29' })
+    expect(weekOf('2026-11-23', 1).from).toBe('2026-11-30')
+    expect(weekOf('2027-01-01')).toEqual({ from: '2026-12-28', to: '2027-01-03' })
+  })
+  it('zeigt laufende und wöchentliche Termine', () => {
+    const n = eventsBetween(all, '2026-11-23', '2026-11-29').map((e) => e.n)
+    expect(n).toContain('LA Auto Show')
+    expect(n).toContain('Essen Motor Show')
+    expect(n).toContain('Supercar Sunday')
+    expect(n).not.toContain('Tokyo Auto Salon')
+  })
+  it('jeder Termin hat gültige Daten und eine https-Quelle', () => {
+    for (const e of all) {
+      expect(e.a).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(e.b >= e.a).toBe(true)
+      expect(e.s.startsWith('https://')).toBe(true)
+    }
+  })
+})

@@ -2,12 +2,13 @@
 // Herkunftsland und die Besichtigungs-Checkliste. Erreichbar über #/discover/models/<id>.
 import { ArrowRight, ArrowUpRight, Calculator, Check, ClipboardCheck, Plus, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { PRICE_SOURCE } from '../../classics.ts'
 import { MARKETS, sendToCalc } from '../../data.ts'
 import { DIR_COUNTRY } from '../../data/directory.ts'
 import { IMPORT_RULES, ruleById } from '../../data/importRules.ts'
 import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
 import { ROADS, roadImg } from '../../data/roads.ts'
-import { loadCatalogue, type CarModel } from '../../components/ModelFinder.tsx'
+import { loadCatalogue, loadPhotos, type CarModel, type ModelPhotos } from '../../components/ModelFinder.tsx'
 import { ProviderGrid } from '../../components/motion.tsx'
 import { Badge, EmptyState, NotFound, PageHead, SourceLink, img } from '../../components/ui.tsx'
 import { useT } from '../../i18n/i18n.ts'
@@ -32,10 +33,12 @@ export function ModelPage({ id }: { id: string }) {
   const [txt, setTxt] = useState<{ en?: string; de?: string }>({})
   const home = useStore((s) => s.settings.homeCountry) || 'de'
   const vehicles = useStore((s) => s.vehicles)
+  const [pics, setPics] = useState<ModelPhotos>({})
 
   useEffect(() => {
     let alive = true
     loadCatalogue().then((all) => alive && setM(all.find((x) => x.id === id) ?? null))
+    loadPhotos().then((x) => alive && setPics(x))
     loadTexts().then((t) => alive && setTxt(t[id] ?? {}))
     return () => {
       alive = false
@@ -56,6 +59,7 @@ export function ModelPage({ id }: { id: string }) {
   const checks = checklistFor({ age, origin: m.cc })
   const have = vehicles.find((v) => v.modelId === m.id)
   const text = (lang === 'de' && txt.de) || txt.en
+  const pic = pics[m.id]
   const textLang = lang === 'de' && txt.de ? 'de' : 'en'
   const photo = PHOTO[m.id]
   const cover = photo ? img(photo) : roads[0] ? roadImg(roads[0].id) : roadImg('stelvio')
@@ -109,11 +113,25 @@ export function ModelPage({ id }: { id: string }) {
           </div>
           {m.usd ? (
             <div>
-              <span>{tx('Median Angebotspreis Japan', 'Median asking price Japan')}</span>
+              <span>
+                {tx('Median Angebotspreis Japan', 'Median asking price Japan')} · {PRICE_SOURCE.name}, {PRICE_SOURCE.date}
+              </span>
               <b className="mono">$ {m.usd.toLocaleString('de-DE')}</b>
             </div>
           ) : null}
         </div>
+        {pic && (
+          <figure className="mp-photo">
+            <img src={img('models/' + m.id)} alt={m.n} />
+            <figcaption className="muted small">
+              {tx('Foto', 'Photo')}: {pic.a},{' '}
+              <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(pic.f)}`} target="_blank" rel="noopener noreferrer">
+                Wikimedia Commons
+              </a>
+              , {pic.u ? <a href={pic.u} target="_blank" rel="noopener noreferrer">{pic.l}</a> : pic.l} {tx('(verkleinert)', '(resized)')}
+            </figcaption>
+          </figure>
+        )}
         {text && (
           <div className="gcard mp-text">
             <p>{text}</p>
@@ -151,7 +169,7 @@ export function ModelPage({ id }: { id: string }) {
           )}
           {rule.age && (
             <p>
-              <Badge kind={ageOk ? 'ok' : 'warn'}>{ageOk ? tx('Altersgrenze erreicht', 'Age threshold met') : tx('Altersgrenze noch nicht erreicht', 'Age threshold not yet met')}</Badge> {L(rule.age.text)}
+              <Badge kind={ageOk ? 'ok' : 'warn'}>{ageOk ? tx('Früheste Baujahre erfüllen die Grenze', 'Earliest cars meet the threshold') : tx('Altersgrenze noch nicht erreicht', 'Age threshold not yet met')}</Badge> {L(rule.age.text)}
             </p>
           )}
           <a className="link" href={href('discover/rules/' + rule.id)}>
