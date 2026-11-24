@@ -13,7 +13,7 @@ const Globe3D = lazy(() => import('../components/Globe3D.tsx'))
 import { Finds } from '../components/Finds.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { BRAND } from '../config/brand.ts'
-import { ClassicFinder } from '../components/ClassicFinder.tsx'
+import { ModelFinder } from '../components/ModelFinder.tsx'
 
 const MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru', 'Mitsubishi', 'Lexus', 'Suzuki', 'Ford', 'Chevrolet', 'Dodge', 'Pontiac', 'Jeep', 'Holden', 'TVR', 'Lotus', 'Jaguar', 'Hyundai', 'Kia']
 const IDEAS: MarketQuery[] = [
@@ -48,7 +48,9 @@ export function Markets() {
   const label = `${q.make} ${q.model}`.trim()
   const search = (next: MarketQuery, origin: string) => {
     setQ(next)
-    setActive(origin)
+    // Europäische Herkunft → Markt Europa; Länder ohne eigene Such-Zentrale → alle Märkte
+    const o = ['de', 'it', 'fr', 'se', 'at', 'nl', 'ch', 'no', 'es', 'be'].includes(origin) ? 'eu' : origin
+    setActive(MARKETS.some((m) => m.id === o) ? o : undefined)
     requestAnimationFrame(() => document.getElementById('angebote')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
 
@@ -61,7 +63,7 @@ export function Markets() {
             <h1 className="display">
               {tx('Eine Suche.', 'One search.')}
               <br />
-              <em>{tx('Elf Märkte.', 'Eleven markets.')}</em>
+              <em>{tx('Zwölf Märkte.', 'Twelve markets.')}</em>
             </h1>
             <p className="lead">{tx(`Für Autos, die es hier kaum gibt: JDM aus Japan, Muscle-Cars aus den USA, Klassiker aus England und Australien. Sag ${BRAND.name}, was du suchst, und spring direkt zu den Angeboten und Auktionen in jedem Land.`, `For cars that are rare here: JDM from Japan, muscle cars from the USA, classics from England and Australia. Tell ${BRAND.name} what you’re looking for and jump straight to listings and auctions in each country.`)}</p>
           </Reveal>
@@ -70,8 +72,8 @@ export function Markets() {
       </section>
 
       <section className="section tight" id="modelle">
-        <SectionHead eyebrow={tx('Modell-Finder', 'Model finder')} title={<>{tx('Selten hier. ', 'Rare here. ')}<em>{tx('Zu finden dort.', 'Found there.')}</em></>} text={tx('Ältere, besondere Autos, die du in Deutschland kaum oder nur teuer bekommst. Filtere nach Land, Jahrzehnt und Oldtimer-Status.', 'Older, special cars that are hard or expensive to find in Germany. Filter by country, decade and classic status.')} />
-        <ClassicFinder onSearch={search} />
+        <SectionHead eyebrow={tx('Modell-Katalog', 'Model catalogue')} title={<>{tx('Über 900 Modelle. ', 'Over 900 models. ')}<em>{tx('Aus aller Welt.', 'From around the world.')}</em></>} text={tx('Tipp einfach los: Die Vorschlagsliste findet Marke, Modell und Baujahr. Filtere nach Herkunft, Klasse, Jahrzehnt und Oldtimer-Status; jedes Modell führt direkt zu den Portalen seines Herkunftslands und in den Rechner.', 'Just start typing: suggestions find make, model and year. Filter by origin, class, decade and classic status; every model leads straight to the marketplaces of its home country and into the calculator.')} />
+        <ModelFinder onSearch={search} />
       </section>
 
       <section className="section tight" id="suche">

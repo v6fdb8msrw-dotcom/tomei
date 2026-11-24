@@ -17,6 +17,8 @@ import { buildScenarios, range3 } from '../lib/scenarios.ts'
 import { href, navigate } from '../lib/router.ts'
 import { addVehicle, useStore } from '../store/store.ts'
 import { VEHICLE_STATUS, type PassportKind } from '../store/schema.ts'
+import { loadCatalogue, suggest, type CarModel } from '../components/ModelFinder.tsx'
+import { DIR_COUNTRY } from '../data/directory.ts'
 
 // Weltweit: Straßen und Autos aus Europa, Amerika, Asien und Ozeanien
 const SLIDES = [
@@ -33,6 +35,9 @@ function Hero() {
   const { t } = useT()
   const [i, setI] = useState(0)
   const [q, setQ] = useState('')
+  const [cat, setCat] = useState<CarModel[]>([])
+  const [openSug, setOpenSug] = useState(false)
+  const sugg = useMemo(() => suggest(cat, q, 6), [cat, q])
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
   const sx = useSpring(mx, { stiffness: 40, damping: 18 })
@@ -73,9 +78,28 @@ function Hero() {
         <motion.p className="hx-sub" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8 }}>
           {t('home.hero.sub')}
         </motion.p>
-        <motion.form className="hx-search" onSubmit={submit} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.8, ease: EASE }}>
+        <motion.form className="hx-search mf-host" onSubmit={submit} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.8, ease: EASE }}>
           <Search size={19} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('home.hero.search')} aria-label={t('home.hero.search')} />
+          <input
+            value={q}
+            onChange={(e) => (setQ(e.target.value), setOpenSug(true))}
+            onFocus={() => (loadCatalogue().then(setCat), setOpenSug(true))}
+            onBlur={() => setTimeout(() => setOpenSug(false), 150)}
+            placeholder={t('home.hero.search')}
+            aria-label={t('home.hero.search')}
+            autoComplete="off"
+          />
+          {openSug && sugg.length > 0 && (
+            <ul className="mf-suggest" role="listbox">
+              {sugg.map((m) => (
+                <li key={m.id} role="option" aria-selected={false} onMouseDown={(e) => (e.preventDefault(), setQ(m.n.replace(/\s*\(.*\)$/, '')), setOpenSug(false))}>
+                  <span className="mf-flag">{DIR_COUNTRY[m.cc]?.flag ?? '🌍'}</span>
+                  <b>{m.n}</b>
+                  <small>{m.y0 ?? ''}</small>
+                </li>
+              ))}
+            </ul>
+          )}
           <button className="btn primary" type="submit">
             {t('home.hero.go')}
           </button>
@@ -108,7 +132,7 @@ function Hero() {
 function Worlds() {
   const { t, tx } = useT()
   const worlds = [
-    { id: 'discover', n: '01', img: img('cars/fd'), items: [tx('Fahrzeugsuche in 11 Ländern', 'Vehicle search in 11 countries'), tx('Auktionshäuser & Import-Partner', 'Auction houses & import partners'), tx('Importrechner mit 4 Szenarien', 'Import calculator with 4 scenarios')] },
+    { id: 'discover', n: '01', img: img('cars/fd'), items: [tx('Fahrzeugsuche in 12 Märkten', 'Vehicle search in 12 markets'), tx('Auktionshäuser & Import-Partner', 'Auction houses & import partners'), tx('Importrechner mit 4 Szenarien', 'Import calculator with 4 scenarios')] },
     { id: 'drive', n: '02', img: roadImg('stelvio'), items: [tx(`${ROADS.length} belegte Roads`, `${ROADS.length} sourced roads`), tx('Roadtrip-Builder mit GPX', 'Road trip builder with GPX'), tx('Automotive Atlas & Mieten', 'Automotive Atlas & rentals')] },
     { id: 'own', n: '03', img: img('fuji-lakes'), items: [tx('Garage vom Traum bis Verkauf', 'Garage from dream to sale'), tx('Unterhalt, Build, Wartung', 'Ownership, build, maintenance'), 'Automotive Passport'] },
   ] as const

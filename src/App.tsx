@@ -20,6 +20,7 @@ const Service = named(() => import('./pages/Service.tsx'), 'Service')
 const Rent = named(() => import('./pages/Rent.tsx'), 'Rent')
 const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
 const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
+const PartsPage = named(() => import('./pages/Parts.tsx'), 'PartsPage')
 const DiscoverHub = named(discover, 'DiscoverHub')
 const Auctions = named(discover, 'Auctions')
 const Partners = named(discover, 'Partners')
@@ -64,6 +65,7 @@ function useSub(world: World): SubItem[] {
     { to: 'own/garage', label: 'Garage' },
     { to: 'own/simulator', label: en ? 'Ownership' : 'Unterhalt' },
     { to: 'own/build', label: 'Build Studio' },
+    { to: 'own/parts', label: en ? 'Parts' : 'Teile' },
     { to: 'own/maintenance', label: en ? 'Maintenance' : 'Wartung' },
     { to: 'own/passport', label: 'Passport' },
   ]
@@ -95,6 +97,7 @@ function Page({ path }: { path: string[] }): ReactNode {
     if (sub === 'garage') return <Garage vehicleId={id} />
     if (sub === 'simulator') return <Simulator vehicleId={id} />
     if (sub === 'build') return <BuildStudio vehicleId={id} />
+    if (sub === 'parts') return <PartsPage />
     if (sub === 'maintenance') return <Maintenance vehicleId={id} />
     if (sub === 'passport') return <Passport vehicleId={id} />
   }
@@ -199,6 +202,7 @@ export default function App() {
             <b>Own</b>
             <a href="#/own/garage">Garage</a>
             <a href="#/own/simulator">{lang === 'en' ? 'Ownership simulator' : 'Unterhalt'}</a>
+            <a href="#/own/parts">{lang === 'en' ? 'Parts shops' : 'Teile-Shops'}</a>
             <a href="#/own/maintenance">{lang === 'en' ? 'Maintenance' : 'Wartung'}</a>
             <a href="#/own/passport">Passport</a>
           </nav>

@@ -784,3 +784,29 @@ main.w-discover > section.section:nth-of-type(4n+2), main.w-drive > section.sect
 .hx-text, .phead.with-img .phead-text { text-shadow: 0 1px 18px rgb(0 0 0 / 35%); }
 .hx-search { text-shadow: none; }
 .phead.with-img::after { background: linear-gradient(to top, rgb(12 14 14 / 90%) 0%, rgb(12 14 14 / 62%) 40%, rgb(12 14 14 / 22%) 75%, rgb(12 14 14 / 34%) 100%), linear-gradient(to right, rgb(12 14 14 / 45%) 0%, rgb(12 14 14 / 0%) 60%); }
+.parts-filter { margin-bottom: 22px; }
+
+/* Modell-Katalog mit Vorschlagsliste */
+.mf { display: grid; gap: 22px; }
+.mf-filters { display: grid; gap: 14px; padding: 22px; }
+.mf-search { position: relative; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 18px; border-radius: 999px; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line-strong); color: var(--text-3); }
+.mf-search:focus-within { box-shadow: inset 0 0 0 2px var(--petrol), 0 0 0 5px var(--accent-soft); }
+.mf-search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font: inherit; font-size: 17px; padding: 10px 0; color: var(--text); }
+.mf-suggest { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 8px); list-style: none; margin: 0; padding: 6px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow-lg), inset 0 0 0 1px var(--line); max-height: 360px; overflow-y: auto; }
+.mf-suggest li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; cursor: pointer; color: var(--text); }
+.mf-suggest li.on { background: var(--accent-soft); }
+.mf-suggest li small { color: var(--text-3); font-family: var(--mono); font-size: 12px; }
+.mf-flag { font-size: 18px; line-height: 1; }
+.mf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.mf-card { padding: 20px; display: flex; flex-direction: column; gap: 6px; }
+.mf-card header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mf-card h3 { font-size: 19px; margin: 6px 0 0; }
+.mf-card .cf-actions { margin-top: auto; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mf-price { margin: 6px 0 0; }
+.mf-price small { color: var(--text-3); }
+.btn.ghost { background: var(--accent-soft); color: var(--petrol); cursor: default; }
+.row.center { justify-content: center; }
+@media (max-width: 1100px) { .mf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .mf-grid { grid-template-columns: minmax(0, 1fr); } .mf-search input { font-size: 16px; } }
+.mf-host { position: relative; }
+.hx-search .mf-suggest { text-shadow: none; text-align: left; }

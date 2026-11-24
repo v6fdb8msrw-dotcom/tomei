@@ -122,4 +122,9 @@ export const DATA_EN: Record<string, string> = {
   "Verzollung": "Customs clearance",
   "TÜV & Zulassung": "TÜV & registration",
   "Lieferung vor die Tür": "Delivery to your door",
+  "Europa": "Europe",
+  "Marktplatz": "Marketplace",
+  "Auktionshaus": "Auction house",
+  "Deutschland · Italien · Frankreich · Schweden": "Germany · Italy · France · Sweden",
+  "Europäische Klassiker und Youngtimer: Porsche, BMW, Mercedes, Alfa Romeo, Ferrari, Citroën, Volvo. Innerhalb der EU ohne Zoll und Einfuhrumsatzsteuer.": "European classics and youngtimers: Porsche, BMW, Mercedes, Alfa Romeo, Ferrari, Citroën, Volvo. No customs duty or import VAT within the EU.",
 }

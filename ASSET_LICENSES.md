@@ -23,6 +23,16 @@ Quelle: Wikimedia Commons, heruntergeladen am 24.11.2026 als 1920-px-Vorschau un
 | bigsur.jpg | Bixby-Creek-Brücke, Big Sur | Diliff | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Bixby_Creek_Bridge,_California,_USA_-_May_2013.jpg |
 | blueridge.jpg | East Fork Overlook, Blue Ridge Parkway | Tsimmons | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:East_Fork_Overlook.jpg |
 | sunroad.jpg | Going-to-the-Sun Road | MPSharwood | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Going-to-the-Sun_Road_-_Glacier_National_Park.jpg |
+| timmelsjoch.jpg | Timmelsjoch-Hochalpenstraße | Fischer.H | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Timmelsjoch_-_Hochalpenstraße_IMG_7446.jpg |
+| grimsel.jpg | Grimselpass | Hansueli Krapf | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:2007-10-02_Grimselpass_01.jpg |
+| tremola.jpg | Tremola, Gotthardpass | Samuel Ferrara | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Tremola_on_the_Gotthard_Pass.jpg |
+| greatocean.jpg | Island Archway, Great Ocean Road | Diliff | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Island_Archway,_Great_Ocean_Rd,_Victoria,_Australia_-_Nov_08.jpg |
+| icefields.jpg | Icefields Parkway | m01229 from USA | CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Winding_road_in_the_Icefields_Parkway_(33798244575).jpg |
+| dragon.jpg | Tail of the Dragon | William Klos from Mason, US | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Tail_of_the_Dragon_2.jpg |
+| jebeljais.jpg | Jebel Jais Road | Montaserarqob | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Jebel_Jais_road_II.jpg |
+| turini.jpg | Col de Turini | Anthospace | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Col_de_Turini_06-_Since_Camp_d'Argent_road.jpg |
+| bealach.jpg | Bealach na Bà | Jooniur | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Bealach_na_ba.jpg |
+| milford.jpg | Milford Road | Michal Klajban | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Milford_Road_east_of_Homer_Saddle,_New_Zealand_(22).jpg |
 
 ## Weltweite Klassiker (`public/images/cars/`)
 

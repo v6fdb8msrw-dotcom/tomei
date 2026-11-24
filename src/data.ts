@@ -420,6 +420,18 @@ export const MARKETS: Market[] = [
     ],
   },
   {
+    id: 'eu', cur: 'EUR', code: 'EU', country: 'Europa', hub: 'Deutschland · Italien · Frankreich · Schweden', x: 50, y: 20,
+    text: 'Europäische Klassiker und Youngtimer: Porsche, BMW, Mercedes, Alfa Romeo, Ferrari, Citroën, Volvo. Innerhalb der EU ohne Zoll und Einfuhrumsatzsteuer.',
+    portals: [
+      { name: 'AutoScout24', kind: 'Marktplatz', url: (q) => `https://www.autoscout24.de/lst/${slug(q.make)}${q.model ? '/' + slug(q.model) : ''}` },
+      { name: 'mobile.de', kind: 'Marktplatz', url: site('mobile.de') },
+      { name: 'Classic Trader', kind: 'Marktplatz für Klassiker', url: site('classic-trader.com') },
+      { name: 'Catawiki', kind: 'Online-Auktion, offen für alle', url: site('catawiki.com') },
+      { name: 'Dorotheum', kind: 'Auktionshaus für Klassiker', url: site('dorotheum.com') },
+      { name: 'Artcurial', kind: 'Auktionshaus für Klassiker', url: site('artcurial.com') },
+    ],
+  },
+  {
     id: 'au', cur: 'AUD', code: 'AU', country: 'Australien', hub: 'Melbourne · Sydney', x: 88, y: 88,
     text: 'Eigene Muscle-Car-Kultur: Holden Monaro, Torana, Ford Falcon GT, in Europa kaum zu finden. Dazu viele JDM-Autos. Rechtslenker, lange Verschiffung.',
     portals: [

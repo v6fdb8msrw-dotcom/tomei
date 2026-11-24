@@ -27,6 +27,8 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 | Länder: Fahrseite, ungefähre Landesmitte | `src/data/countries.ts` | Allgemeinwissen; Koordinaten nur für Markierungen | 24.11.2026 |
 | Vollgutachten § 21 StVZO (Grundentgelt 116,50 € + 35 €/Viertelstunde) | `src/data.ts` → `DEST.DE.feeSources` | TÜV NORD Entgeltliste 2025: https://tuev-nord.de/fileadmin/Content/TUEV_NORD_DE/verkehr/pdf/pk-td-entgeltliste-25-01.pdf | 24.11.2026 |
 | Kfz-Steuer H-Kennzeichen 191,73 €/Jahr | `src/lib/ownership.ts` | § 9 Abs. 4 Nr. 2 KraftStG, https://www.gesetze-im-internet.de/kraftstg/__9.html | 24.11.2026 |
+| Modell-Katalog (Name, Hersteller, Herkunftsland, Bauzeit, Klasse) | `src/data/models.json` | Wikidata (CC0, SPARQL-Abfrage) für Modelle, Hersteller und Herkunft; Bauzeit und Klasse aus der Infobox der englischen Wikipedia (API, einmalig beim Bauen, Link je Modell) | 24.11.2026 |
+| Erweitertes Verzeichnis (Auktionshäuser, Transport, Vermietung, Teile) | `src/data/directory.ts` | Webseiten der Firmen; jede Adresse am 24.11.2026 abgerufen; nur Rolle beschrieben, keine Preise oder Bewertungen | 24.11.2026 |
 | Landflächen des Globus | `world-atlas/land-110m.json` | Natural Earth (gemeinfrei) über das Paket world-atlas (ISC) | Paket 2.0.2 |
 
 ## Annahmen (in der Oberfläche als „Annahme“ markiert, änderbar)
@@ -46,6 +48,9 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 | Beispielwerte Unterhalt | Simulator, Knopf „Beispielwerte laden“ | Badge „Beispielwerte, keine Marktdaten“ |
 
 ## Nicht verfügbar (bewusst)
+
+- **Live-Bestand je Modell** („Welche Portale haben das Auto gerade?“): Die Portale bieten keine freie Schnittstelle, Auslesen ist verboten. Einzige freie offizielle Schnittstelle wäre eBay (Entwicklerkonto + eigener Server nötig, neuer Dienst → nur nach Tims Entscheidung). Stattdessen: Portale des Herkunftslands als Vorauswahl.
+- **Preise für den Katalog:** nur bei den handverlesenen Modellen aus `classics.ts` (JDMBUYSELL, CC BY 4.0, von Hand abgelesen).
 
 - Inserate und Auktionsergebnisse der Portale: Auslesen verboten bzw. nur kostenpflichtig.
 - Freie Preisquellen für Klassiker in USA/UK/AU: keine mit erlaubter Nachnutzung gefunden (siehe Kommentar in `src/classics.ts`).

@@ -12,6 +12,7 @@ import { href } from '../../lib/router.ts'
 import { addPassportEntry, updateVehicle, useStore } from '../../store/store.ts'
 import { roadImg } from '../../data/roads.ts'
 import { BRAND } from '../../config/brand.ts'
+import { AUCTIONS_MORE, DIR_COUNTRY, TRANSPORT } from '../../data/directory.ts'
 
 export function DiscoverHub() {
   const { t, tx } = useT()
@@ -27,8 +28,8 @@ export function DiscoverHub() {
       sub={t('world.discover.text')}
       image={img('cars/fd')}
       tools={[
-        { to: 'discover/search', title: tx('Fahrzeugsuche', 'Vehicle search'), text: tx('Eine Suche, elf Märkte von Japan bis Australien, mit Modell-Finder für seltene Klassiker.', 'One search, eleven markets from Japan to Australia, with a model finder for rare classics.'), img: img('cars/r34'), meta: watch ? tx(`${watch} in deiner Garage`, `${watch} in your garage`) : tx('Such-Zentrale', 'Search hub') },
-        { to: 'discover/auctions', title: tx('Auktionshäuser', 'Auction houses'), text: tx('Offene Auktionen und Händlerauktionen als Verzeichnis, mit direkten Suchlinks. Keine kopierten Inserate.', 'Public and dealer-only auctions as a directory, with direct search links. No copied listings.'), img: img('parts-show'), meta: tx(`${AUCTIONS.length} Häuser`, `${AUCTIONS.length} houses`) },
+        { to: 'discover/search', title: tx('Fahrzeugsuche', 'Vehicle search'), text: tx('Eine Suche, zwölf Märkte von Japan bis Australien, mit Modell-Finder für seltene Klassiker.', 'One search, twelve markets from Japan to Australia, with a model finder for rare classics.'), img: img('cars/r34'), meta: watch ? tx(`${watch} in deiner Garage`, `${watch} in your garage`) : tx('Such-Zentrale', 'Search hub') },
+        { to: 'discover/auctions', title: tx('Auktionshäuser', 'Auction houses'), text: tx('Offene Auktionen und Händlerauktionen als Verzeichnis, mit direkten Suchlinks. Keine kopierten Inserate.', 'Public and dealer-only auctions as a directory, with direct search links. No copied listings.'), img: img('parts-show'), meta: tx(`${AUCTIONS.length + AUCTIONS_MORE.length} Häuser`, `${AUCTIONS.length + AUCTIONS_MORE.length} houses`) },
         { to: 'discover/partners', title: tx('Import-Partner', 'Import partners'), text: tx('Agenten, Importeure und Speditionen nach Herkunft und Leistung, mit veröffentlichten Preisen und Quelle.', 'Agents, importers and shippers by origin and service, with published prices and sources.'), img: img('import-port'), meta: tx('Ohne Bewertungen, ohne Provision', 'No ratings, no commission') },
         { to: 'discover/calculator', title: tx('Importrechner 2.0', 'Import calculator 2.0'), text: tx('Best, Expected, Worst und Custom: die Spanne bis vor die Tür, mit Tageskurs der EZB.', 'Best, expected, worst and custom: the range to your door, with the ECB daily rate.'), img: img('import-ship'), meta: tx('5 Herkunfts-, 6 Zielländer', '5 origin, 6 destination countries') },
         { to: 'discover/journey', title: 'Import-Journey', text: tx('Vom Fund bis zur Zulassung in neun Schritten, mit Häkchen pro Fahrzeug.', 'From find to registration in nine steps, ticked off per vehicle.'), img: roadImg('wangan'), meta: tx('Fortschritt je Auto', 'Progress per car') },
@@ -50,14 +51,22 @@ function auctionSearch(name: string, q: MarketQuery): string | undefined {
 }
 
 export function Auctions() {
-  const { tx, d } = useT()
+  const { tx, d, L, lang } = useT()
   const [kind, setKind] = useState<'all' | 'open' | 'dealer'>('all')
   const [text, setText] = useState('')
   const q: MarketQuery = useMemo(() => {
     const [make, ...rest] = text.trim().split(/\s+/)
     return { make: make ?? '', model: rest.join(' ') }
   }, [text])
-  const list = AUCTIONS.filter((a) => (kind === 'all' ? true : kind === 'open' ? a.open : !a.open))
+  const all = useMemo(
+    () => [
+      ...AUCTIONS.map((a) => ({ name: a.name, country: d(a.country), text: d(a.text), url: a.url, open: !!a.open })),
+      ...AUCTIONS_MORE.map((a) => ({ name: a.name, country: `${DIR_COUNTRY[a.cc].flag} ${L(DIR_COUNTRY[a.cc].name)}`, text: L(a.text), url: a.url, open: !!a.open })),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [lang],
+  )
+  const list = all.filter((a) => (kind === 'all' ? true : kind === 'open' ? a.open : !a.open))
   return (
     <>
       <PageHead
@@ -93,9 +102,9 @@ export function Auctions() {
                 <div className="dir-main">
                   <h3>{a.name}</h3>
                   <span className="dir-sub">
-                    {d(a.country)} · {a.open ? tx('offen für alle', 'open to all') : tx('nur registrierte Händler', 'registered dealers only')}
+                    {a.country} · {a.open ? tx('offen für alle', 'open to all') : tx('nur registrierte Händler', 'registered dealers only')}
                   </span>
-                  <p>{d(a.text)}</p>
+                  <p>{a.text}</p>
                 </div>
                 <div className="dir-actions">
                   {link && (
@@ -129,7 +138,7 @@ export function Auctions() {
 /* ------------------------------------------------------------------ Import-Partner */
 
 type PartnerRole = 'agent' | 'complete' | 'shipping'
-type Partner = { id: string; name: string; url: string; origins: string[]; roles: PartnerRole[]; text: string; price?: string; source?: string }
+type Partner = { id: string; name: string; url: string; origins: string[]; roles: PartnerRole[]; text: string | { de: string; en: string }; price?: string; source?: string }
 
 const ROLE: Record<PartnerRole, { de: string; en: string }> = {
   agent: { de: 'Kauf vor Ort / Agent', en: 'Local purchase / agent' },
@@ -162,6 +171,13 @@ function buildPartners(): Partner[] {
     seen.add(new URL(m.source).hostname)
     const host = new URL(m.source).hostname.replace(/^www\./, '')
     list.push({ id: host, name: host === 'wcshipping.com' ? 'West Coast Shipping' : host === 'alltransportdepot.com' ? 'All Transport Depot' : host, url: 'https://' + host + '/', origins: ['us'], roles: ['shipping'], text: m.text, price: `ab ${m.cost?.toLocaleString('de-DE')} $`, source: m.source })
+  }
+  // Reedereien, Terminal und Speditionen aus dem erweiterten Verzeichnis
+  const ALL_ORIGINS = ['jp', 'us', 'uk', 'ca', 'au']
+  for (const t of TRANSPORT) {
+    if (list.some((x) => x.name === t.name)) continue
+    const origins = t.cc === 'jp' ? ['jp'] : t.cc === 'us' ? ['us', 'ca'] : ALL_ORIGINS
+    list.push({ id: t.name, name: t.name, url: t.url, origins, roles: ['shipping'], text: t.text })
   }
   return list
 }
@@ -233,7 +249,7 @@ export function Partners() {
                   ))}
                   {p.price ? <Badge kind="ok">{tx('Preis veröffentlicht', 'Price published')}</Badge> : <Badge kind="warn">{tx('Preis auf Anfrage', 'Price on request')}</Badge>}
                 </div>
-                <p>{d(p.text)}</p>
+                <p>{typeof p.text === 'string' ? d(p.text) : L(p.text)}</p>
                 {p.price && <p className="partner-price mono">{p.price}</p>}
                 {p.source && <SourceLink url={p.source}>{tx('Preisquelle', 'Price source')}</SourceLink>}
               </motion.article>

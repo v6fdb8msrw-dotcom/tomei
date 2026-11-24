@@ -59,6 +59,15 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
 
+## Datenbank-Ausbau (alpha.4, noch nicht deployt)
+
+- **Modell-Katalog:** 1.000 Modelle aus Wikidata und Wikipedia plus die handverlesenen Klassiker (zusammen gut 1.030) in `src/data/models.json`. Suche mit Vorschlagsliste beim Tippen (Fahrzeugsuche und Startseite), Filter nach Herkunft, Klasse, Jahrzehnt und Oldtimer-Status. Je Modell: Inserate im Herkunftsland suchen, durchrechnen (Herkunft JP/US/UK/CA/AU), in die Garage merken, Quelle. Preise nur bei den handverlesenen Modellen.
+- **Verzeichnis** (`src/data/directory.ts`, alle Adressen am 24.11.2026 geprüft): 57 weitere Auktionshäuser und Marktplätze (insgesamt 70), 41 Transportfirmen (Reedereien, Häfen, Speditionen, Frachtvergleich), 30 weitere Vermieter weltweit mit Länderfilter, 75 weitere Teile-Shops (insgesamt 80) aus 10 Ländern.
+- **Teile passend zur Garage:** neue Seite Own · Teile; Shops werden nach den Marken in der Garage vorgeschlagen.
+- **Europa** als zwölfter Markt (AutoScout24, mobile.de, Classic Trader, Catawiki, Dorotheum, Artcurial); Frankreich im Atlas.
+- **10 neue Straßen** (insgesamt 25): Timmelsjoch, Grimselpass, Gotthardpass, Great Ocean Road, Icefields Parkway, Tail of the Dragon, Jebel Jais, Col de Turini, Bealach na Bà, Milford Road – Fakten aus Wikipedia, Fotos von Wikimedia Commons mit Lizenz.
+- **Nicht möglich (kostenlos und erlaubt):** anzeigen, welche Portale ein Modell gerade im Bestand haben; siehe `DATA_SOURCES.md`.
+
 ## Überarbeitung nach Tims Feedback (alpha.3)
 
 - **Weltweit statt Japan im Mittelpunkt:** Startseite (Slides aus Italien, USA, Japan, Norwegen, England), Traumautos aus vier Kontinenten (Skyline, Mustang, Esprit, Monaro; neue Wikimedia-Fotos mit Lizenz), Globus auf Europa ausgerichtet, Japan nicht mehr besonders markiert.
