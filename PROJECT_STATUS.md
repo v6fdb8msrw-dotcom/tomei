@@ -1,8 +1,8 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.3 (erster Entwurf, überarbeitet) · Zweig `tomei-2.0` · nicht deployt**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.3 (erster Entwurf, überarbeitet) · Zweig `tomei-2.0` · deployt am 24.11.2026 auf Tims Ja**
 
-Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt weiterhin den alten Stand 1.x. Dieser Stand ist nur lokal geprüft (Preview-Server). Deploy erst nach Tims ausdrücklichem Ja.
+Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt seit 24.11.2026 diesen Stand (Deploy auf Tims Ja, live geprüft). Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
 
 ## Kurzfassung
 
