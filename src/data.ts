@@ -1,3 +1,4 @@
+import { getState } from './store/store.ts'
 // Alle Inhalte an einer Stelle: Texte, Links und Bilder lassen sich hier tauschen.
 // [REPLACE] markiert Stellen, an denen eigene Fotos oder Videos hingehören.
 
@@ -441,22 +442,15 @@ export const AUCTIONS: { name: string; country: string; text: string; open?: boo
 /** Kontakt für Service-Anfragen. [REPLACE] Öffentliche Adresse eintragen, dann öffnet „Anfrage senden“ eine fertige E-Mail. */
 export const CONTACT_EMAIL = ''
 
-/* ---------------- Merkliste: Fundstücke aus den Portalen, verbunden mit dem Rechner ---------------- */
+/* ---------------- Merkliste: Fundstücke aus den Portalen, verbunden mit dem Rechner ----------------
+   Seit 2.0 liegen sie als Fahrzeuge (Status „Beobachtet“) im gemeinsamen Speicher (src/store). */
 export type Find = { id: string; title: string; url: string; price: number; cur: string; market: string; added: string }
-export const FINDS_KEY = 'tomei.finds'
 export const CALC_LOAD_KEY = 'tomei.calc.load'
+/** Alle Fahrzeuge der Garage mit Preis, im Format der alten Merkliste (für den Rechner) */
 export function loadFinds(): Find[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(FINDS_KEY) || '[]')
-    return Array.isArray(v) ? v : []
-  } catch {
-    return []
-  }
-}
-export function saveFinds(f: Find[]) {
-  try {
-    localStorage.setItem(FINDS_KEY, JSON.stringify(f))
-  } catch {}
+  return getState()
+    .vehicles.filter((v) => v.price && v.price.amount > 0)
+    .map((v) => ({ id: v.id, title: [v.make, v.model, v.variant].filter(Boolean).join(' '), url: v.url ?? '', price: v.price!.amount, cur: v.price!.cur, market: v.market ?? 'jp', added: v.createdAt }))
 }
 /** Preis in Yen (rates: 1 ¥ = … Fremdwährung) */
 export function toJpy(price: number, cur: string, rates: Record<string, number>) {
@@ -468,6 +462,8 @@ export function toJpy(price: number, cur: string, rates: Record<string, number>)
 export function sendToCalc(f: Find) {
   try {
     localStorage.setItem(CALC_LOAD_KEY, JSON.stringify(f))
-  } catch {}
-  location.hash = '/import/rechner'
+  } catch {
+    /* ohne Speicher öffnet der Rechner leer */
+  }
+  location.hash = '/discover/calculator/rechner'
 }

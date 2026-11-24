@@ -1,8 +1,11 @@
 import { ArrowUpRight, ChevronDown, RotateCcw, Sparkles } from 'lucide-react'
 import { animate, AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { AGENTS, CALC_LOAD_KEY, CARS, DEST, FX_FALLBACK, HERO, IMPORT_FLAT, IMPORTERS, ORIGIN, agentAverage, agentTotal, loadFinds, toJpy, type DestKey, type Find, type OriginKey } from '../data.ts'
-import { EASE, Hero, ProviderGrid, Reveal, SectionHead } from '../components/motion.tsx'
+import { AGENTS, CALC_LOAD_KEY, CARS, DEST, FX_FALLBACK, IMPORT_FLAT, IMPORTERS, ORIGIN, agentAverage, agentTotal, loadFinds, toJpy, type DestKey, type Find, type OriginKey } from '../data.ts'
+import { EASE, ProviderGrid, Reveal, SectionHead } from '../components/motion.tsx'
+import { Badge, PageHead, img } from '../components/ui.tsx'
+import { ScenarioPanel } from '../components/ScenarioPanel.tsx'
+import { range3 } from '../lib/scenarios.ts'
 import { int, landedCost, money, yen } from '../lib/calc.ts'
 import { useFx } from '../lib/fx.ts'
 
@@ -354,15 +357,42 @@ export function Import() {
   const cheapest = brokers[0]?.landed ?? 0
   const avgLanded = landedCost({ ...base, japanFees: avgFees * rate, fees }).landed
 
+  // Importrechner 2.0: Spannen für die Szenarien (nur veröffentlichte Werte)
+  const scenBase = useMemo(() => ({ vehicle, japanFees: japanFees * rate, freight, insureOn, insurePct, dutyPct, vatPct, fees }), [vehicle, japanFees, rate, freight, insureOn, insurePct, dutyPct, vatPct, fees])
+  const originRange = useMemo(
+    () =>
+      O || agent === 'manual'
+        ? range3([japanFees * rate], japanFees * rate)
+        : range3(
+            AGENTS.map((a) => agentTotal(a, hammer)).filter((x): x is number => x !== null).map((x) => x * rate),
+            japanFees * rate,
+          ),
+    [O, agent, japanFees, rate, hammer],
+  )
+  const freightRange = useMemo(() => {
+    const opts = O ? O.ship.filter((m) => m.cost !== null).map((m) => conv(m.cost!, m.cur, cur)) : [dest.freight.roro, dest.freight.container]
+    return { low: Math.min(freight, ...opts), expected: freight, high: Math.max(freight, ...opts) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [O, freight, dest, cur, rates])
+  const scenBasis = `${O ? O.name : 'Japan'} → ${dest.name}, ${O ? pickedShip!.label : ship === 'roro' ? 'RoRo' : 'Container'}, ${O ? pickedHouse!.name : agent === 'avg' ? 'Ø ' + AGENTS.length + ' Agenten' : agent === 'manual' ? 'eigene Japan-Gebühren' : (picked?.name ?? '')}`
+  const findParts = find ? find.title.trim().split(/\s+/) : []
+  const carParts = shownCar.model.split(' ')
+  const suggestion = find
+    ? { make: findParts[0] ?? '', model: findParts.slice(1).join(' '), price: { amount: find.price, cur: find.cur }, market: find.market, url: find.url || undefined }
+    : carId
+      ? { make: carParts[0], model: carParts.slice(1).join(' '), year: shownCar.year, image: 'cars/' + shownCar.id, market: 'jp' }
+      : undefined
+
   const rateNote = O && manualRate === 0 ? (live ? `EZB-Kurs vom ${new Date(live.date).toLocaleDateString('de-DE')}` : 'Ersatzkurs vom 16.11.2026') : manualRate > 0 ? 'eigener Kurs' : live ? `EZB-Kurs vom ${new Date(live.date).toLocaleDateString('de-DE')}` : 'Ersatzkurs vom 27.10.2026'
 
   return (
     <>
-      <Hero slides={HERO.import} eyebrow="Import" title={<>From Yokohama <em>to your garage.</em></>} sub="Was dein JDM bis vor die Haustür wirklich kostet.">
-        <a className="btn red" href="#/import/rechner">
-          Kosten berechnen
-        </a>
-      </Hero>
+      <PageHead
+        eyebrow="Discover · Importrechner 2.0"
+        title={<>Bis vor die Tür. <em>In vier Szenarien.</em></>}
+        sub="Was ein Auto aus Japan, den USA, England, Kanada oder Australien bis vor die Tür kostet: mit Tageskurs der EZB, veröffentlichten Gebühren und vier Szenarien."
+        image={img('import-ship')}
+      />
 
       <section className="section narrow" id="rechner">
         <SectionHead eyebrow="Rechner" title={<>Jeder Yen <em>sichtbar.</em></>} />
@@ -394,6 +424,9 @@ export function Import() {
             </AnimatePresence>
           </div>
 
+          <p className="cars-note">
+            <Badge kind="demo">Beispielautos</Badge> Preise zur Orientierung, keine echten Inserate. Eigene Fundstücke kommen aus der Fahrzeugsuche oder der Garage.
+          </p>
           <div className="cars">
             {CARS.map((c) => (
               <motion.button key={c.id} className={'car' + (c.id === carId ? ' on' : '')} onClick={() => pickCar(c.id)} whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} title={c.model}>
@@ -664,6 +697,22 @@ export function Import() {
           <p className="disclaimer">
             Schätzung · 1 {cur} = {(1 / rate).toLocaleString('de-DE', { maximumFractionDigits: 2 })} {osym} ({rateNote}). Zoll (HS 8703) und Gebühren mit einem Zollagenten bestätigen. Ohne Kfz-Steuer, Versicherung und Reparaturen.
           </p>
+        </Reveal>
+      </section>
+
+      <section className="section narrow">
+        <Reveal>
+          <ScenarioPanel
+            key={origin + destKey}
+            base={scenBase}
+            originFees={originRange}
+            freight={freightRange}
+            cur={cur}
+            basis={scenBasis}
+            linkedId={find?.id}
+            suggestion={suggestion}
+            fxLabel={`Kursänderung bis zur Zahlung, wirkt auf alles in ${origCur}`}
+          />
         </Reveal>
       </section>
 

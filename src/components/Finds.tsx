@@ -1,31 +1,30 @@
 // Merkliste: Inserate, die man in den Portalen gefunden hat, mit Link und Preis festhalten.
-// Bleibt auf dem Gerät (localStorage) und ist mit dem Import-Rechner verbunden: ein Klick rechnet das Auto durch.
+// Seit 2.0 ein Ausschnitt der Garage: Fahrzeuge mit Preis. Bleibt auf dem Gerät und ist mit dem Importrechner verbunden.
 import { Calculator, ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
-import { MARKETS, loadFinds, saveFinds, sendToCalc, toJpy, type Find } from '../data.ts'
+import { MARKETS, sendToCalc, toJpy, type Find } from '../data.ts'
+import { addVehicle, removeVehicle, useStore } from '../store/store.ts'
+import { StatusPill } from './ui.tsx'
 import { int, yen } from '../lib/calc.ts'
 import { useFx } from '../lib/fx.ts'
 
 export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
   const { rates } = useFx()
-  const [list, setList] = useState<Find[]>(loadFinds)
+  const vehicles = useStore((s) => s.vehicles)
+  const list = vehicles.filter((v) => v.price && v.price.amount > 0)
   const [market, setMarket] = useState('jp')
   const cur = MARKETS.find((m) => m.id === market)?.cur ?? 'JPY'
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [price, setPrice] = useState('')
 
-  const update = (f: Find[]) => {
-    setList(f)
-    saveFinds(f)
-  }
   const amount = parseInt(price.replace(/[^\d]/g, ''), 10) || 0
   const okUrl = /^https:\/\/\S+$/.test(url.trim())
   const add = () => {
     if (!amount) return
-    const f: Find = { id: String(Date.now()), title: title.trim() || defaultTitle || 'Fundstück', url: okUrl ? url.trim() : '', price: amount, cur, market, added: new Date().toISOString() }
-    update([f, ...list])
+    const t = (title.trim() || defaultTitle || 'Fundstück').split(/\s+/)
+    addVehicle({ make: t[0], model: t.slice(1).join(' '), status: 'watchlist', price: { amount, cur }, market, url: okUrl ? url.trim() : undefined, source: 'finds' })
     setTitle('')
     setUrl('')
     setPrice('')
@@ -65,13 +64,15 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
       {amount > 0 && cur !== 'JPY' && <p className="hint">≈ {yen(toJpy(amount, cur, rates))} zum Tageskurs</p>}
 
       <AnimatePresence initial={false}>
-        {list.map((f) => (
+        {list.map((v) => {
+          const f: Find = { id: v.id, title: [v.make, v.model, v.variant].filter(Boolean).join(' '), url: v.url ?? '', price: v.price!.amount, cur: v.price!.cur, market: v.market ?? 'jp', added: v.createdAt }
+          return (
           <motion.div key={f.id} className="find" layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
             <span className="mk-code small-code">{f.market.toUpperCase()}</span>
             <span className="find-main">
               <b>{f.title}</b>
               <small>
-                {f.cur === 'JPY' ? yen(f.price) : `${int(f.price)} ${f.cur} · ≈ ${yen(toJpy(f.price, f.cur, rates))}`}
+                {f.cur === 'JPY' ? yen(f.price) : `${int(f.price)} ${f.cur} · ≈ ${yen(toJpy(f.price, f.cur, rates))}`} · <StatusPill status={v.status} />
               </small>
             </span>
             {f.url && (
@@ -82,13 +83,14 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
             <button className="btn small red" onClick={() => sendToCalc(f)}>
               <Calculator size={14} /> Durchrechnen
             </button>
-            <button className="icon-btn" title="Entfernen" onClick={() => update(list.filter((x) => x.id !== f.id))}>
+            <button className="icon-btn" title="Aus der Garage entfernen" onClick={() => confirm(`„${f.title}“ aus der Garage entfernen?`) && removeVehicle(v.id)}>
               <Trash2 size={16} />
             </button>
           </motion.div>
-        ))}
+          )
+        })}
       </AnimatePresence>
-      {list.length === 0 && <p className="muted small">Noch nichts gemerkt. Öffne oben ein Portal, kopier Link und Preis hierher und rechne das Auto mit einem Klick bis vor deine Tür durch.</p>}
+      {list.length === 0 && <p className="muted small">Noch nichts gemerkt. Öffne oben ein Portal, kopier Link und Preis hierher und rechne das Auto mit einem Klick bis vor deine Tür durch. Alles Gemerkte steht auch in deiner Garage.</p>}
     </div>
   )
 }

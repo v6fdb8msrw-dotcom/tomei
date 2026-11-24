@@ -1,5 +1,6 @@
 // Service: Kaufen, verschiffen, zulassen als ein Paket. TŌMEI tritt als Vermittler auf (neutral, Partner folgt).
 // Preisrahmen aus dem Import-Rechner (Deutschland), Anfrage als vorausgefüllte E-Mail oder zum Kopieren.
+import { Badge } from '../components/ui.tsx'
 import { Anchor, Check, ClipboardCopy, FileSearch, Gavel, Mail, ShieldCheck, Ship, Truck, Wrench } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
@@ -94,7 +95,10 @@ export function Service() {
               <em>Zulassen.</em>
             </h1>
             <p className="lead">Ein Ansprechpartner von der Auktion in Übersee bis zur Zulassung in Deutschland. Du sagst, was du suchst, wir kümmern uns um den Rest.</p>
-            <a className="btn red" href="#/service/anfrage">
+            <p className="cars-note">
+              <Badge kind="demo">In Vorbereitung</Badge> Den Service gibt es noch nicht. Die Anfrage lässt sich vorbereiten und kopieren, aber noch an niemanden senden.
+            </p>
+            <a className="btn red" href="#/discover/service/anfrage">
               Anfrage starten
             </a>
           </Reveal>
@@ -153,7 +157,7 @@ export function Service() {
             <span>Bis vor die Tür, ca.</span>
             <b>{money(cost.landed, 'EUR')}</b>
           </motion.div>
-          <a className="link" href="#/import/rechner">
+          <a className="link" href="#/discover/calculator/rechner">
             Genauer rechnen im Import-Rechner
           </a>
         </div>

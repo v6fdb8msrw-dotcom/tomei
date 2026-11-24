@@ -1,8 +1,8 @@
 import { motion, useScroll, useTransform } from 'motion/react'
 import { ArrowUpRight } from 'lucide-react'
 import { useRef } from 'react'
-import { DASAI_URL, HERO, PARTS } from '../data.ts'
-import { EASE, Hero, ProviderGrid, SectionHead } from '../components/motion.tsx'
+import { DASAI_URL, PARTS } from '../data.ts'
+import { EASE, ProviderGrid, SectionHead } from '../components/motion.tsx'
 
 /** Das Mochi: kleines Display mit Augen, die blinzeln und umherschauen. */
 function Mochi() {
@@ -21,7 +21,8 @@ function Mochi() {
   )
 }
 
-export function Parts() {
+/** Teile-Shops und Dasai Mochi, eingebettet ins Build Studio */
+export function PartsShops() {
   const ref = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
   const scale = useTransform(scrollYProgress, [0, 1], [0.6, 1])
@@ -30,12 +31,6 @@ export function Parts() {
 
   return (
     <>
-      <Hero
-        slides={HERO.parts}
-        eyebrow="Parts"
-        title={<>Wheels, kits, <em>gadgets — direct.</em></>}
-        sub="Teile und Gadgets direkt aus Japan."
-      />
       <section className="section">
         <SectionHead eyebrow="Shops" title={<>Teile direkt <em>aus Japan.</em></>} />
         <ProviderGrid items={PARTS} />

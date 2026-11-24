@@ -180,10 +180,10 @@ export function Markets() {
           </div>
         ))}
         <div className="mk-cta">
-          <a className="btn red" href="#/service">
+          <a className="btn red" href="#/discover/service">
             <ShieldCheck size={18} /> Über TŌMEI ersteigern lassen
           </a>
-          <a className="btn" href="#/import/rechner">
+          <a className="btn" href="#/discover/calculator/rechner">
             Kosten bis vor die Tür berechnen
           </a>
         </div>

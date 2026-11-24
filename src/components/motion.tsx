@@ -156,12 +156,9 @@ export function ParallaxBand({ src, children }: { src: string; children: ReactNo
   )
 }
 
-/** Logo über den Favicon-Dienst von Google, sonst der Anfangsbuchstabe. */
-function Logo({ url, name }: { url: string; name: string }) {
-  const [failed, setFailed] = useState(false)
-  const host = new URL(url).hostname
-  if (failed) return <span className="logo letter">{name[0]}</span>
-  return <img className="logo" src={`https://www.google.com/s2/favicons?domain=${host}&sz=128`} alt="" loading="lazy" onError={() => setFailed(true)} />
+/** Monogramm statt Logo: keine Anfrage an fremde Dienste (früher Googles Favicon-Dienst, der Besucher-IPs an Google schickt). */
+function Logo({ name }: { url: string; name: string }) {
+  return <span className="logo letter">{name.replace(/^the\s+/i, '')[0]}</span>
 }
 
 /** Raster mit Anbieter-Karten (Logo, ein Satz, externer Link). */

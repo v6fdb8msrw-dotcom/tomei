@@ -1,0 +1,37 @@
+# Bildrechte und Lizenzen
+
+Alle Bilder sind echte Fotos mit freier Lizenz. Es gibt keine gezeichneten Autos oder Orte. Die Grafik in der Routen-Skizze des Builders und der Globus sind Datenvisualisierungen (Punkte aus Koordinaten, Landflächen aus Natural Earth).
+
+## Straßen (`public/images/roads/`)
+
+Quelle: Wikimedia Commons, heruntergeladen am 24.11.2026 als 1920-px-Vorschau und auf höchstens 1500 px verkleinert (keine weiteren Änderungen). Bei CC-BY-SA-Fotos gilt die verkleinerte Fassung als Bearbeitung und steht unter derselben Lizenz. Der Nachweis steht auch auf jeder Straßenseite.
+
+| Datei | Motiv | Urheber | Lizenz | Quelle |
+|---|---|---|---|---|
+| hakone.jpg | Hakone Turnpike im Frühling | PekePON | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Hakone_Turnpike_20140412-1.jpg |
+| izu.jpg | Izu Skyline mit Fuji | Batholith | Public Domain | https://commons.wikimedia.org/wiki/File:Izu_Skyline_20120203.jpg |
+| shiga.jpg | Nationalstraße 292 | 松岡明芳 | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:2016-10-10_Japan_National_Route_292（国道292号）_DSCF0538.jpg |
+| wangan.jpg | Shinonome JCT, Bayshore Route | Ebiebi2 | CC0 | https://commons.wikimedia.org/wiki/File:Shinonome_JCT_2.JPG |
+| shimanami.jpg | Kurushima-Kaikyō-Brücke | Nkns | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Kurushimakaikyou_ohashi01.jpg |
+| stelvio.jpg | Stilfser Joch, Ostrampe | kallerna | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Stelvio_Pass_Bolzano_side_1.jpg |
+| glockner.jpg | Großglockner-Hochalpenstraße | Sander Hoogendoorn | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Grossglockner_road.jpg |
+| furka.jpg | Furkapass, Westseite | Cooper.ch | CC BY 2.5 | https://commons.wikimedia.org/wiki/File:Furkapass_westside.jpg |
+| nordschleife.jpg | Nürburgring Nordschleife, Brünnchen | Mike Roberts | CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Nurburgring_lap.jpg |
+| transfagarasan.jpg | Transfăgărășan | Cristian Bortes | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Transfagarasan_twisty_road.jpg |
+| trollstigen.jpg | Trollstigen | Color probe | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Trollstigen_Norway_2006.JPG |
+| atlantic.jpg | Atlantikstraße | Ernst Vikne | CC BY-SA 2.0 | https://commons.wikimedia.org/wiki/File:Atlanterhavsvegen_1.jpg |
+| bigsur.jpg | Bixby-Creek-Brücke, Big Sur | Diliff | CC BY-SA 3.0 | https://commons.wikimedia.org/wiki/File:Bixby_Creek_Bridge,_California,_USA_-_May_2013.jpg |
+| blueridge.jpg | East Fork Overlook, Blue Ridge Parkway | Tsimmons | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:East_Fork_Overlook.jpg |
+| sunroad.jpg | Going-to-the-Sun Road | MPSharwood | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Going-to-the-Sun_Road_-_Glacier_National_Park.jpg |
+
+## Übrige Fotos (`public/images/`, `public/images/cars/`)
+
+Unsplash-Lizenz (kostenlos, auch kommerziell, Namensnennung freiwillig). Einzelnachweise: `public/images/CREDITS.md`. Einige Spot-Fotos sind Symbolbilder (dort vermerkt).
+
+## Schriften
+
+Manrope, Inter und JetBrains Mono über Fontsource, SIL Open Font License 1.1 (siehe `THIRD_PARTY_NOTICES.md`). Die Schriften liegen im Build, es gibt keine Anfrage an Google Fonts.
+
+## Icons
+
+Lucide (ISC-Lizenz).
