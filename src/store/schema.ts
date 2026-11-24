@@ -60,6 +60,18 @@ export type Vehicle = {
   mods: Mod[]
   /** erledigte Schritte der Import-Journey */
   journey: string[]
+  /** Modell im Katalog (ModelFinder-ID), wenn das Auto daraus übernommen wurde */
+  modelId?: string
+  /** abgehakte Punkte der Kauf-Checkliste */
+  checks?: string[]
+  /** eigener Wertverlauf (Schätzung, Gutachten, Angebot) */
+  values?: { date: string; amount: number; cur: string; note?: string }[]
+  /** nächste Hauptuntersuchung (YYYY-MM) */
+  huDue?: string
+  /** Saisonkennzeichen: erster und letzter Monat (1–12) */
+  season?: { from: number; to: number }
+  /** Anzahl eigener Fotos (die Fotos selbst liegen in IndexedDB) */
+  photoCount?: number
   /** Herkunft des Eintrags */
   source?: 'manual' | 'finds' | 'finder' | 'calculator' | 'home' | 'import'
   createdAt: string

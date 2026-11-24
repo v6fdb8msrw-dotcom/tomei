@@ -10,13 +10,13 @@ import { PageHead, img } from '../components/ui.tsx'
 /** Japanische Marken: dafür passen die JDM-Shops aus Japan */
 const JDM_MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Mitsubishi', 'Subaru', 'Suzuki', 'Lexus', 'Daihatsu', 'Isuzu', 'Infiniti', 'Acura', 'Datsun']
 
-const ALL: DirEntry[] = [
+export const ALL_SHOPS: DirEntry[] = [
   ...PARTS.map((p) => ({ name: p.name, url: p.url, cc: 'jp', makes: JDM_MAKES, text: { de: p.text, en: '' } })),
   ...PARTS_MORE,
 ]
 
 /** Passt ein Shop zu einer Marke? Ignoriert Groß-/Kleinschreibung und Zusätze wie „Mercedes“ vs. „Mercedes-Benz“. */
-function fits(shop: DirEntry, make: string): boolean {
+export function fits(shop: DirEntry, make: string): boolean {
   const m = make.trim().toLowerCase()
   if (!m) return false
   return (shop.makes ?? []).some((x) => x !== '*' && (x.toLowerCase() === m || x.toLowerCase().startsWith(m) || m.startsWith(x.toLowerCase())))
@@ -30,13 +30,13 @@ export function PartsShops() {
 
   const key = makes.join('|')
   const suggested = useMemo(() => {
-    const hits = ALL.filter((s) => makes.some((m) => fits(s, m)))
-    const general = ALL.filter((s) => s.makes?.includes('*'))
+    const hits = ALL_SHOPS.filter((s) => makes.some((m) => fits(s, m)))
+    const general = ALL_SHOPS.filter((s) => s.makes?.includes('*'))
     return hits.length ? [...hits, ...general] : []
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
-  const countries = [...new Set(ALL.map((s) => s.cc))]
-  const list = ALL.filter((s) => cc === 'all' || s.cc === cc)
+  const countries = [...new Set(ALL_SHOPS.map((s) => s.cc))]
+  const list = ALL_SHOPS.filter((s) => cc === 'all' || s.cc === cc)
 
   return (
     <>
@@ -64,7 +64,7 @@ export function PartsShops() {
               <em>{tx('aus aller Welt.', 'from around the world.')}</em>
             </>
           }
-          text={tx(`${ALL.length} Shops in ${countries.length} Ländern. Leg ein Auto in der Garage an, dann stehen passende Shops oben.`, `${ALL.length} shops in ${countries.length} countries. Add a car to your garage and matching shops appear at the top.`)}
+          text={tx(`${ALL_SHOPS.length} Shops in ${countries.length} Ländern. Leg ein Auto in der Garage an, dann stehen passende Shops oben.`, `${ALL_SHOPS.length} shops in ${countries.length} countries. Add a car to your garage and matching shops appear at the top.`)}
         />
         <div className="seg wrap parts-filter">
           <button className={cc === 'all' ? 'on' : ''} onClick={() => setCc('all')}>

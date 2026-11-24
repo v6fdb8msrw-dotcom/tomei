@@ -10,6 +10,7 @@ import { DIR_COUNTRY } from '../data/directory.ts'
 import { useT } from '../i18n/i18n.ts'
 import { addVehicle, useStore } from '../store/store.ts'
 import { EASE } from './ui.tsx'
+import { href } from '../lib/router.ts'
 
 export type CarModel = {
   id: string
@@ -35,7 +36,7 @@ export type CarModel = {
 }
 
 /** Fahrzeugklassen (aus der Wikipedia-Infobox zusammengefasst) */
-const CLASSES: Record<string, { de: string; en: string }> = {
+export const CLASS_LABEL: Record<string, { de: string; en: string }> = {
   sports: { de: 'Sportwagen', en: 'Sports car' },
   gt: { de: 'Gran Turismo', en: 'Grand tourer' },
   hot: { de: 'Kompaktsportler', en: 'Hot hatch' },
@@ -219,7 +220,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
           <button className={'chip' + (cls === 'all' ? ' on' : '')} onClick={() => setCls('all')}>
             {tx('Alle Klassen', 'All classes')}
           </button>
-          {Object.entries(CLASSES).map(([k, v]) => (
+          {Object.entries(CLASS_LABEL).map(([k, v]) => (
             <button key={k} className={'chip' + (cls === k ? ' on' : '')} onClick={() => setCls(cls === k ? 'all' : k)}>
               {L(v)}
             </button>
@@ -250,10 +251,12 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
             <motion.article key={m.id} className="gcard mf-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: (k % PAGE) * 0.012, ease: EASE }}>
               <header>
                 <span className="mf-flag">{DIR_COUNTRY[m.cc]?.flag ?? '🌍'}</span>
-                <span className="cf-kind">{m.cl && CLASSES[m.cl] ? L(CLASSES[m.cl]) : m.cl ? d(m.cl) : m.mk}</span>
+                <span className="cf-kind">{m.cl && CLASS_LABEL[m.cl] ? L(CLASS_LABEL[m.cl]) : m.cl ? d(m.cl) : m.mk}</span>
                 {m.y0 && <span className={'cf-badge' + (oldOk ? ' ok' : '')}>{oldOk ? tx('Oldtimer-fähig', 'Classic-eligible') : tx(`Oldtimer ab ${m.y0 + 30}`, `Classic from ${m.y0 + 30}`)}</span>}
               </header>
-              <h3>{m.n}</h3>
+              <h3>
+                <a href={href('discover/models/' + m.id)}>{m.n}</a>
+              </h3>
               <p className="muted small mono">{years(m) || tx('Bauzeit siehe Quelle', 'Years: see source')}</p>
               {m.why && <p className="cf-why">{d(m.why)}</p>}
               {m.usd ? (
@@ -275,7 +278,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
                     <Check size={14} /> {tx('In der Garage', 'In garage')}
                   </span>
                 ) : (
-                  <button className="btn small" onClick={() => addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, source: 'finder' })}>
+                  <button className="btn small" onClick={() => addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, modelId: m.id, source: 'finder' })}>
                     <Plus size={14} /> {tx('Merken', 'Save')}
                   </button>
                 )}

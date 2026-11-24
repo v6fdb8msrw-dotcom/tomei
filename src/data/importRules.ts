@@ -1,0 +1,145 @@
+// Importregeln je Zielland (Stand 24.11.2026). Nur Aussagen, die die verlinkten offiziellen Seiten bzw. die
+// Quellen in DATA_SOURCES.md decken. Zahlen zu Zoll und Steuern stimmen mit DEST in data.ts überein.
+// Kein Ersatz für eine Auskunft beim Zoll oder bei der Zulassungsstelle.
+type Tx = { de: string; en: string }
+export type ImportRule = {
+  id: string
+  flag: string
+  name: Tx
+  /** Altersgrenze, ab der der Import deutlich einfacher oder günstiger wird */
+  age?: { years: number; text: Tx }
+  taxes: Tx
+  steps: Tx[]
+  links: { label: Tx; url: string }[]
+}
+
+export const IMPORT_RULES: ImportRule[] = [
+  {
+    id: 'de',
+    flag: '🇩🇪',
+    name: { de: 'Deutschland', en: 'Germany' },
+    age: { years: 30, text: { de: 'Ab 30 Jahren im Originalzustand: Einreihung als Sammlungsstück möglich (0 % Zoll, 7 % Einfuhrumsatzsteuer) und H-Kennzeichen mit pauschal 191,73 € Kfz-Steuer.', en: 'From 30 years in original condition: may be classified as a collector’s item (0 % duty, 7 % import VAT) and qualifies for an H plate with a flat €191.73 vehicle tax.' } },
+    taxes: { de: '10 % Zoll und 19 % Einfuhrumsatzsteuer auf den Zollwert (Kaufpreis plus Fracht und Versicherung). Innerhalb der EU gekaufte Autos: kein Zoll.', en: '10 % duty and 19 % import VAT on the customs value (price plus freight and insurance). Cars bought within the EU: no duty.' },
+    steps: [
+      { de: 'Zollanmeldung beim ersten Zollamt in der EU (meist am Hafen, z. B. Bremerhaven), mit Rechnung und Frachtpapieren.', en: 'Customs declaration at the first customs office in the EU (usually at the port, e.g. Bremerhaven), with invoice and shipping papers.' },
+      { de: 'Vollgutachten nach § 21 StVZO (Einzelgenehmigung) bei TÜV, DEKRA, GTÜ oder KÜS; bei Bedarf Umbauten, z. B. Scheinwerfer.', en: 'Full inspection under § 21 StVZO (individual approval) at TÜV, DEKRA, GTÜ or KÜS; conversions such as headlights if needed.' },
+      { de: 'Für ein H-Kennzeichen zusätzlich ein Oldtimer-Gutachten nach § 23 StVZO (mindestens 30 Jahre, weitgehend original, gepflegt).', en: 'For an H plate also a classic car report under § 23 StVZO (at least 30 years, largely original, well kept).' },
+      { de: 'Zulassung bei der Zulassungsstelle mit Gutachten, Zollbescheinigung, Versicherungsbestätigung (eVB) und Ausweis.', en: 'Registration at the local registration office with the report, customs certificate, insurance confirmation (eVB) and ID.' },
+    ],
+    links: [
+      { label: { de: 'ADAC: Oldtimer-Import und -Export', en: 'ADAC: importing and exporting classics' }, url: 'https://www.adac.de/rund-ums-fahrzeug/oldtimer-youngtimer/recht-tipps/oldtimer-import-export/' },
+      { label: { de: 'EU-Kommission: Autos kaufen und verkaufen', en: 'European Commission: buying and selling cars' }, url: 'https://taxation-customs.ec.europa.eu/buying-and-selling-cars_de' },
+      { label: { de: '§ 21 StVZO (Einzelgenehmigung)', en: '§ 21 StVZO (individual approval)' }, url: 'https://www.gesetze-im-internet.de/stvzo_2012/__21.html' },
+      { label: { de: '§ 23 StVZO (Gutachten für Oldtimer)', en: '§ 23 StVZO (classic car report)' }, url: 'https://www.gesetze-im-internet.de/stvzo_2012/__23.html' },
+      { label: { de: '§ 2 FZV (Begriff Oldtimer)', en: '§ 2 FZV (definition of classic)' }, url: 'https://www.gesetze-im-internet.de/fzv_2023/__2.html' },
+      { label: { de: 'Kfz-Steuer-Rechner des BMF', en: 'BMF vehicle tax calculator' }, url: 'https://www.bundesfinanzministerium.de/Web/DE/Service/Apps_Rechner/KfzRechner/KfzRechner.html' },
+    ],
+  },
+  {
+    id: 'at',
+    flag: '🇦🇹',
+    name: { de: 'Österreich', en: 'Austria' },
+    taxes: { de: 'Zoll und 20 % Einfuhrumsatzsteuer bei Einfuhr aus Drittstaaten; bei der Zulassung zusätzlich die Normverbrauchsabgabe (NoVA).', en: 'Duty and 20 % import VAT for imports from non-EU countries; on registration also the standard consumption tax (NoVA).' },
+    steps: [
+      { de: 'Verzollung beim Zollamt mit Rechnung und Fahrzeugpapieren.', en: 'Customs clearance at the customs office with invoice and vehicle papers.' },
+      { de: 'Einzelgenehmigung bzw. Prüfung beim Landesprüfzentrum.', en: 'Individual approval or inspection at the regional testing centre.' },
+      { de: 'NoVA beim Finanzamt, dann Zulassung bei einer Zulassungsstelle (Versicherung).', en: 'Pay NoVA at the tax office, then register at a registration point (insurer).' },
+    ],
+    links: [
+      { label: { de: 'oesterreich.gv.at: Kfz-Import aus Drittländern', en: 'oesterreich.gv.at: importing from non-EU countries' }, url: 'https://www.oesterreich.gv.at/themen/mobilitaet/kfz/3/Seite.061530.html' },
+      { label: { de: 'BMF: Fahrzeugimport aus Drittstaaten (NoVA)', en: 'BMF: vehicle import from non-EU countries (NoVA)' }, url: 'https://www.bmf.gv.at/themen/steuern/kraftfahrzeuge/normverbrauchsabgabe-uebersicht/fahrzeugimport/fahrzeugimport-aus-drittstaaten.html' },
+    ],
+  },
+  {
+    id: 'ch',
+    flag: '🇨🇭',
+    name: { de: 'Schweiz', en: 'Switzerland' },
+    taxes: { de: 'Zoll nach Gewicht, 4 % Automobilsteuer auf den Fahrzeugwert und Mehrwertsteuer auf den Wert einschließlich Automobilsteuer (auch für Autos aus der EU).', en: 'Duty by weight, 4 % automobile tax on the vehicle value and VAT on the value including the automobile tax (also for cars from the EU).' },
+    steps: [
+      { de: 'Zollanmeldung (e-dec) mit Rechnung oder Kaufvertrag, Fahrzeugausweis und Identitätsnachweis.', en: 'Customs declaration (e-dec) with invoice or purchase contract, vehicle document and ID.' },
+      { de: 'Technische Prüfung beim kantonalen Strassenverkehrsamt.', en: 'Technical inspection at the cantonal road traffic office.' },
+      { de: 'Zulassung im Wohnkanton.', en: 'Registration in your canton of residence.' },
+    ],
+    links: [{ label: { de: 'BAZG: Fahrzeug in die Schweiz einführen', en: 'FOCBS: importing a vehicle into Switzerland' }, url: 'https://www.bazg.admin.ch/de/fahrzeug-import-schweiz-zollanmeldung-steuern' }],
+  },
+  {
+    id: 'uk',
+    flag: '🇬🇧',
+    name: { de: 'Großbritannien', en: 'United Kingdom' },
+    age: { years: 40, text: { de: 'Ab 40 Jahren kann ein Fahrzeug als „historic vehicle“ von der Kfz-Steuer (und der MOT) befreit sein.', en: 'From 40 years a vehicle can qualify as a historic vehicle, exempt from vehicle tax (and MOT).' } },
+    taxes: { de: '10 % Zoll und 20 % VAT auf Autos aus Drittstaaten.', en: '10 % duty and 20 % VAT on cars from outside the UK.' },
+    steps: [
+      { de: 'Import beim HMRC melden und Zoll/VAT zahlen.', en: 'Notify HMRC of the import and pay duty/VAT.' },
+      { de: 'Je nach Alter eine Typprüfung (z. B. IVA-Test) bei der DVSA.', en: 'Depending on age, an approval test (e.g. IVA) with the DVSA.' },
+      { de: 'Registrierung bei der DVLA, danach Versicherung und Steuer.', en: 'Register with the DVLA, then insure and tax the vehicle.' },
+    ],
+    links: [
+      { label: { de: 'GOV.UK: Fahrzeuge importieren', en: 'GOV.UK: importing vehicles' }, url: 'https://www.gov.uk/importing-vehicles-into-the-uk' },
+      { label: { de: 'GOV.UK: Fahrzeugzulassung (IVA)', en: 'GOV.UK: vehicle approval (IVA)' }, url: 'https://www.gov.uk/vehicle-approval' },
+      { label: { de: 'GOV.UK: Historische Fahrzeuge', en: 'GOV.UK: historic vehicles' }, url: 'https://www.gov.uk/historic-vehicles' },
+    ],
+  },
+  {
+    id: 'us',
+    flag: '🇺🇸',
+    name: { de: 'USA', en: 'USA' },
+    age: { years: 25, text: { de: 'Ab 25 Jahren sind Autos von den US-Sicherheitsnormen (FMVSS) ausgenommen; für die Abgasvorschriften der EPA gilt eine Grenze von 21 Jahren.', en: 'From 25 years cars are exempt from US safety standards (FMVSS); the EPA emissions exemption applies from 21 years.' } },
+    taxes: { de: '2,5 % Zoll auf Pkw, 25 % auf Pickups und Transporter. Keine Bundes-Mehrwertsteuer; Steuern beim Zulassen im Bundesstaat.', en: '2.5 % duty on cars, 25 % on pickups and vans. No federal VAT; state taxes on registration.' },
+    steps: [
+      { de: 'Einfuhr beim CBP anmelden (Formulare HS-7 für NHTSA und EPA 3520-1).', en: 'Declare the import with CBP (forms HS-7 for NHTSA and EPA 3520-1).' },
+      { de: 'Jüngere Autos nur über einen registrierten Importeur (RI), der sie anpasst.', en: 'Younger cars only via a registered importer (RI) who brings them into compliance.' },
+      { de: 'Titel und Zulassung beim DMV des Bundesstaats.', en: 'Title and registration with the state DMV.' },
+    ],
+    links: [
+      { label: { de: 'NHTSA: Fahrzeug importieren', en: 'NHTSA: importing a vehicle' }, url: 'https://www.nhtsa.gov/importing-vehicle' },
+      { label: { de: 'EPA: Fahrzeuge importieren', en: 'EPA: importing vehicles' }, url: 'https://www.epa.gov/importing-vehicles-and-engines' },
+      { label: { de: 'CBP: Kfz importieren', en: 'CBP: importing a motor vehicle' }, url: 'https://www.cbp.gov/trade/basic-import-export/importing-car' },
+    ],
+  },
+  {
+    id: 'ca',
+    flag: '🇨🇦',
+    name: { de: 'Kanada', en: 'Canada' },
+    age: { years: 15, text: { de: 'Ab 15 Jahren sind Autos von den kanadischen Sicherheitsnormen ausgenommen; jüngere Autos aus den USA laufen über das RIV-Programm.', en: 'From 15 years cars are exempt from Canadian safety standards; younger cars from the USA go through the RIV programme.' } },
+    taxes: { de: '6,1 % Zoll (ohne Ursprung aus Nordamerika) und 5 % GST, dazu Provinzsteuer bei der Zulassung.', en: '6.1 % duty (non-North-American origin) and 5 % GST, plus provincial tax on registration.' },
+    steps: [
+      { de: 'Verzollung bei der CBSA.', en: 'Customs clearance with the CBSA.' },
+      { de: 'Bei jüngeren Autos aus den USA: RIV-Registrierung und Inspektion.', en: 'For younger cars from the USA: RIV registration and inspection.' },
+      { de: 'Zulassung in der Provinz.', en: 'Provincial registration.' },
+    ],
+    links: [
+      { label: { de: 'Transport Canada: Fahrzeug importieren', en: 'Transport Canada: importing a vehicle' }, url: 'https://tc.canada.ca/en/road-transportation/importing-vehicle' },
+      { label: { de: 'RIV – Registrar of Imported Vehicles', en: 'RIV – Registrar of Imported Vehicles' }, url: 'https://www.riv.ca/' },
+    ],
+  },
+  {
+    id: 'au',
+    flag: '🇦🇺',
+    name: { de: 'Australien', en: 'Australia' },
+    age: { years: 25, text: { de: 'Autos, die vor mehr als 25 Jahren gebaut wurden, können über die vereinfachte Einfuhrgenehmigung für ältere Fahrzeuge importiert werden.', en: 'Cars built more than 25 years ago can be imported through the concessional entry approval for older vehicles.' } },
+    taxes: { de: '5 % Zoll und 10 % GST, bei teuren Autos ggf. Luxury Car Tax.', en: '5 % duty and 10 % GST, plus luxury car tax on expensive cars.' },
+    steps: [
+      { de: 'Einfuhrgenehmigung (ROVER-Portal) vor der Verschiffung beantragen.', en: 'Apply for import approval (ROVER portal) before shipping.' },
+      { de: 'Verzollung und Biosicherheits-Prüfung bei der Ankunft.', en: 'Customs clearance and biosecurity inspection on arrival.' },
+      { de: 'Zulassung im Bundesstaat.', en: 'Registration in the state.' },
+    ],
+    links: [
+      { label: { de: 'Australische Regierung: Fahrzeug importieren', en: 'Australian Government: importing a vehicle' }, url: 'https://www.infrastructure.gov.au/infrastructure-transport-vehicles/vehicles/importing-vehicle' },
+      { label: { de: 'Ältere Fahrzeuge (25+ Jahre)', en: 'Older vehicles (25+ years)' }, url: 'https://infrastructure.gov.au/department/media/news/how-import-your-older-vehicle-25-years-or-older' },
+      { label: { de: 'ROVER-Portal', en: 'ROVER portal' }, url: 'https://rover.infrastructure.gov.au/' },
+    ],
+  },
+  {
+    id: 'nz',
+    flag: '🇳🇿',
+    name: { de: 'Neuseeland', en: 'New Zealand' },
+    taxes: { de: '0 % Zoll auf Pkw und 15 % GST.', en: '0 % duty on cars and 15 % GST.' },
+    steps: [
+      { de: 'Biosicherheits-Reinigung und Grenzkontrolle.', en: 'Biosecurity cleaning and border inspection.' },
+      { de: 'Entry Certification (Prüfung von Identität und Vorschriften), dann Registrierung.', en: 'Entry certification (identity and standards check), then registration.' },
+    ],
+    links: [{ label: { de: 'NZTA: Fahrzeug importieren', en: 'NZTA: importing a vehicle' }, url: 'https://www.nzta.govt.nz/vehicles/how-the-vehicle-system-works/importing-a-vehicle/' }],
+  },
+]
+
+export const ruleById = (id: string) => IMPORT_RULES.find((r) => r.id === id)

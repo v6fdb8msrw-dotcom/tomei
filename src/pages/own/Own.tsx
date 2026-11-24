@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { MARKETS, sendToCalc } from '../../data.ts'
 import { roadImg } from '../../data/roads.ts'
 import { WorldHub } from '../../components/WorldHub.tsx'
+import { VehicleExtras } from './VehicleExtras.tsx'
+import { removeVehiclePhotos } from '../../lib/photos.ts'
 import { EmptyState, EASE, NotFound, PageHead, StatusPill, VehicleVisual, fmtMoney, img, vehicleTitle } from '../../components/ui.tsx'
 import { useT, type TKey } from '../../i18n/i18n.ts'
 import { href, navigate } from '../../lib/router.ts'
@@ -223,6 +225,13 @@ function VehiclePage({ id }: { id: string }) {
           </a>
         </div>
 
+        {v.modelId && (
+          <p>
+            <a className="link" href={href('discover/models/' + v.modelId)}>
+              {tx('Modellseite: Importregeln, Suche, Teile, Checkliste →', 'Model page: import rules, search, parts, checklist →')}
+            </a>
+          </p>
+        )}
         <div className="gcard">
           <h3>{tx('Daten', 'Details')}</h3>
           <div className="fields two">
@@ -301,6 +310,8 @@ function VehiclePage({ id }: { id: string }) {
           <p className="muted small">{tx('Nur https-Links werden gespeichert. Änderungen speichern sich sofort auf diesem Gerät.', 'Only https links are saved. Changes are saved instantly on this device.')}</p>
         </div>
 
+        <VehicleExtras v={v} />
+
         <div className="row gap wrap">
           <a className="btn" href={href('own/garage')}>
             <ArrowRight size={15} style={{ transform: 'rotate(180deg)' }} /> {tx('Zur Garage', 'Back to garage')}
@@ -310,6 +321,7 @@ function VehiclePage({ id }: { id: string }) {
             onClick={() => {
               if (confirm(tx(`„${vehicleTitle(v)}“ mit Wartung und Passport-Einträgen löschen? Das lässt sich nicht rückgängig machen.`, `Delete “${vehicleTitle(v)}” with its maintenance and passport entries? This cannot be undone.`))) {
                 removeVehicle(v.id)
+                void removeVehiclePhotos(v.id)
                 navigate('own/garage')
               }
             }}

@@ -66,6 +66,19 @@ export function sanitizeVehicle(v: unknown): Vehicle | null {
       .filter(isObj)
       .map((m) => clean({ id: str(m.id, 80) || uid(), title: str(m.title, 200) ?? 'Teil', category: str(m.category, 60) ?? 'Sonstiges', status: (['idea', 'planned', 'ordered', 'installed'].includes(m.status as string) ? m.status : 'idea') as Vehicle['mods'][number]['status'], cost: money(m.cost), url: safeUrl(m.url), date: str(m.date, 30), notes: str(m.notes, 2000) })),
     journey: arr(v.journey).filter((x): x is string => typeof x === 'string').slice(0, 50),
+    modelId: str(v.modelId, 40),
+    checks: v.checks === undefined ? undefined : arr(v.checks).filter((x): x is string => typeof x === 'string').slice(0, 100),
+    values:
+      v.values === undefined
+        ? undefined
+        : arr(v.values)
+            .filter(isObj)
+            .map((x) => clean({ date: str(x.date, 10) ?? '', amount: num(x.amount) ?? 0, cur: str(x.cur, 3) ?? 'EUR', note: str(x.note, 200) }))
+            .filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date) && x.amount > 0)
+            .slice(0, 200),
+    huDue: typeof v.huDue === 'string' && /^\d{4}-\d{2}$/.test(v.huDue) ? v.huDue : undefined,
+    season: isObj(v.season) && num(v.season.from) && num(v.season.to) ? { from: Math.min(12, Math.max(1, num(v.season.from)!)), to: Math.min(12, Math.max(1, num(v.season.to)!)) } : undefined,
+    photoCount: num(v.photoCount),
     source: str(v.source, 20) as Vehicle['source'],
     createdAt: str(v.createdAt, 40) ?? t,
     updatedAt: str(v.updatedAt, 40) ?? t,

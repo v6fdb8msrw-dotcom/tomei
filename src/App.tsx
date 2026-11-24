@@ -21,6 +21,8 @@ const Rent = named(() => import('./pages/Rent.tsx'), 'Rent')
 const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
 const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
 const PartsPage = named(() => import('./pages/Parts.tsx'), 'PartsPage')
+const ModelPage = named(() => import('./pages/discover/ModelPage.tsx'), 'ModelPage')
+const RulesPage = named(() => import('./pages/discover/Rules.tsx'), 'RulesPage')
 const DiscoverHub = named(discover, 'DiscoverHub')
 const Auctions = named(discover, 'Auctions')
 const Partners = named(discover, 'Partners')
@@ -50,6 +52,7 @@ function useSub(world: World): SubItem[] {
       { to: 'discover/partners', label: en ? 'Import partners' : 'Import-Partner' },
       { to: 'discover/calculator', label: en ? 'Calculator' : 'Importrechner' },
       { to: 'discover/journey', label: 'Import-Journey' },
+      { to: 'discover/rules', label: en ? 'Import rules' : 'Importregeln' },
       { to: 'discover/service', label: 'Service' },
     ]
   if (world === 'drive')
@@ -83,6 +86,8 @@ function Page({ path }: { path: string[] }): ReactNode {
     if (sub === 'partners') return <Partners />
     if (sub === 'calculator') return <Import />
     if (sub === 'journey') return <Journey vehicleId={id} />
+    if (sub === 'models' && id) return <ModelPage id={id} />
+    if (sub === 'rules') return <RulesPage id={id} />
     if (sub === 'service') return <Service />
   }
   if (w === 'drive') {

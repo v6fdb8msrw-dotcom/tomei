@@ -1,0 +1,69 @@
+// Besichtigungs- und Kauf-Checkliste. Allgemeine Punkte nach den Ratgebern von ADAC und TÜV NORD (Links unten),
+// dazu Punkte, die sich aus Alter und Herkunft eines Autos ergeben (Import, Rechtslenker, Auktionsblatt).
+// Bewusst keine erfundenen modelltypischen Schwachstellen.
+type Tx = { de: string; en: string }
+export type CheckCtx = { age?: number; origin?: string }
+export type CheckItem = { id: string; t: Tx; when?: (c: CheckCtx) => boolean }
+export type CheckGroup = { id: string; title: Tx; items: CheckItem[] }
+
+const imported = (c: CheckCtx) => !!c.origin && !['de', 'eu', 'at', 'ch', 'it', 'fr', 'se', 'nl'].includes(c.origin)
+const old = (c: CheckCtx) => (c.age ?? 0) >= 25
+
+export const CHECKLIST: CheckGroup[] = [
+  {
+    id: 'papers',
+    title: { de: 'Papiere und Historie', en: 'Papers and history' },
+    items: [
+      { id: 'vin', t: { de: 'Fahrgestellnummer am Auto stimmt mit den Papieren überein', en: 'VIN on the car matches the papers' } },
+      { id: 'owner', t: { de: 'Verkäufer ist im Fahrzeugbrief bzw. Titel eingetragen oder legt eine Vollmacht vor', en: 'Seller is listed on the title or shows a power of attorney' } },
+      { id: 'service', t: { de: 'Serviceheft, Rechnungen und Belege zu Reparaturen vorhanden', en: 'Service book, invoices and repair records available' } },
+      { id: 'km', t: { de: 'Kilometerstand plausibel zu Belegen, Verschleiß und Alter', en: 'Mileage plausible against records, wear and age' } },
+      { id: 'sheet', t: { de: 'Auktionsblatt übersetzen lassen und Note, Mängelskizze und Laufleistung prüfen', en: 'Have the auction sheet translated; check grade, damage map and mileage' }, when: (c) => c.origin === 'jp' || c.origin === 'kr' },
+      { id: 'export', t: { de: 'Export-Zertifikat bzw. Deregistrierung liegt vor (Nachweis für Erstzulassung und Alter)', en: 'Export or deregistration certificate available (proof of first registration and age)' }, when: imported },
+      { id: 'title', t: { de: 'US-Titel ohne Vermerk „salvage“ oder „rebuilt“', en: 'US title without “salvage” or “rebuilt” brand' }, when: (c) => c.origin === 'us' || c.origin === 'ca' },
+    ],
+  },
+  {
+    id: 'body',
+    title: { de: 'Karosserie', en: 'Body' },
+    items: [
+      { id: 'rust', t: { de: 'Rost an Schwellern, Radläufen, Wagenheberaufnahmen, Bodenblech und Rahmen', en: 'Rust on sills, wheel arches, jacking points, floor pan and frame' } },
+      { id: 'gaps', t: { de: 'Gleichmäßige Spaltmaße; Lackschichtdicke messen (Hinweis auf Unfall)', en: 'Even panel gaps; measure paint thickness (sign of accident)' } },
+      { id: 'water', t: { de: 'Feuchtigkeit oder Wasser im Innenraum und Kofferraum', en: 'Damp or water in the cabin and boot' } },
+      { id: 'salt', t: { de: 'Unterboden besonders genau ansehen: Streusalz-Regionen (Nordosten USA, Kanada, Großbritannien)', en: 'Check the underbody closely: road-salt regions (north-east USA, Canada, UK)' }, when: (c) => ['us', 'ca', 'uk'].includes(c.origin ?? '') },
+    ],
+  },
+  {
+    id: 'tech',
+    title: { de: 'Technik und Probefahrt', en: 'Mechanicals and test drive' },
+    items: [
+      { id: 'cold', t: { de: 'Kaltstart: Geräusche, Rauch, Leerlauf', en: 'Cold start: noises, smoke, idle' } },
+      { id: 'leaks', t: { de: 'Ölverlust und Undichtigkeiten unter dem Auto und im Motorraum', en: 'Oil and fluid leaks under the car and in the engine bay' } },
+      { id: 'drive', t: { de: 'Probefahrt: Kupplung, Getriebe, Bremsen, Lenkung, Geradeauslauf', en: 'Test drive: clutch, gearbox, brakes, steering, tracking' } },
+      { id: 'tyres', t: { de: 'Reifen: Alter (DOT-Nummer) und gleichmäßige Abnutzung', en: 'Tyres: age (DOT code) and even wear' } },
+      { id: 'rubber', t: { de: 'Gummiteile, Schläuche, Zahnriemen und Dichtungen altersbedingt prüfen oder einplanen', en: 'Check or budget for ageing rubber, hoses, timing belt and seals' }, when: old },
+      { id: 'mods', t: { de: 'Umbauten (Fahrwerk, Auspuff, Leistung) erfassen; in Deutschland müssen sie eingetragen werden können', en: 'Record modifications (suspension, exhaust, power); in Germany they must be approvable' } },
+    ],
+  },
+  {
+    id: 'import',
+    title: { de: 'Import und Zulassung', en: 'Import and registration' },
+    items: [
+      { id: 'rhd', t: { de: 'Rechtslenker: Scheinwerfer müssen für Rechtsverkehr passen (Umrüstung einplanen)', en: 'Right-hand drive: headlights must suit right-hand traffic (plan a conversion)' }, when: (c) => ['jp', 'uk', 'au', 'nz'].includes(c.origin ?? '') },
+      { id: 'speedo', t: { de: 'Tacho in km/h oder mit km/h-Skala (sonst Umrüstung)', en: 'Speedometer in km/h or with a km/h scale (otherwise convert)' }, when: (c) => ['us', 'uk'].includes(c.origin ?? '') },
+      { id: 'calc', t: { de: 'Gesamtkosten im Importrechner (Best/Expected/Worst) durchgerechnet', en: 'Total cost calculated in the import calculator (best/expected/worst)' }, when: imported },
+      { id: 'quote', t: { de: 'Schriftliches Angebot von Agent oder Spedition, Zahlung nur auf Firmenkonto', en: 'Written quote from agent or shipper; pay only to the company account' }, when: imported },
+      { id: 'h', t: { de: 'H-Kennzeichen möglich? Originalzustand für das Oldtimer-Gutachten prüfen', en: 'H plate possible? Check original condition for the classic car report' }, when: (c) => (c.age ?? 0) >= 30 },
+    ],
+  },
+]
+
+export const CHECK_SOURCES = [
+  { label: 'ADAC: Gebrauchtwagen kaufen', url: 'https://www.adac.de/rund-ums-fahrzeug/auto-kaufen-verkaufen/gebrauchtwagenkauf/gebrauchtwagen-kauf/' },
+  { label: 'TÜV NORD: Checkliste Probefahrt', url: 'https://www.tuev-nord.de/de/privatkunden/ratgeber-und-tipps/auto-ratgeber/tuev-nord-vertrauenscheck/probefahrt-checkliste' },
+]
+
+/** Alle Punkte, die für ein Auto mit diesem Alter und dieser Herkunft gelten */
+export function checklistFor(c: CheckCtx): CheckGroup[] {
+  return CHECKLIST.map((g) => ({ ...g, items: g.items.filter((i) => !i.when || i.when(c)) })).filter((g) => g.items.length)
+}

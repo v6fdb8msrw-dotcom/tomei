@@ -810,3 +810,40 @@ main.w-discover > section.section:nth-of-type(4n+2), main.w-drive > section.sect
 @media (max-width: 720px) { .mf-grid { grid-template-columns: minmax(0, 1fr); } .mf-search input { font-size: 16px; } }
 .mf-host { position: relative; }
 .hx-search .mf-suggest { text-shadow: none; text-align: left; }
+
+/* Modellseite und Importregeln */
+.mp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.mp-facts > div { background: var(--surface); border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow); }
+.mp-facts span { font-size: 12.5px; color: var(--text-3); }
+.mp-facts b { font-size: 17px; }
+.mp-text p:first-child { font-size: 17px; line-height: 1.6; }
+.mp-rule p { margin: 0 0 10px; }
+.mp-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.mp-checks ul { margin: 8px 0 0; padding-left: 18px; color: var(--text-2); }
+.mp-checks li { margin: 6px 0; }
+.mf-card h3 a { color: inherit; text-decoration: none; }
+.mf-card h3 a:hover { text-decoration: underline; }
+.rules-h { margin: 34px 0 12px; }
+.rules-links { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.journey li .j-check { display: grid; place-items: center; font-weight: 700; }
+@media (max-width: 720px) { .mp-checks { grid-template-columns: minmax(0, 1fr); } }
+
+/* Fahrzeugseite: Checkliste, Wertverlauf, Fotos, Erinnerungen */
+.vx { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+.vx-card { display: flex; flex-direction: column; gap: 12px; }
+.vx-card h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.vx-bar { height: 6px; border-radius: 3px; background: var(--field); overflow: hidden; }
+.vx-bar i { display: block; height: 100%; background: var(--petrol); transition: width .4s var(--ease); }
+.vx-group { display: grid; gap: 6px; }
+.vx-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--text-2); cursor: pointer; }
+.vx-check input { margin-top: 3px; accent-color: var(--petrol); width: 16px; height: 16px; flex: none; }
+.vx-chart { width: 100%; height: auto; background: var(--field); border-radius: 12px; }
+.vx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.vx-list li { display: grid; grid-template-columns: auto auto 1fr auto; gap: 10px; align-items: center; font-size: 14px; }
+.vx-add { display: grid; grid-template-columns: 1fr 1fr 1.4fr auto; gap: 8px; }
+.vx-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.vx-photos figure { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--field); }
+.vx-photos img { width: 100%; height: 100%; object-fit: cover; }
+.vx-photos .icon-btn { position: absolute; top: 6px; right: 6px; background: rgb(255 255 255 / 85%); }
+.vx-season { display: flex; gap: 8px; }
+@media (max-width: 900px) { .vx { grid-template-columns: minmax(0, 1fr); } .vx-add { grid-template-columns: 1fr 1fr; } }
