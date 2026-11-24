@@ -29,6 +29,10 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 | Kfz-Steuer H-Kennzeichen 191,73 €/Jahr | `src/lib/ownership.ts` | § 9 Abs. 4 Nr. 2 KraftStG, https://www.gesetze-im-internet.de/kraftstg/__9.html | 24.11.2026 |
 | Modell-Katalog (Name, Hersteller, Herkunftsland, Bauzeit, Klasse) | `src/data/models.json` | Wikidata (CC0, SPARQL-Abfrage) für Modelle, Hersteller und Herkunft; Bauzeit und Klasse aus der Infobox der englischen Wikipedia (API, einmalig beim Bauen, Link je Modell) | 24.11.2026 |
 | Erweitertes Verzeichnis (Auktionshäuser, Transport, Vermietung, Teile) | `src/data/directory.ts` | Webseiten der Firmen; jede Adresse am 24.11.2026 abgerufen; nur Rolle beschrieben, keine Preise oder Bewertungen | 24.11.2026 |
+| Weitere Straßen und Rennstrecken (Kurztext, Höhe, Länge, Koordinaten) | `src/data/roads_more.json` | Wikipedia de/en (Texte gekürzt, CC BY-SA 4.0; Zahlen aus der Infobox), Fotos von Hand gesichtet | 24.11.2026 |
+| Kurztexte der Modelle | `src/data/models_text.json` | Wikipedia de/en, gekürzt, CC BY-SA 4.0, Link je Modell | 24.11.2026 |
+| Events | `src/data/events.json` | Quelle je Termin (Veranstalter, Presse, Saisonseiten der Wikipedia); teils Drittquellen | 24.11.2026 |
+| Importregeln | `src/data/importRules.ts` | Behördenseiten (Links je Land) | 24.11.2026 |
 | Landflächen des Globus | `world-atlas/land-110m.json` | Natural Earth (gemeinfrei) über das Paket world-atlas (ISC) | Paket 2.0.2 |
 
 ## Annahmen (in der Oberfläche als „Annahme“ markiert, änderbar)

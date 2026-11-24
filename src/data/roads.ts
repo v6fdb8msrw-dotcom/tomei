@@ -2,6 +2,7 @@
 // Fakten (Länge, Höhe, Endpunkte) aus der englischen Wikipedia, abgerufen am 24.11.2026 über die Wikipedia-API.
 // Koordinaten der Wegpunkte = Koordinaten der Wikipedia-Artikel zu Orten bzw. Pässen, keine gezeichnete Strecke.
 // Fotos: Wikimedia Commons mit freier Lizenz, Nachweis je Foto (photo.*) und in ASSET_LICENSES.md.
+import more from './roads_more.json'
 import type { Waypoint } from '../store/schema.ts'
 
 export type RoadPhoto = { file: string; author: string; licence: string; licenceUrl?: string; page: string }
@@ -23,6 +24,8 @@ export type Road = {
   loop?: boolean
   source: string
   official?: string
+  /** Kurztext stammt aus der Wikipedia (Lizenzhinweis nötig) */
+  wiki?: boolean
   photo: RoadPhoto
 }
 
@@ -35,7 +38,7 @@ const BY2 = { licence: 'CC BY 2.0', licenceUrl: 'https://creativecommons.org/lic
 
 export const roadImg = (id: string) => `${import.meta.env.BASE_URL}images/roads/${id}.jpg`
 
-export const ROADS: Road[] = [
+const BASE_ROADS: Road[] = [
   {
     id: 'hakone', name: 'Hakone Turnpike', local: '箱根ターンパイク', country: 'jp', region: 'Kanagawa', kind: 'touge', lengthKm: 15.752,
     text: { de: 'Private Mautstraße von Odawara hinauf in die Berge von Hakone. Breite, gepflegte Kurven, oben der Blick über die Sagami-Bucht.', en: 'Private toll road climbing from Odawara into the Hakone mountains. Wide, well-kept curves and a view over Sagami Bay at the top.' },
@@ -255,6 +258,9 @@ export const ROADS: Road[] = [
     photo: { file: "Milford_Road_east_of_Homer_Saddle,_New_Zealand_(22).jpg", author: "Michal Klajban", ...BYSA4, page: C("Milford_Road_east_of_Homer_Saddle,_New_Zealand_(22).jpg") },
   },
 ]
+
+// Weitere Straßen und Rennstrecken: Kurztexte aus Wikipedia (CC BY-SA 4.0), siehe DATA_SOURCES.md
+export const ROADS: Road[] = [...BASE_ROADS, ...(more as Road[])]
 
 export const ROAD_KINDS: Record<Road['kind'], { de: string; en: string }> = {
   pass: { de: 'Passstraße', en: 'Mountain pass' },

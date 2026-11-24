@@ -183,6 +183,14 @@ export function RoadDetail({ id }: { id: string }) {
         </div>
 
         <p className="road-lead">{L(r.text)}</p>
+        {r.wiki && (
+          <p className="muted small">
+            {tx('Text gekürzt aus Wikipedia', 'Text abridged from Wikipedia')},{' '}
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">
+              CC BY-SA 4.0
+            </a>
+          </p>
+        )}
 
         <div className="road-cols">
           <div className="gcard">

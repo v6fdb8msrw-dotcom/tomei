@@ -1,6 +1,6 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.3 (erster Entwurf, überarbeitet) · Zweig `tomei-2.0` · deployt am 24.11.2026 auf Tims Ja**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.5 · Zweig `tomei-2.0` · deployt am 24.11.2026 auf Tims Ja**
 
 Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt seit 24.11.2026 diesen Stand (Deploy auf Tims Ja, live geprüft). Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
 
@@ -58,6 +58,14 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Speicher: `localStorage`-Schlüssel `tomei.store`, Format-Version 1, alte Merkliste `tomei.finds` wird beim ersten Start übernommen (bleibt liegen).
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
+
+## Ausbau (alpha.5, noch nicht deployt)
+
+- Modellseiten (`#/discover/models/<id>`) mit Wikipedia-Kurztext und Foto (1.074 von 1.100), Importregeln (`#/discover/rules`), Kauf-Checkliste.
+- Garage: Checkliste, Wertverlauf, eigene Fotos (IndexedDB, nur im Browser, nicht in der JSON-Sicherung), HU- und Saison-Erinnerungen.
+- Events (`#/drive/events`): aktuelle Woche, 106 Termine mit Quelle; neue Termine von Hand in `src/data/events.json`.
+- 106 Straßen und Rennstrecken (81 neu). Die Pässe haben meist nur einen Punkt, keine Strecke.
+- Offen: handverlesene Klassiker ohne eigenes Foto, Impressum.
 
 ## Datenbank-Ausbau (alpha.4, deployt am 24.11.2026 inkl. Katalog-Nachbesserung)
 
