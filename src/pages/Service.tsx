@@ -8,6 +8,7 @@ import { AGENTS, CONTACT_EMAIL, DEST, FX_FALLBACK, MARKETS, agentAverage } from 
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack } from '../components/depth.tsx'
 import { useT } from '../i18n/i18n.ts'
+import { DATA_EN } from '../i18n/data_en.ts'
 import { landedCost, money } from '../lib/calc.ts'
 
 const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
@@ -196,7 +197,7 @@ export function Service() {
           <div className="mk-ideas">
             {MARKETS.map((m) => (
               <button key={m.id} className={'chip' + (d.markets.includes(m.id) ? ' on' : '')} onClick={() => toggle('markets', m.id)}>
-                {m.country}
+                {lang === 'en' ? (DATA_EN[m.country] ?? m.country) : m.country}
               </button>
             ))}
           </div>
@@ -204,7 +205,7 @@ export function Service() {
           <div className="mk-ideas">
             {SERVICES.map((s) => (
               <button key={s} className={'chip' + (d.services.includes(s) ? ' on' : '')} onClick={() => toggle('services', s)}>
-                {d.services.includes(s) && <Check size={13} />} {s}
+                {d.services.includes(s) && <Check size={13} />} {lang === 'en' ? (DATA_EN[s] ?? s) : s}
               </button>
             ))}
           </div>

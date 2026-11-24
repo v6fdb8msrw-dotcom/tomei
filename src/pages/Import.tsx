@@ -133,7 +133,7 @@ function Fold({ title, children }: { title: string; children: ReactNode }) {
 
 export function Import() {
   const { rates, live } = useFx()
-  const { tx, locale } = useT()
+  const { tx, d, lang, locale } = useT()
   const [origin, setOrigin] = useState<OriginKey>('jp')
   const O = origin === 'jp' ? null : ORIGIN[origin]
   const [house, setHouse] = useState('')
@@ -331,7 +331,7 @@ export function Import() {
     { label: tx('Zollabwicklung', 'Customs clearance'), val: fees.clearance },
     { label: tx('Agent / Provision', 'Agent / commission'), val: fees.agent },
     { label: `${tx('Inlandstransport', 'Inland transport')} (${dest.port} → ${tx('Tür', 'door')})`, val: fees.inland },
-    { label: dest.inspectionLabel, val: fees.inspection },
+    { label: d(dest.inspectionLabel), val: fees.inspection },
     { label: tx('Zulassung & Umbau', 'Registration & conversion'), val: fees.reg },
   ]
 
@@ -491,7 +491,7 @@ export function Import() {
             <div className="total">
               <Counter value={calc.landed} format={(v) => money(v, cur)} />
             </div>
-            {freightMissing && <span className="total-warn">{tx('Noch ohne Seefracht', 'Sea freight not yet included')}: {pickedShip!.text}</span>}
+            {freightMissing && <span className="total-warn">{tx('Noch ohne Seefracht', 'Sea freight not yet included')}: {d(pickedShip!.text)}</span>}
             <span className="total-sub">
               <b>×{calc.multiplier.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> {tx('vom Fahrzeugwert · davon', 'of vehicle value · of which')} {money(calc.taxes, cur)} {tx('Steuern & Zoll', 'taxes & duty')}
             </span>
@@ -517,14 +517,14 @@ export function Import() {
                 <span className="step-label">{tx('Gekauft bei', 'Bought at')} · {O.name}</span>
                 <div className="mk-ideas">
                   {O.houses.map((h) => (
-                    <button key={h.id} className={'chip' + (pickedHouse?.id === h.id ? ' on' : '')} onClick={() => setHouse(h.id)} title={h.text}>
+                    <button key={h.id} className={'chip' + (pickedHouse?.id === h.id ? ' on' : '')} onClick={() => setHouse(h.id)} title={d(h.text)}>
                       {h.name}
                       {h.id !== 'private' && ' · ' + money(h.fee(hammer), O.cur)}
                     </button>
                   ))}
                 </div>
                 <p className="hint">
-                  {pickedHouse!.text}
+                  {d(pickedHouse!.text)}
                   {pickedHouse!.source && (
                     <>
                       {' '}
@@ -545,7 +545,7 @@ export function Import() {
                   ))}
                 </div>
                 <p className="hint">
-                  {pickedShip!.text}
+                  {d(pickedShip!.text)}
                   {pickedShip!.source && (
                     <>
                       {' '}
@@ -554,7 +554,7 @@ export function Import() {
                       </a>
                     </>
                   )}
-                  {O.destHandling && !pickedShip!.selfDrive && <> {O.destHandling.text}</>}
+                  {O.destHandling && !pickedShip!.selfDrive && <> {d(O.destHandling.text)}</>}
                 </p>
               </div>
             </>
@@ -570,7 +570,7 @@ export function Import() {
               {AGENTS.map((a) => {
                 const t = agentTotal(a, hammer)
                 return (
-                  <button key={a.id} className={'chip' + (agent === a.id ? ' on' : '')} disabled={t === null} onClick={() => setAgent(a.id)} title={a.text}>
+                  <button key={a.id} className={'chip' + (agent === a.id ? ' on' : '')} disabled={t === null} onClick={() => setAgent(a.id)} title={d(a.text)}>
                     {a.name} · {t === null ? tx('auf Anfrage', 'on request') : yen(t)}
                   </button>
                 )
@@ -620,7 +620,21 @@ export function Import() {
                 <span className="mono">{money(calc.landed, cur)}</span>
               </div>
             </div>
-            <p className="small muted">{O ? O.note : dest.note}</p>
+            <p className="small muted">{d(O ? O.note : dest.note)}</p>
+            {!O && (
+              <p className="small muted">
+                <Badge kind="estimate" /> {tx('Zollabwicklung, Agent, Inlandstransport und Zulassung sind Schätzwerte; dafür gibt es keine veröffentlichten Festpreise.', 'Customs clearance, agent, inland transport and registration are estimates; no published fixed prices exist for them.')}
+                {dest.feeSources?.map((f) => (
+                  <span key={f.url}>
+                    {' '}
+                    {lang === 'en' ? f.en : f.de}{' '}
+                    <a href={f.url} target="_blank" rel="noopener noreferrer">
+                      {tx('Quelle', 'Source')}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            )}
           </Fold>
 
           <Fold title={tx('Kosten anpassen', 'Adjust costs')}>
@@ -650,7 +664,7 @@ export function Import() {
             )}
             {O?.pref && epa && !classicOn && (
               <p className="hint">
-                {O.pref.text}{' '}
+                {d(O.pref.text)}{' '}
                 <a href={O.pref.source} target="_blank" rel="noopener noreferrer">
                   {tx('Quelle', 'Source')}
                 </a>
@@ -687,7 +701,7 @@ export function Import() {
               <NumField label={tx('Zollabwicklung', 'Customs clearance')} prefix={cur} value={fees.clearance} onChange={setFee('clearance')} />
               <NumField label={tx('Agent / Provision', 'Agent / commission')} prefix={cur} value={fees.agent} onChange={setFee('agent')} />
               <NumField label={tx('Inlandstransport', 'Inland transport')} prefix={cur} value={fees.inland} onChange={setFee('inland')} />
-              <NumField label={dest.inspectionLabel} prefix={cur} value={fees.inspection} onChange={setFee('inspection')} />
+              <NumField label={d(dest.inspectionLabel)} prefix={cur} value={fees.inspection} onChange={setFee('inspection')} />
               <NumField label={tx('Zulassung & Umbau', 'Registration & conversion')} prefix={cur} value={fees.reg} onChange={setFee('reg')} />
             </div>
             {manualRate > 0 && (
@@ -727,7 +741,7 @@ export function Import() {
         )}
         <div className="brokers">
           {brokers.map((b, k) => (
-            <motion.div key={b.id} layout className={'broker' + (k === 0 && b.landed !== null ? ' best' : '')} title={b.text}>
+            <motion.div key={b.id} layout className={'broker' + (k === 0 && b.landed !== null ? ' best' : '')} title={d(b.text)}>
               {b.url ? (
                 <a className="broker-name" href={b.url} target="_blank" rel="noopener noreferrer">
                   {b.name}

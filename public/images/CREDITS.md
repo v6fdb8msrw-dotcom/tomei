@@ -31,3 +31,11 @@ Die Spot-Fotos sind teils Symbolbilder: Sie zeigen ähnliche Motive, nicht unbed
 | evo.jpg | Weißer Mitsubishi Lancer Evolution VI in Japan | https://unsplash.com/photos/KOpKVs_YHRI |
 | ek9.jpg | Gelber Honda Civic (EK) auf der Rennstrecke (Chris Hristov) | https://unsplash.com/photos/d_hh806CGsQ |
 | kei.jpg | Weißer Kei-Truck in Takayama | https://unsplash.com/photos/1lo131A_OEA |
+
+## Weltweite Klassiker (Wikimedia Commons, heruntergeladen am 24.11.2026, auf 1400 px verkleinert)
+
+| Datei | Motiv | Urheber | Lizenz | Quelle |
+|---|---|---|---|---|
+| cars/mustang.jpg | 1967 Ford Mustang 289 V8 Fastback | Coolalabright | CC BY 4.0 | https://commons.wikimedia.org/wiki/File:1967_Ford_Mustang_289_V8_Fastback_Coupe.jpg |
+| cars/esprit.jpg | 1987 Lotus Esprit Turbo HC | MrWalkr | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:1987_Lotus_Esprit_Turbo_HC.jpg |
+| cars/monaro.jpg | Holden Monaro HK GTS | Jeremy from Sydney, Australia | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:Holden_Monaro_HK_GTS_(17080838017).jpg |

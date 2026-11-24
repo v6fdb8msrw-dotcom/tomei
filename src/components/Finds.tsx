@@ -19,7 +19,7 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [price, setPrice] = useState('')
-  const { tx } = useT()
+  const { tx, d } = useT()
 
   const amount = parseInt(price.replace(/[^\d]/g, ''), 10) || 0
   const okUrl = /^https:\/\/\S+$/.test(url.trim())
@@ -50,7 +50,7 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
           <select className="input" value={market} onChange={(e) => setMarket(e.target.value)}>
             {MARKETS.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.country}
+                {d(m.country)}
               </option>
             ))}
           </select>

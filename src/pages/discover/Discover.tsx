@@ -50,7 +50,7 @@ function auctionSearch(name: string, q: MarketQuery): string | undefined {
 }
 
 export function Auctions() {
-  const { tx } = useT()
+  const { tx, d } = useT()
   const [kind, setKind] = useState<'all' | 'open' | 'dealer'>('all')
   const [text, setText] = useState('')
   const q: MarketQuery = useMemo(() => {
@@ -93,9 +93,9 @@ export function Auctions() {
                 <div className="dir-main">
                   <h3>{a.name}</h3>
                   <span className="dir-sub">
-                    {a.country} · {a.open ? tx('offen für alle', 'open to all') : tx('nur registrierte Händler', 'registered dealers only')}
+                    {d(a.country)} · {a.open ? tx('offen für alle', 'open to all') : tx('nur registrierte Händler', 'registered dealers only')}
                   </span>
-                  <p>{a.text}</p>
+                  <p>{d(a.text)}</p>
                 </div>
                 <div className="dir-actions">
                   {link && (
@@ -167,7 +167,7 @@ function buildPartners(): Partner[] {
 }
 
 export function Partners() {
-  const { tx, L } = useT()
+  const { tx, L, d } = useT()
   const all = useMemo(buildPartners, [])
   const [origin, setOrigin] = useState('jp')
   const [role, setRole] = useState<PartnerRole | 'all'>('all')
@@ -233,7 +233,7 @@ export function Partners() {
                   ))}
                   {p.price ? <Badge kind="ok">{tx('Preis veröffentlicht', 'Price published')}</Badge> : <Badge kind="warn">{tx('Preis auf Anfrage', 'Price on request')}</Badge>}
                 </div>
-                <p>{p.text}</p>
+                <p>{d(p.text)}</p>
                 {p.price && <p className="partner-price mono">{p.price}</p>}
                 {p.source && <SourceLink url={p.source}>{tx('Preisquelle', 'Price source')}</SourceLink>}
               </motion.article>

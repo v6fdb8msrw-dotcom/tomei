@@ -1,6 +1,6 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.2 (erster Entwurf) · Zweig `tomei-2.0` · nicht deployt**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.3 (erster Entwurf, überarbeitet) · Zweig `tomei-2.0` · nicht deployt**
 
 Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt weiterhin den alten Stand 1.x. Dieser Stand ist nur lokal geprüft (Preview-Server). Deploy erst nach Tims ausdrücklichem Ja.
 
@@ -27,7 +27,7 @@ Alle Welten teilen einen lokalen, versionierten Datenspeicher. Beispiele für Ve
 |---|---|
 | `npx tsc -b` | ohne Fehler |
 | `npm test` (Vitest) | 20 Tests grün: Rechnung, Szenarien, GPX lesen/schreiben, Speicher (Migration, alte Merkliste, Sicherung, Zusammenführen, unsichere Links), Wartung, Unterhalt, ICS |
-| `npm run build` | erfolgreich; Hauptbündel ~469 KB (vorher ~590 KB): alle Seiten außer der Startseite werden erst bei Bedarf geladen |
+| `npm run build` | erfolgreich; Hauptbündel ~303 KB, Seiten und Globus werden nachgeladen |
 | `npm run lint` (oxlint) | nur Warnungen (Fast-Refresh-Hinweise), keine Fehler |
 | Browser Desktop 1440×900 | Startseite (alle 9 Sektionen), alle Welt-Seiten, Detailseiten, 404 geprüft; keine Konsolenfehler außer bekannten Abbrüchen von View-Transitions (abgefangen) |
 | Browser Mobil 375×812 | alle Routen ohne seitlichen Überlauf, Unternavigation scrollt zum aktiven Punkt |
@@ -59,6 +59,16 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
 
+## Überarbeitung nach Tims Feedback (alpha.3)
+
+- **Weltweit statt Japan im Mittelpunkt:** Startseite (Slides aus Italien, USA, Japan, Norwegen, England), Traumautos aus vier Kontinenten (Skyline, Mustang, Esprit, Monaro; neue Wikimedia-Fotos mit Lizenz), Globus auf Europa ausgerichtet, Japan nicht mehr besonders markiert.
+- **3D-Globus (three.js):** schlicht und einfarbig, Routen in Rot, mit der Maus drehbar. Importrouten jedes Markts nach Bremerhaven als Bögen von Land zu Land. Farbe je Abschnitt fest: grau (Startseite, Fahrzeugsuche, Roadtrip-Builder), Petrol (Atlas). Kein Umschaltknopf.
+- **Roadtrip-Builder:** zeigt die Route auf dem Globus (Ort zu Ort). Die OpenStreetMap-Karte ist wieder raus, es gibt also keinen zusätzlichen externen Dienst.
+- **Design:** Seitenköpfe mit Vollbild-Foto und Slideshow, Startseite als Vollbild-Slideshow, Werkzeuge als Bildkacheln, je Welt farbige Hintergründe (Discover Sand, Drive Petrol, Own Rosé) mit langsam wanderndem Höhenlinien-Muster, Globus-Abschnitte dunkel. Ein komplett dunkles Design wurde ausprobiert und auf Tims Wunsch verworfen.
+- **Dasai Mochi** entfernt (die Nachbildung traf das Original nicht).
+- **Englisch für Datentexte:** Beschreibungen aus `data.ts`/`classics.ts` über `src/i18n/data_en.ts`.
+- **Gebühren Deutschland:** Vollgutachten § 21 mit Quelle (TÜV NORD Entgeltliste 2025); übrige Zielland-Gebühren bleiben Schätzwerte, weil es keine veröffentlichten Festpreise gibt.
+
 ## Erster Entwurf (alpha.2)
 
 - **Englisch** für alle Werkzeuge: Oberfläche, Beschriftungen, Hinweise, Leer- und Fehlerzustände. Texte stehen als Paar direkt im Werkzeug (`tx('Deutsch', 'English')`), gemeinsame Texte in `src/i18n/i18n.ts`.
@@ -69,12 +79,11 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 
 ## Offene Punkte
 
-1. **Englisch, Datentexte:** Beschreibungen aus `src/data.ts` und `src/classics.ts` (Portale, Auktionshäuser, Agenten, Vermieter, Teile-Shops, Spots, Klassiker, Hinweise der Zielländer) sind noch deutsch; Straßen und Länder sind schon zweisprachig.
+1. **Englisch:** fast vollständig; einzelne Datentexte ohne Umlaut/Füllwort können noch deutsch sein (Eintrag in `src/i18n/data_en.ts` ergänzen).
 2. **Impressum/Datenschutz:** Name, Anschrift und öffentliche E-Mail von Tim in `BRAND.operator` eintragen, Texte rechtlich prüfen lassen. Ohne das kein öffentlicher Release.
-3. **Bundle-Größe** (~469 KB): Motion und React bilden den Großteil; weiteres Aufteilen bringt wenig.
+3. **Bundle-Größe:** Hauptbündel ~303 KB; der 3D-Globus (three.js, ~630 KB) lädt erst, wenn er gebraucht wird.
 4. **Ziel-Gebühren im Rechner** (DEST in `src/data.ts`) sind Schätzwerte ohne Einzelquelle; nach Quellen ersetzen oder deutlicher kennzeichnen.
 5. **Service** ist nur eine Anfrage-Vorlage; `CONTACT_EMAIL` bleibt leer, bis Tim eine öffentliche Adresse nennt.
-6. **Karte mit Kacheln** im Builder nur nach Tims OK (neuer externer Dienst).
-7. **Dasai-Mochi-Bereich** (Build Studio, aus 1.x): zeigt eine mit CSS gezeichnete Nachbildung eines Produkts. Nach der Regel „nur echte Fotos“ durch ein lizenziertes Foto ersetzen oder entfernen (Tims Entscheidung).
+6. **Design-Feinschliff:** Tims Urteil zum hellen, farbigen Stand steht aus.
 
 Roadmap: `ROADMAP.md` · Quellen: `DATA_SOURCES.md` · Bildrechte: `ASSET_LICENSES.md` · Bibliotheken: `THIRD_PARTY_NOTICES.md` · Release: `RELEASE_CHECKLIST.md`

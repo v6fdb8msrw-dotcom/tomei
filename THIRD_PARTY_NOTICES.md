@@ -11,6 +11,7 @@ TŌMEI nutzt ausschließlich kostenlose Open-Source-Bibliotheken und frei lizenz
 | lucide-react | 1.63.0 | ISC | Icons |
 | d3-geo (inkl. d3-array) | 3.1.2 | ISC | Projektion des Globus und der Weltkarte |
 | topojson-client | 3.1.0 | ISC | Landflächen entpacken |
+| three | 0.172.0 | MIT | 3D-Globus |
 | world-atlas | 2.0.2 | ISC | Landflächen 1:110 Mio. (Daten: Natural Earth, gemeinfrei) |
 | @fontsource-variable/manrope | 5.3.0 | OFL-1.1 (Schrift), MIT (Paket) | Überschriften |
 | @fontsource-variable/inter | 5.3.0 | OFL-1.1 (Schrift), MIT (Paket) | Fließtext |

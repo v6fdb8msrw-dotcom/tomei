@@ -1,4 +1,4 @@
-// Länderarchitektur: Japan ist der Ausgangspunkt, dazu Europa, Nordamerika, Ozeanien und weitere Märkte.
+// Länderarchitektur: weltweit gleichrangig – Asien, Europa, Amerika, Ozeanien und Naher Osten.
 // Jedes Land verknüpft die Welten: Markt (DISCOVER), Straßen und Vermietung (DRIVE), Importregeln (Rechner).
 // Koordinaten = ungefähre Landesmitte, nur für Markierungen auf Globus und Karte.
 import type { DestKey } from '../data.ts'

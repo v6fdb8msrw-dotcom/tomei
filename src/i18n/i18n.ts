@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { setSettings, useStore } from '../store/store.ts'
 import type { Lang } from '../store/schema.ts'
+import { DATA_EN } from './data_en.ts'
 
 const de = {
   'nav.home': 'Start',
@@ -31,11 +32,11 @@ const de = {
   'home.worlds.title': 'Ein Auto, drei Kapitel.',
   'home.worlds.sub': 'Was du in einer Welt anlegst, steht in den anderen bereit.',
   'home.globe.eyebrow': 'Weltweit',
-  'home.globe.title': 'Japan ist der Anfang.',
-  'home.globe.sub': 'Märkte, Straßen und Importwege in 18 Ländern. Zieh den Globus, tipp auf einen Punkt.',
+  'home.globe.title': 'Die ganze Welt. Ein Ziel.',
+  'home.globe.sub': 'Märkte auf vier Kontinenten, große Straßen und die Importwege bis vor deine Tür. Zieh den Globus, tipp auf einen Punkt.',
   'home.dream.eyebrow': 'Dream Car',
   'home.dream.title': 'Welches Auto soll es sein?',
-  'home.dream.sub': 'Mediane Angebotspreise aus Japan (JDMBUYSELL, CC BY 4.0). Ein Klick legt das Auto als Traum in deine Garage.',
+  'home.dream.sub': 'Klassiker aus Japan, den USA, England und Australien. Ein Klick legt das Auto als Traum in deine Garage. Preise nur, wo es eine freie Quelle gibt (Japan: JDMBUYSELL, CC BY 4.0).',
   'home.cost.eyebrow': 'Real Cost',
   'home.cost.title': 'Was es wirklich kostet.',
   'home.cost.sub': 'Nicht ein Preis, sondern eine Spanne: günstigster und teuerster Agent, RoRo oder Container, Kursschwankung und Reserve.',
@@ -109,11 +110,11 @@ const en: Record<TKey, string> = {
   'home.worlds.title': 'One car, three chapters.',
   'home.worlds.sub': 'What you create in one world is ready in the others.',
   'home.globe.eyebrow': 'Worldwide',
-  'home.globe.title': 'Japan is where it starts.',
-  'home.globe.sub': 'Markets, roads and import routes in 18 countries. Drag the globe, tap a point.',
+  'home.globe.title': 'The whole world. One destination.',
+  'home.globe.sub': 'Markets on four continents, great roads and the import routes to your door. Drag the globe, tap a point.',
   'home.dream.eyebrow': 'Dream Car',
   'home.dream.title': 'Which car will it be?',
-  'home.dream.sub': 'Median asking prices in Japan (JDMBUYSELL, CC BY 4.0). One click adds the car to your garage as a dream.',
+  'home.dream.sub': 'Classics from Japan, the USA, England and Australia. One click adds the car to your garage as a dream. Prices only where a free source exists (Japan: JDMBUYSELL, CC BY 4.0).',
   'home.cost.eyebrow': 'Real Cost',
   'home.cost.title': 'What it really costs.',
   'home.cost.sub': 'Not one price but a range: cheapest and most expensive agent, RoRo or container, currency swings and a reserve.',
@@ -171,6 +172,8 @@ export function useT() {
     lang,
     t: (key: TKey) => translate(lang, key),
     L: (v: { de: string; en: string }) => v[lang] ?? v.de,
+    /** Beschreibungstexte aus den Daten (data.ts, classics.ts): auf Englisch aus DATA_EN, sonst unverändert */
+    d: (deText: string | undefined) => (deText && lang === 'en' ? (DATA_EN[deText] ?? deText) : (deText ?? '')),
     /** Kurzform für Texte direkt im Werkzeug: tx('Deutsch', 'English') */
     tx: (deText: string, enText: string) => (lang === 'en' ? enText : deText),
     setLang: (l: Lang) => setSettings({ lang: l }),

@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { AnimatePresence, motion, useMotionValue, useScroll, useSpring, useTransform } from 'motion/react'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import type { Provider, Slide } from '../data.ts'
+import { useT } from '../i18n/i18n.ts'
 
 export const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -163,6 +164,7 @@ function Logo({ name }: { url: string; name: string }) {
 
 /** Raster mit Anbieter-Karten (Logo, ein Satz, externer Link). */
 export function ProviderGrid({ items }: { items: Provider[] }) {
+  const { d } = useT()
   return (
     <div className="providers">
       {items.map((p, k) => (
@@ -186,7 +188,7 @@ export function ProviderGrid({ items }: { items: Provider[] }) {
             {p.name}
             {p.tag && <span className="tag">{p.tag}</span>}
           </h3>
-          <p>{p.text}</p>
+          <p>{d(p.text)}</p>
         </motion.a>
       ))}
     </div>

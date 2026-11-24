@@ -24,6 +24,10 @@ Quelle: Wikimedia Commons, heruntergeladen am 24.11.2026 als 1920-px-Vorschau un
 | blueridge.jpg | East Fork Overlook, Blue Ridge Parkway | Tsimmons | CC BY 3.0 | https://commons.wikimedia.org/wiki/File:East_Fork_Overlook.jpg |
 | sunroad.jpg | Going-to-the-Sun Road | MPSharwood | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Going-to-the-Sun_Road_-_Glacier_National_Park.jpg |
 
+## Weltweite Klassiker (`public/images/cars/`)
+
+Wikimedia Commons, 24.11.2026, auf 1400 px verkleinert: mustang.jpg (Coolalabright, CC BY 4.0), esprit.jpg (MrWalkr, CC BY-SA 4.0), monaro.jpg (Jeremy from Sydney, CC BY 2.0). Links in `public/images/CREDITS.md`. Nachweis auch auf der Startseite (Dream Car).
+
 ## Übrige Fotos (`public/images/`, `public/images/cars/`)
 
 Unsplash-Lizenz (kostenlos, auch kommerziell, Namensnennung freiwillig). Einzelnachweise: `public/images/CREDITS.md`. Einige Spot-Fotos sind Symbolbilder (dort vermerkt).

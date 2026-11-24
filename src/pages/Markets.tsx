@@ -4,7 +4,12 @@ import { ArrowUpRight, Gavel, Search, ShieldCheck } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { AUCTIONS, MARKETS, type MarketQuery } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
-import { CarStack, RouteMap } from '../components/depth.tsx'
+import { CarStack } from '../components/depth.tsx'
+import { BREMERHAVEN, importRoutes } from '../components/Globe.tsx'
+import { COUNTRIES } from '../data/countries.ts'
+import { lazy, Suspense } from 'react'
+
+const Globe3D = lazy(() => import('../components/Globe3D.tsx'))
 import { Finds } from '../components/Finds.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { BRAND } from '../config/brand.ts'
@@ -31,7 +36,7 @@ function load(): MarketQuery {
 }
 
 export function Markets() {
-  const { tx } = useT()
+  const { tx, d, L } = useT()
   const [q, setQ] = useState<MarketQuery>(load)
   const [active, setActive] = useState<string | undefined>()
   useEffect(() => {
@@ -102,7 +107,27 @@ export function Markets() {
 
       <section className="section tight">
         <SectionHead eyebrow={tx('Netzwerk', 'Network')} title={<>{tx('Von dort ', 'From there ')}<em>{tx('bis Bremerhaven.', 'to Bremerhaven.')}</em></>} text={tx('Tippe auf ein Land, um nur dessen Angebote zu sehen. Die Linien zeigen den Seeweg nach Bremerhaven.', 'Tap a country to see only its listings. The lines show the sea route to Bremerhaven.')} />
-        <RouteMap markets={MARKETS} active={active} onPick={(id) => setActive((a) => (a === id ? undefined : id))} />
+        <div className="net-globe">
+          <Suspense fallback={<div className="globe-ph" aria-hidden />}>
+            <Globe3D
+              theme="stone"
+              focus={[45, 60]}
+              routes={importRoutes(active)}
+              points={[
+                ...COUNTRIES.filter((c) => c.market && c.id !== 'de').map((c) => ({ id: c.market!, lat: c.lat, lon: c.lon, label: `${c.flag} ${L(c.name)}`, kind: (c.home || c.market === active ? 'home' : 'country') as 'home' | 'country' })),
+                { id: 'hub', lat: BREMERHAVEN[0], lon: BREMERHAVEN[1], label: '⚓ Bremerhaven', kind: 'hub' as const },
+              ]}
+              onSelect={(p) => p.id !== 'hub' && setActive((a) => (a === p.id ? undefined : p.id))}
+            />
+          </Suspense>
+          <div className="net-chips">
+            {MARKETS.map((m) => (
+              <button key={m.id} className={'chip' + (active === m.id ? ' on' : '')} onClick={() => setActive((a) => (a === m.id ? undefined : m.id))}>
+                {m.code} · {d(m.country)}
+              </button>
+            ))}
+          </div>
+        </div>
         {active && (
           <button className="link mk-all" onClick={() => setActive(undefined)}>
             {tx('Alle Länder zeigen', 'Show all countries')}
@@ -118,17 +143,17 @@ export function Markets() {
                 <header>
                   <span className="mk-code">{m.code}</span>
                   <div>
-                    <h3>{m.country}</h3>
-                    <p className="muted small">{m.hub}</p>
+                    <h3>{d(m.country)}</h3>
+                    <p className="muted small">{d(m.hub)}</p>
                   </div>
                 </header>
-                <p className="mk-text">{m.text}</p>
+                <p className="mk-text">{d(m.text)}</p>
                 <div className="mk-portals">
                   {m.portals.map((p) => (
                     <a key={p.name} className="mk-portal" href={p.url(q)} target="_blank" rel="noopener noreferrer">
                       <span>
                         <b>{p.name}</b>
-                        <small>{p.kind}</small>
+                        <small>{d(p.kind)}</small>
                       </span>
                       <span className="mk-go">
                         {label || tx('Alle', 'All')} <ArrowUpRight size={15} />
@@ -174,8 +199,8 @@ export function Markets() {
                     ) : (
                       <b>{a.name}</b>
                     )}
-                    <span className="muted small">{a.country}</span>
-                    <p>{a.text}</p>
+                    <span className="muted small">{d(a.country)}</span>
+                    <p>{d(a.text)}</p>
                   </div>
                 </Reveal>
               ))}

@@ -139,6 +139,8 @@ export type Dest = {
   fees: { clearance: number; agent: number; inland: number; inspection: number; reg: number }
   inspectionLabel: string
   note: string
+  /** Belegte Einzelposten (Rest der Gebühren bleibt Schätzwert) */
+  feeSources?: { de: string; en: string; url: string }[]
 }
 
 export const DEST: Record<DestKey, Dest> = {
@@ -148,6 +150,14 @@ export const DEST: Record<DestKey, Dest> = {
     fees: { clearance: 250, agent: 500, inland: 350, inspection: 1000, reg: 600 },
     inspectionLabel: 'TÜV / Einzelabnahme §21',
     note: 'Pkw-Drittlandszoll 10 %. Das EU-Japan-Abkommen (EPA) kann ihn mit Ursprungsnachweis auf 0 % senken, bei Gebrauchtimporten aber selten. TÜV-Vollabnahme und ggf. Scheinwerfer-Umrüstung nötig.',
+    // Stand 24.11.2026. Zollabwicklung, Hafen, Inlandstransport und Zulassung/Umbau: keine veröffentlichten Festpreise gefunden.
+    feeSources: [
+      {
+        de: 'Vollgutachten § 21 StVZO bis 3,5 t: 116,50 € Grundentgelt plus 35 € je Viertelstunde Aufwand (TÜV NORD, Entgeltliste 2025). Der Schätzwert im Rechner enthält zusätzlich mögliche Umbauten wie Scheinwerfer.',
+        en: 'Full inspection under § 21 StVZO up to 3.5 t: €116.50 base fee plus €35 per quarter hour of work (TÜV NORD price list 2025). The calculator’s estimate also covers possible conversions such as headlights.',
+        url: 'https://tuev-nord.de/fileadmin/Content/TUEV_NORD_DE/verkehr/pdf/pk-td-entgeltliste-25-01.pdf',
+      },
+    ],
   },
   UK: {
     name: 'Großbritannien', flag: '🇬🇧', cur: 'GBP', port: 'Southampton', duty: 10, vat: 20, vatLabel: 'VAT',

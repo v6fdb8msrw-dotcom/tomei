@@ -126,8 +126,8 @@ export function Legal({ kind }: { kind: 'privacy' | 'imprint' }) {
           <h4>{tx('4. Keine Cookies, kein Tracking, keine eingebundenen Dienste', '4. No cookies, no tracking, no embedded services')}</h4>
           <p>
             {tx(
-              'Es gibt keine Cookies, keine Analyse- oder Werbedienste, keine eingebetteten Karten oder Videos. Schriften und Fotos liegen auf demselben Server wie die Seite. Externe Links (Portale, Auktionshäuser, Google Maps, OpenStreetMap) öffnen sich erst, wenn du sie anklickst; ab dann gelten die Regeln des jeweiligen Anbieters.',
-              'There are no cookies, no analytics or advertising services, no embedded maps or videos. Fonts and photos are served from the same server as the site. External links (marketplaces, auction houses, Google Maps, OpenStreetMap) open only when you click them; from then on the provider’s own rules apply.',
+              'Es gibt keine Cookies, keine Analyse- oder Werbedienste und keine eingebetteten Karten oder Videos. Schriften und Fotos liegen auf demselben Server wie die Seite. Externe Links (Portale, Auktionshäuser, Google Maps, OpenStreetMap) öffnen sich erst, wenn du sie anklickst; ab dann gelten die Regeln des jeweiligen Anbieters.',
+              'There are no cookies, no analytics or advertising services and no embedded maps or videos. Fonts and photos are served from the same server as the site. External links (marketplaces, auction houses, Google Maps, OpenStreetMap) open only when you click them; from then on the provider’s own rules apply.',
             )}
           </p>
 

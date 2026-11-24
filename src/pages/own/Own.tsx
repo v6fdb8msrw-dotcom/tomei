@@ -28,7 +28,7 @@ export function OwnHub() {
       tools={[
         { to: 'own/garage', title: 'Garage', text: tx('Alle Autos an einem Ort, mit Status vom Traum über Import bis Verkauf.', 'All cars in one place, with status from dream through import to sale.'), img: img('cars/r34'), meta: n ? tx(`${n} Fahrzeuge`, `${n} vehicles`) : tx('Noch leer', 'Still empty') },
         { to: 'own/simulator', title: tx('Ownership-Simulator', 'Ownership simulator'), text: tx('Was ein Auto über die Jahre wirklich kostet: Sprit, Versicherung, Steuer, Wartung und Wertänderung.', 'What a car really costs over the years: fuel, insurance, tax, maintenance and change in value.'), img: img('cars/fd'), meta: tx('Nur deine Zahlen', 'Only your numbers') },
-        { to: 'own/build', title: 'Build Studio', text: tx('Umbauten planen, Budget im Blick, Teile-Shops aus Japan.', 'Plan modifications, keep the budget in view, parts shops from Japan.'), img: img('parts-wheel'), meta: tx('Plan → Einbau', 'Plan → installed') },
+        { to: 'own/build', title: 'Build Studio', text: tx('Umbauten planen, Budget im Blick, Teile-Shops.', 'Plan modifications, keep the budget in view, parts shops.'), img: img('parts-wheel'), meta: tx('Plan → Einbau', 'Plan → installed') },
         { to: 'own/maintenance', title: tx('Wartungsplaner', 'Maintenance planner'), text: tx('Intervalle nach Zeit und Kilometern, Fälligkeiten, Kalender-Export.', 'Intervals by time and distance, due dates, calendar export.'), img: img('parts-engine'), meta: due ? tx(`${due} Einträge`, `${due} entries`) : tx('Mit .ics-Export', 'With .ics export') },
         { to: 'own/passport', title: 'Automotive Passport', text: tx('Die Geschichte deines Autos auf einer Zeitleiste. Druckbar und exportierbar.', 'Your car’s story on one timeline. Printable and exportable.'), img: roadImg('hakone'), meta: tx('Kauf · Import · Wartung · Fahrten', 'Purchase · import · service · drives') },
       ]}
@@ -153,7 +153,7 @@ function GarageList() {
 }
 
 function VehiclePage({ id }: { id: string }) {
-  const { t, tx, locale } = useT()
+  const { t, tx, locale, d } = useT()
   const v = useStore((s) => s.vehicles.find((x) => x.id === id))
   const counts = useStore((s) => ({ m: s.maintenance.filter((x) => x.vehicleId === id).length, p: s.passport.filter((x) => x.vehicleId === id).length, tr: s.trips.filter((x) => x.vehicleId === id).length }))
   if (!v) return <NotFound />
@@ -261,7 +261,7 @@ function VehiclePage({ id }: { id: string }) {
                 <option value="">–</option>
                 {MARKETS.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.country}
+                    {d(m.country)}
                   </option>
                 ))}
               </select>

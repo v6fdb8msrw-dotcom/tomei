@@ -1,6 +1,6 @@
 // Roadtrip-Builder: eigene Routen aus Wegpunkten, GPX-Import und -Export, verknüpft mit Garage und Passport.
 import { ArrowDown, ArrowUp, ArrowUpRight, BookPlus, Download, FileUp, Plus, Trash2 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
 import { ROADS, roadImg } from '../../data/roads.ts'
 import { EmptyState, Note, NotFound, PageHead, VehicleSelect, fmtDate, img, today, vehicleTitle } from '../../components/ui.tsx'
@@ -9,6 +9,9 @@ import { href, navigate } from '../../lib/router.ts'
 import { addPassportEntry, downloadFile, nowIso, removeTrip, uid, upsertTrip, useStore } from '../../store/store.ts'
 import type { Trip, Waypoint } from '../../store/schema.ts'
 import { useT } from '../../i18n/i18n.ts'
+
+// Route auf dem 3D-Globus: von Ort zu Ort, keine Straßenführung
+const Globe3D = lazy(() => import('../../components/Globe3D.tsx'))
 
 function newTrip(name = 'Neuer Roadtrip', waypoints: Waypoint[] = [], track?: [number, number][]): Trip {
   const t = nowIso()
@@ -209,7 +212,21 @@ function Editor({ id }: { id: string }) {
             </div>
           </div>
 
-          <RouteSketch trip={trip} />
+          {trip.waypoints.length > 0 ? (
+            <div className="trip-globe">
+              <Suspense fallback={<div className="globe-ph" aria-hidden />}>
+                <Globe3D
+                  theme="stone"
+                  autoRotate={false}
+                  focus={[trip.waypoints[0].lat, trip.waypoints[0].lon]}
+                  points={trip.waypoints.map((w, i) => ({ id: 'w' + i, lat: w.lat, lon: w.lon, label: `${i + 1}. ${w.name}`, kind: i === 0 ? 'home' : 'stop' }))}
+                  routes={trip.waypoints.slice(1).map((w, i) => ({ from: [trip.waypoints[i].lat, trip.waypoints[i].lon] as [number, number], to: [w.lat, w.lon] as [number, number], kind: 'trip' as const }))}
+                />
+              </Suspense>
+            </div>
+          ) : (
+            <RouteSketch trip={trip} />
+          )}
           <p className="muted small">
             {trip.waypoints.length} {tx('Wegpunkte', 'waypoints')}{trip.track?.length ? `, ${trip.track.length.toLocaleString(locale)} ${tx('Spurpunkte aus GPX', 'track points from GPX')}` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} {tx('km Luftlinie (keine Straßenlänge)', 'km straight-line (not road distance)')}
           </p>

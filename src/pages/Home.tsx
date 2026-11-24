@@ -18,11 +18,14 @@ import { href, navigate } from '../lib/router.ts'
 import { addVehicle, useStore } from '../store/store.ts'
 import { VEHICLE_STATUS, type PassportKind } from '../store/schema.ts'
 
+// Weltweit: Straßen und Autos aus Europa, Amerika, Asien und Ozeanien
 const SLIDES = [
-  { src: img('fuji-lakes'), caption: 'Nissan Skyline GT-R am Fuji' },
   { src: roadImg('stelvio'), caption: 'Stilfser Joch, Italien' },
-  { src: img('cars/r34'), caption: 'Skyline GT-R R34, Shibuya' },
-  { src: roadImg('shimanami'), caption: 'Shimanami Kaidō, Japan' },
+  { src: img('cars/mustang'), caption: 'Ford Mustang Fastback, USA' },
+  { src: roadImg('bigsur'), caption: 'Big Sur, Kalifornien' },
+  { src: img('fuji-lakes'), caption: 'Nissan Skyline GT-R am Fuji, Japan' },
+  { src: roadImg('trollstigen'), caption: 'Trollstigen, Norwegen' },
+  { src: img('cars/esprit'), caption: 'Lotus Esprit Turbo, England' },
 ]
 
 /* 1 ------------------------------------------------------------------ Hero */
@@ -175,20 +178,21 @@ function GlobeSection() {
           </a>
         </Reveal>
       </div>
-      <GlobeView compact />
+      <GlobeView compact theme="stone" />
     </section>
   )
 }
 
 /* 4 ------------------------------------------------------------------ Dream Car */
+// Vier Kontinente: Japan, USA, England, Australien
 const DREAM = [
   { id: 'r34', image: 'cars/r34' },
-  { id: 'fd', image: 'cars/fd' },
-  { id: 's15', image: 'cars/s15' },
-  { id: 'evo6', image: 'cars/evo' },
+  { id: 'mustang', image: 'cars/mustang' },
+  { id: 'esprit', image: 'cars/esprit' },
+  { id: 'monaro', image: 'cars/monaro' },
 ]
 function DreamCar() {
-  const { t, tx, locale } = useT()
+  const { t, tx, locale, d } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const cars = DREAM.map((d) => ({ ...d, c: CLASSICS.find((x) => x.id === d.id)! })).filter((d) => d.c)
   return (
@@ -213,12 +217,12 @@ function DreamCar() {
                   {c.chassis} · {c.from}–{c.to}
                 </span>
                 <h3>{c.name}</h3>
-                <p>{c.why}</p>
+                <p>{d(c.why)}</p>
                 {c.price ? (
                   <p className="dcard-price">
                     <b className="mono">{c.price.jp.toLocaleString(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</b>
                     <span>{tx('Median Angebotspreis Japan', 'Median asking price Japan')}{c.price.n ? tx(`, ${c.price.n} Inserate`, `, ${c.price.n} listings`) : ''}</span>
-                    {c.price.note && <small>{c.price.note}</small>}
+                    {c.price.note && <small>{d(c.price.note)}</small>}
                   </p>
                 ) : (
                   <p className="dcard-price muted">{tx('Kein freier Marktpreis', 'No open market price')}</p>
@@ -241,7 +245,7 @@ function DreamCar() {
         })}
       </div>
       <p className="muted small">
-        {tx('Preise', 'Prices')}: <a href={PRICE_SOURCE.url} target="_blank" rel="noopener noreferrer">{PRICE_SOURCE.name} Market Trends</a> ({PRICE_SOURCE.licence}), {tx(`abgelesen am ${PRICE_SOURCE.date}. Angebotspreise, keine Verkaufspreise. Fotos: Unsplash.`, `read on ${PRICE_SOURCE.date}. Asking prices, not sale prices. Photos: Unsplash.`)}
+        {tx('Preise', 'Prices')}: <a href={PRICE_SOURCE.url} target="_blank" rel="noopener noreferrer">{PRICE_SOURCE.name} Market Trends</a> ({PRICE_SOURCE.licence}), {tx(`abgelesen am ${PRICE_SOURCE.date}. Angebotspreise, keine Verkaufspreise. Fotos: Unsplash; Mustang: Coolalabright (CC BY 4.0), Esprit: MrWalkr (CC BY-SA 4.0), Monaro: Jeremy from Sydney (CC BY 2.0), alle Wikimedia Commons.`, `read on ${PRICE_SOURCE.date}. Asking prices, not sale prices. Photos: Unsplash; Mustang: Coolalabright (CC BY 4.0), Esprit: MrWalkr (CC BY-SA 4.0), Monaro: Jeremy from Sydney (CC BY 2.0), all Wikimedia Commons.`)}
       </p>
     </section>
   )
@@ -314,7 +318,7 @@ function RealCost() {
 
 /* 6 ------------------------------------------------------------------ Roads (horizontal, filmisch) */
 function Roads() {
-  const { t, tx, L } = useT()
+  const { t, tx, L, d } = useT()
   const ref = useRef<HTMLElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const [dist, setDist] = useState(0)
@@ -352,7 +356,7 @@ function Roads() {
                   <span>
                     {c?.flag} {c ? L(c.name) : ''} · {L(ROAD_KINDS[r.kind])}
                   </span>
-                  <h3>{r.name}</h3>
+                  <h3>{d(r.name)}</h3>
                   <span className="mono">
                     {r.lengthKm ? `${r.lengthKm.toLocaleString('de-DE')} km` : ''}
                     {r.lengthKm && r.highestM ? ' · ' : ''}

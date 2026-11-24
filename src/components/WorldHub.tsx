@@ -12,7 +12,7 @@ export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyeb
   const { tx } = useT()
   return (
     <>
-      <PageHead eyebrow={eyebrow} title={title} sub={sub} image={image} />
+      <PageHead eyebrow={eyebrow} title={title} sub={sub} images={[image, ...tools.map((t) => t.img)]} />
       {children}
       <section className="section">
         <div className="tools">
@@ -26,6 +26,9 @@ export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyeb
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.7, delay: (k % 3) * 0.07, ease: EASE }}
             >
+              <div className="tool-img">
+                <img src={t.img} alt="" loading="lazy" />
+              </div>
               <div className="tool-body">
                 {t.meta && <span className="tool-meta">{t.meta}</span>}
                 <h3>{t.title}</h3>
@@ -33,9 +36,6 @@ export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyeb
                 <span className="tool-go">
                   {tx('Öffnen', 'Open')} <ArrowRight size={15} />
                 </span>
-              </div>
-              <div className="tool-img">
-                <img src={t.img} alt="" loading="lazy" />
               </div>
             </motion.a>
           ))}

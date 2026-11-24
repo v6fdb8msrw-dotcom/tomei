@@ -32,7 +32,7 @@ export function DriveHub() {
       tools={[
         { to: 'drive/roads', title: 'Roads', text: tx(`${ROADS.length} Straßen in Japan, Europa und den USA, mit belegten Fakten und Route zum Mitnehmen.`, `${ROADS.length} roads in Japan, Europe and the USA, with verified facts and a route to take along.`), img: roadImg('trollstigen'), meta: 'Roadtrip-Explorer' },
         { to: 'drive/builder', title: 'Roadtrip-Builder', text: tx('Eigene Route aus Wegpunkten bauen, GPX importieren und exportieren, mit dem Auto aus deiner Garage verknüpfen.', 'Build your own route from waypoints, import and export GPX, link it to a car from your garage.'), img: roadImg('atlantic'), meta: trips ? tx(`${trips} gespeichert`, `${trips} saved`) : tx('GPX rein, GPX raus', 'GPX in, GPX out') },
-        { to: 'drive/atlas', title: 'Automotive Atlas', text: tx(`${COUNTRIES.length} Länder: Märkte, Straßen, Importregeln und Mietwagen, verbunden über den Globus.`, `${COUNTRIES.length} countries: markets, roads, import rules and rentals, connected via the globe.`), img: roadImg('shimanami'), meta: tx('Japan als Ausgangspunkt', 'Starting in Japan') },
+        { to: 'drive/atlas', title: 'Automotive Atlas', text: tx(`${COUNTRIES.length} Länder: Märkte, Straßen, Importregeln und Mietwagen, verbunden über den Globus.`, `${COUNTRIES.length} countries: markets, roads, import rules and rentals, connected via the globe.`), img: roadImg('shimanami'), meta: tx('Vier Kontinente', 'Four continents') },
         { to: 'drive/rent', title: tx('Sportwagen mieten', 'Rent a sports car'), text: tx('JDM-Legenden direkt in Japan mieten. Ein Verzeichnis ohne Provision.', 'Rent JDM legends in Japan. A directory without commission.'), img: img('rent-supra'), meta: tx(`${RENT.length} Anbieter`, `${RENT.length} providers`) },
       ]}
     />
@@ -42,7 +42,7 @@ export function DriveHub() {
 /* ------------------------------------------------------------------ Explorer */
 
 function RoadCard({ r, k }: { r: Road; k: number }) {
-  const { L, tx, locale } = useT()
+  const { L, tx, d, locale } = useT()
   const c = countryById(r.country)
   return (
     <motion.a href={href('drive/roads/' + r.id)} className="road" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.6, delay: (k % 3) * 0.06, ease: EASE }}>
@@ -53,7 +53,7 @@ function RoadCard({ r, k }: { r: Road; k: number }) {
         <span className="road-meta">
           {c?.flag} {c ? L(c.name) : ''} · {L(ROAD_KINDS[r.kind])}
         </span>
-        <h3>{r.name}</h3>
+        <h3>{d(r.name)}</h3>
         <span className="road-facts mono">
           {r.lengthKm ? `${r.lengthKm.toLocaleString(locale)} km` : ''}
           {r.lengthKm && r.highestM ? ' · ' : ''}
@@ -128,7 +128,7 @@ export function startTripFromRoad(r: Road, vehicleId?: string) {
 }
 
 export function RoadDetail({ id }: { id: string }) {
-  const { L, tx, locale } = useT()
+  const { L, tx, d, locale } = useT()
   const r = ROADS.find((x) => x.id === id)
   const trips = useStore((s) => s.trips.filter((t) => t.roadId === id))
   if (!r) return <NotFound />
@@ -148,7 +148,7 @@ export function RoadDetail({ id }: { id: string }) {
           <p className="eyebrow">
             {c.flag} {L(c.name)} · {r.region}
           </p>
-          <h1>{r.name}</h1>
+          <h1>{d(r.name)}</h1>
           {r.local && <p className="road-local">{r.local}</p>}
         </div>
       </section>
@@ -289,13 +289,13 @@ function AtlasIndex() {
         eyebrow="Drive · Automotive Atlas"
         title={
           <>
-            {tx('Japan ist der Anfang. ', 'Japan is where it starts. ')}<em>{tx('Die Welt ist groß.', 'The world is big.')}</em>
+            {tx('Vier Kontinente. ', 'Four continents. ')}<em>{tx('Eine Karte.', 'One atlas.')}</em>
           </>
         }
         sub={tx('Jedes Land verbindet die drei Welten: wo man sucht, was der Import kostet, welche Straßen sich lohnen und wo man mieten kann.', 'Each country connects the three worlds: where to search, what importing costs, which roads are worth it and where to rent.')}
       />
       <section className="section atlas-globe">
-        <GlobeView />
+        <GlobeView theme="petrol" />
       </section>
       <section className="section">
         {groups.map((g) => (
@@ -306,7 +306,7 @@ function AtlasIndex() {
                 const roads = ROADS.filter((r) => r.country === c.id).length
                 const tags = [c.market && tx('Markt', 'Market'), c.dest && tx('Importziel', 'Import destination'), c.origin && c.origin !== 'jp' && tx('Herkunft', 'Origin'), roads && `${roads} Roads`, c.id === 'jp' && tx('Spots & Mieten', 'Spots & rentals')].filter(Boolean)
                 return (
-                  <a key={c.id} href={href('drive/atlas/' + c.id)} className={'atlas-c' + (c.home ? ' home' : '')}>
+                  <a key={c.id} href={href('drive/atlas/' + c.id)} className="atlas-c">
                     <span className="atlas-flag">{c.flag}</span>
                     <span>
                       <b>{L(c.name)}</b>
@@ -325,7 +325,7 @@ function AtlasIndex() {
 }
 
 function CountryPage({ id }: { id: string }) {
-  const { L, tx, locale } = useT()
+  const { L, tx, locale, d } = useT()
   const c = countryById(id)
   if (!c) return <NotFound />
   const market = MARKETS.find((m) => m.id === c.market)
@@ -345,8 +345,8 @@ function CountryPage({ id }: { id: string }) {
         }
         sub={
           tx(
-            [market?.text, c.home ? 'Ausgangspunkt von ' + BRAND.name + '.' : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'Eine Straße' : roads.length + ' Straßen'} im Roadtrip-Explorer${dest || origin ? ', dazu Importregeln im Rechner' : ''}.` : 'Noch wenig eingetragen.'),
-            [market ? `Public search pages of the local marketplaces (hub: ${market.hub}).` : '', c.home ? `Where ${BRAND.name} starts.` : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'One road' : roads.length + ' roads'} in the road trip explorer${dest || origin ? ', plus import rules in the calculator' : ''}.` : 'Not much here yet.'),
+            [market?.text].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'Eine Straße' : roads.length + ' Straßen'} im Roadtrip-Explorer${dest || origin ? ', dazu Importregeln im Rechner' : ''}.` : 'Noch wenig eingetragen.'),
+            [market ? d(market.text) : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'One road' : roads.length + ' roads'} in the road trip explorer${dest || origin ? ', plus import rules in the calculator' : ''}.` : 'Not much here yet.'),
           )
         }
         back={{ to: 'drive/atlas', label: 'Atlas' }}
@@ -389,7 +389,7 @@ function CountryPage({ id }: { id: string }) {
             {market.portals.map((p) => (
               <a key={p.name} className="portal" href={p.url(q)} target="_blank" rel="noopener noreferrer">
                 <b>{p.name}</b>
-                <span>{p.kind}</span>
+                <span>{d(p.kind)}</span>
                 <ArrowUpRight size={15} />
               </a>
             ))}
@@ -413,7 +413,7 @@ function CountryPage({ id }: { id: string }) {
               <h3>
                 {tx('Import nach', 'Import to')} {dest.name} <Badge kind="estimate">{tx('Gebühren geschätzt', 'Fees estimated')}</Badge>
               </h3>
-              <p>{dest.note}</p>
+              <p>{d(dest.note)}</p>
               <p className="mono small">
                 {tx('Zoll', 'Duty')} {dest.duty.toLocaleString(locale)} % · {dest.vatLabel} {dest.vat.toLocaleString(locale)} % · {tx('Hafen', 'Port')} {dest.port}
               </p>
@@ -422,10 +422,10 @@ function CountryPage({ id }: { id: string }) {
           {origin && (
             <div className="gcard">
               <h3>{tx(`Kaufen in ${origin.name}, Ziel Deutschland`, `Buying in ${origin.name}, destination Germany`)}</h3>
-              <p>{origin.note}</p>
+              <p>{d(origin.note)}</p>
               {origin.pref && (
                 <p className="small">
-                  <b>{origin.pref.label}:</b> {origin.pref.text} <SourceLink url={origin.pref.source} />
+                  <b>{d(origin.pref.label)}:</b> {d(origin.pref.text)} <SourceLink url={origin.pref.source} />
                 </p>
               )}
             </div>

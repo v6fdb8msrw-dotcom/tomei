@@ -22,7 +22,7 @@ const usd = (v: number) => '$ ' + new Intl.NumberFormat('de-DE', { maximumFracti
 
 export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: Origin) => void }) {
   const { rates } = useFx()
-  const { tx } = useT()
+  const { tx, d } = useT()
   const [origin, setOrigin] = useState<Origin | 'all'>('all')
   const [era, setEra] = useState('all')
   const [classic, setClassic] = useState(false)
@@ -41,7 +41,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
         <div className="mk-ideas">
           {[{ id: 'all' as const, label: tx('Alle Länder', 'All countries') }, ...ORIGINS].map((o) => (
             <button key={o.id} className={'chip' + (origin === o.id ? ' on' : '')} onClick={() => setOrigin(o.id)}>
-              {o.label}
+              {d(o.label)}
             </button>
           ))}
         </div>
@@ -81,14 +81,14 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
               <motion.article key={c.id} layout className="gcard cf-card" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.3 }}>
                 <header>
                   <span className="mk-code small-code">{market?.code}</span>
-                  <span className="cf-kind">{c.kind}</span>
+                  <span className="cf-kind">{d(c.kind)}</span>
                   <span className={'cf-badge' + (oldOk ? ' ok' : '')}>{oldOk ? tx('Oldtimer-fähig', 'Classic-eligible') : tx(`Oldtimer ab ${c.from + 30}`, `Classic from ${c.from + 30}`)}</span>
                 </header>
                 <h3>{c.name}</h3>
                 <p className="muted small mono">
                   {c.chassis} · {c.from}–{c.to}
                 </p>
-                <p className="cf-why">{c.why}</p>
+                <p className="cf-why">{d(c.why)}</p>
                 {c.price ? (
                   <div className="cf-price">
                     <span>{tx('Typischer Angebotspreis in Japan (Median)', 'Typical asking price in Japan (median)')}</span>
@@ -98,7 +98,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
                       {c.price.out ? tx(` · außerhalb Japans ${usd(c.price.out)}`, ` · outside Japan ${usd(c.price.out)}`) : ''}
                       {c.price.n ? tx(` · ${c.price.n} Inserate`, ` · ${c.price.n} listings`) : ''}
                     </small>
-                    {c.price.note && <small>{c.price.note}</small>}
+                    {c.price.note && <small>{d(c.price.note)}</small>}
                   </div>
                 ) : (
                   <div className="cf-price none">

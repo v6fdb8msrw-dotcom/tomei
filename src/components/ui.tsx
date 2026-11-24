@@ -1,7 +1,7 @@
 // Gemeinsame Bausteine der Version 2.0: Seitenköpfe, Unternavigation, Hinweise, Leer- und Fehlerzustände.
 import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Info, RefreshCw } from 'lucide-react'
-import { motion } from 'motion/react'
-import { Component, useEffect, useRef, type ErrorInfo, type ReactNode } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from 'react'
 import { translate, useT, type TKey } from '../i18n/i18n.ts'
 import { href } from '../lib/router.ts'
 import { getState } from '../store/store.ts'
@@ -10,10 +10,25 @@ import type { Vehicle, VehicleStatus } from '../store/schema.ts'
 export const EASE = [0.22, 1, 0.36, 1] as const
 export const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
 
-/** Kopf einer Unterseite: kleine Zeile, große Aussage, optional Bild */
-export function PageHead({ eyebrow, title, sub, back, children, image, vt }: { eyebrow: string; title: ReactNode; sub?: ReactNode; back?: { to: string; label: string }; children?: ReactNode; image?: string; vt?: string }) {
+// Standardbilder für Seitenköpfe ohne eigenes Bild (echte, lizenzierte Fotos)
+const HEAD_DEFAULTS = ['roads/shimanami', 'roads/atlantic', 'roads/glockner', 'roads/izu', 'fuji-lakes']
+
+/** Kopf einer Unterseite: Vollbild-Foto (oder Slideshow) mit großer Aussage darüber */
+export function PageHead({ eyebrow, title, sub, back, children, image, images, vt }: { eyebrow: string; title: ReactNode; sub?: ReactNode; back?: { to: string; label: string }; children?: ReactNode; image?: string; images?: string[]; vt?: string }) {
+  const list = images?.length ? images : [image ?? img(HEAD_DEFAULTS[[...eyebrow].reduce((a, c) => a + c.charCodeAt(0), 0) % HEAD_DEFAULTS.length])]
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    if (list.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const tm = setInterval(() => setI((x) => (x + 1) % list.length), 5500)
+    return () => clearInterval(tm)
+  }, [list.length])
   return (
-    <header className={'phead' + (image ? ' with-img' : '')}>
+    <header className="phead with-img">
+      <div className="phead-img" style={vt ? { viewTransitionName: vt } : undefined}>
+        <AnimatePresence initial={false}>
+          <motion.img key={list[i]} src={list[i]} alt="" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2 }} />
+        </AnimatePresence>
+      </div>
       <div className="phead-text">
         {back && (
           <a className="phead-back" href={href(back.to)}>
@@ -23,21 +38,23 @@ export function PageHead({ eyebrow, title, sub, back, children, image, vt }: { e
         <motion.p className="eyebrow" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           {eyebrow}
         </motion.p>
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.05, ease: EASE }}>
+        <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.05, ease: EASE }}>
           {title}
         </motion.h1>
         {sub && (
-          <motion.p className="phead-sub" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.12 }}>
+          <motion.p className="phead-sub" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.15 }}>
             {sub}
           </motion.p>
         )}
         {children}
+        {list.length > 1 && (
+          <div className="phead-dots" aria-hidden>
+            {list.map((src, k) => (
+              <i key={src} className={k === i ? 'on' : ''} />
+            ))}
+          </div>
+        )}
       </div>
-      {image && (
-        <div className="phead-img" style={vt ? { viewTransitionName: vt } : undefined}>
-          <img src={image} alt="" />
-        </div>
-      )}
     </header>
   )
 }
