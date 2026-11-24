@@ -72,7 +72,7 @@ export function Markets() {
       </section>
 
       <section className="section tight" id="modelle">
-        <SectionHead eyebrow={tx('Modell-Katalog', 'Model catalogue')} title={<>{tx('Über 900 Modelle. ', 'Over 900 models. ')}<em>{tx('Aus aller Welt.', 'From around the world.')}</em></>} text={tx('Tipp einfach los: Die Vorschlagsliste findet Marke, Modell und Baujahr. Filtere nach Herkunft, Klasse, Jahrzehnt und Oldtimer-Status; jedes Modell führt direkt zu den Portalen seines Herkunftslands und in den Rechner.', 'Just start typing: suggestions find make, model and year. Filter by origin, class, decade and classic status; every model leads straight to the marketplaces of its home country and into the calculator.')} />
+        <SectionHead eyebrow={tx('Modell-Katalog', 'Model catalogue')} title={<>{tx('Über 1.100 Modelle. ', 'Over 1,100 models. ')}<em>{tx('Aus aller Welt.', 'From around the world.')}</em></>} text={tx('Tipp einfach los: Die Vorschlagsliste findet Marke, Modell und Baujahr. Filtere nach Herkunft, Klasse, Jahrzehnt und Oldtimer-Status; jedes Modell führt direkt zu den Portalen seines Herkunftslands und in den Rechner.', 'Just start typing: suggestions find make, model and year. Filter by origin, class, decade and classic status; every model leads straight to the marketplaces of its home country and into the calculator.')} />
         <ModelFinder onSearch={search} />
       </section>
 
