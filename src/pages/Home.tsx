@@ -9,15 +9,14 @@ import { AGENTS, DEST, agentTotal } from '../data.ts'
 import { COUNTRIES, countryById } from '../data/countries.ts'
 import { ROADS, ROAD_KINDS, roadImg } from '../data/roads.ts'
 import { GlobeView } from '../components/Globe.tsx'
-import { Badge, EASE, Reveal, StatusPill, fmtDate, fmtMoney, img, vehicleTitle } from '../components/ui.tsx'
+import { Badge, EASE, Reveal, StatusPill, VehicleVisual, fmtDate, fmtMoney, img, vehicleTitle } from '../components/ui.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { yen } from '../lib/calc.ts'
 import { useFx } from '../lib/fx.ts'
 import { buildScenarios, range3 } from '../lib/scenarios.ts'
 import { href, navigate } from '../lib/router.ts'
 import { addVehicle, useStore } from '../store/store.ts'
-import { VEHICLE_STATUS } from '../store/schema.ts'
-import { VehicleVisual } from './own/Own.tsx'
+import { VEHICLE_STATUS, type PassportKind } from '../store/schema.ts'
 
 const SLIDES = [
   { src: img('fuji-lakes'), caption: 'Nissan Skyline GT-R am Fuji' },
@@ -104,11 +103,11 @@ function Hero() {
 
 /* 2 ------------------------------------------------------------------ Drei Welten */
 function Worlds() {
-  const { t } = useT()
+  const { t, tx } = useT()
   const worlds = [
-    { id: 'discover', n: '01', img: img('cars/fd'), items: ['Fahrzeugsuche in 11 Ländern', 'Auktionshäuser & Import-Partner', 'Importrechner mit 4 Szenarien'] },
-    { id: 'drive', n: '02', img: roadImg('stelvio'), items: [`${ROADS.length} belegte Roads`, 'Roadtrip-Builder mit GPX', 'Automotive Atlas & Mieten'] },
-    { id: 'own', n: '03', img: img('fuji-lakes'), items: ['Garage vom Traum bis Verkauf', 'Unterhalt, Build, Wartung', 'Automotive Passport'] },
+    { id: 'discover', n: '01', img: img('cars/fd'), items: [tx('Fahrzeugsuche in 11 Ländern', 'Vehicle search in 11 countries'), tx('Auktionshäuser & Import-Partner', 'Auction houses & import partners'), tx('Importrechner mit 4 Szenarien', 'Import calculator with 4 scenarios')] },
+    { id: 'drive', n: '02', img: roadImg('stelvio'), items: [tx(`${ROADS.length} belegte Roads`, `${ROADS.length} sourced roads`), tx('Roadtrip-Builder mit GPX', 'Road trip builder with GPX'), tx('Automotive Atlas & Mieten', 'Automotive Atlas & rentals')] },
+    { id: 'own', n: '03', img: img('fuji-lakes'), items: [tx('Garage vom Traum bis Verkauf', 'Garage from dream to sale'), tx('Unterhalt, Build, Wartung', 'Ownership, build, maintenance'), 'Automotive Passport'] },
   ] as const
   return (
     <section className="section">
@@ -146,7 +145,7 @@ function Worlds() {
 
 /* 3 ------------------------------------------------------------------ Globus */
 function GlobeSection() {
-  const { t } = useT()
+  const { t, tx } = useT()
   const markets = COUNTRIES.filter((c) => c.market).length
   return (
     <section className="section hglobe">
@@ -160,11 +159,11 @@ function GlobeSection() {
           <div className="hstats">
             <div>
               <b className="mono">{COUNTRIES.length}</b>
-              <span>Länder im Atlas</span>
+              <span>{tx('Länder im Atlas', 'Countries in the atlas')}</span>
             </div>
             <div>
               <b className="mono">{markets}</b>
-              <span>Märkte mit Suche</span>
+              <span>{tx('Märkte mit Suche', 'Markets with search')}</span>
             </div>
             <div>
               <b className="mono">{ROADS.length}</b>
@@ -189,7 +188,7 @@ const DREAM = [
   { id: 'evo6', image: 'cars/evo' },
 ]
 function DreamCar() {
-  const { t, locale } = useT()
+  const { t, tx, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const cars = DREAM.map((d) => ({ ...d, c: CLASSICS.find((x) => x.id === d.id)! })).filter((d) => d.c)
   return (
@@ -218,22 +217,22 @@ function DreamCar() {
                 {c.price ? (
                   <p className="dcard-price">
                     <b className="mono">{c.price.jp.toLocaleString(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</b>
-                    <span>Median Angebotspreis Japan{c.price.n ? `, ${c.price.n} Inserate` : ''}</span>
+                    <span>{tx('Median Angebotspreis Japan', 'Median asking price Japan')}{c.price.n ? tx(`, ${c.price.n} Inserate`, `, ${c.price.n} listings`) : ''}</span>
                     {c.price.note && <small>{c.price.note}</small>}
                   </p>
                 ) : (
-                  <p className="dcard-price muted">Kein freier Marktpreis</p>
+                  <p className="dcard-price muted">{tx('Kein freier Marktpreis', 'No open market price')}</p>
                 )}
                 {have ? (
                   <a className="btn small" href={href('own/garage/' + have.id)}>
-                    <Check size={14} /> In deiner Garage
+                    <Check size={14} /> {tx('In deiner Garage', 'In your garage')}
                   </a>
                 ) : (
                   <button
                     className="btn small primary"
                     onClick={() => addVehicle({ make: c.q.make, model: c.name.replace(c.q.make + ' ', ''), chassis: c.chassis, status: 'dream', market: 'jp', image, source: 'home' })}
                   >
-                    <Plus size={14} /> Als Traum merken
+                    <Plus size={14} /> {tx('Als Traum merken', 'Save as dream')}
                   </button>
                 )}
               </div>
@@ -242,7 +241,7 @@ function DreamCar() {
         })}
       </div>
       <p className="muted small">
-        Preise: <a href={PRICE_SOURCE.url} target="_blank" rel="noopener noreferrer">{PRICE_SOURCE.name} Market Trends</a> ({PRICE_SOURCE.licence}), abgelesen am {PRICE_SOURCE.date}. Angebotspreise, keine Verkaufspreise. Fotos: Unsplash.
+        {tx('Preise', 'Prices')}: <a href={PRICE_SOURCE.url} target="_blank" rel="noopener noreferrer">{PRICE_SOURCE.name} Market Trends</a> ({PRICE_SOURCE.licence}), {tx(`abgelesen am ${PRICE_SOURCE.date}. Angebotspreise, keine Verkaufspreise. Fotos: Unsplash.`, `read on ${PRICE_SOURCE.date}. Asking prices, not sale prices. Photos: Unsplash.`)}
       </p>
     </section>
   )
@@ -250,7 +249,7 @@ function DreamCar() {
 
 /* 5 ------------------------------------------------------------------ Real Cost */
 function RealCost() {
-  const { t, locale } = useT()
+  const { t, tx, locale } = useT()
   const { rates, live } = useFx()
   const [hammer, setHammer] = useState(4000000)
   const d = DEST.DE
@@ -281,17 +280,17 @@ function RealCost() {
           <h2>{t('home.cost.title')}</h2>
           <p className="sec-text">{t('home.cost.sub')}</p>
           <a className="btn primary" href={href('discover/calculator')}>
-            Importrechner öffnen <ArrowRight size={16} />
+            {tx('Importrechner öffnen', 'Open import calculator')} <ArrowRight size={16} />
           </a>
         </Reveal>
       </div>
       <Reveal className="rc-card gcard">
         <label className="rc-slider">
-          <span className="f-label">Zuschlag in Japan</span>
+          <span className="f-label">{tx('Zuschlag in Japan', 'Hammer price in Japan')}</span>
           <b className="mono">{yen(hammer)}</b>
-          <input type="range" min={500000} max={15000000} step={100000} value={hammer} onChange={(e) => setHammer(Number(e.target.value))} aria-label="Zuschlag in Yen" />
+          <input type="range" min={500000} max={15000000} step={100000} value={hammer} onChange={(e) => setHammer(Number(e.target.value))} aria-label={tx('Zuschlag in Yen', 'Hammer price in yen')} />
           <span className="muted small">
-            ≈ {fmtMoney(hammer * eur, 'EUR', locale)} · {live ? `EZB-Kurs vom ${fmtDate(live.date, locale)}` : 'Ersatzkurs'}
+            ≈ {fmtMoney(hammer * eur, 'EUR', locale)} · {live ? tx(`EZB-Kurs vom ${fmtDate(live.date, locale)}`, `ECB rate of ${fmtDate(live.date, locale)}`) : tx('Ersatzkurs', 'Fallback rate')}
           </span>
         </label>
         <div className="rc-bars">
@@ -306,7 +305,7 @@ function RealCost() {
           ))}
         </div>
         <p className="small muted">
-          Japan → Deutschland, Ø {AGENTS.length} Agenten mit veröffentlichten Gebühren, RoRo bzw. Container, Zoll 10 %, EUSt 19 %. Kursschwankung ±5 % und 10 % Reserve sind <Badge kind="assumption" />, Fracht und Gebühren in Deutschland sind <Badge kind="estimate" />.
+          {tx(`Japan → Deutschland, Ø ${AGENTS.length} Agenten mit veröffentlichten Gebühren, RoRo bzw. Container, Zoll 10 %, EUSt 19 %. Kursschwankung ±5 % und 10 % Reserve sind `, `Japan → Germany, avg. of ${AGENTS.length} agents with published fees, RoRo or container, duty 10 %, import VAT 19 %. Currency swing ±5 % and 10 % reserve are `)}<Badge kind="assumption" />{tx(', Fracht und Gebühren in Deutschland sind ', ', freight and fees in Germany are ')}<Badge kind="estimate" />.
         </p>
       </Reveal>
     </section>
@@ -315,7 +314,7 @@ function RealCost() {
 
 /* 6 ------------------------------------------------------------------ Roads (horizontal, filmisch) */
 function Roads() {
-  const { t, L } = useT()
+  const { t, tx, L } = useT()
   const ref = useRef<HTMLElement>(null)
   const track = useRef<HTMLDivElement>(null)
   const [dist, setDist] = useState(0)
@@ -338,7 +337,7 @@ function Roads() {
             <h2>{t('home.roads.title')}</h2>
           </div>
           <a className="btn light" href={href('drive/roads')}>
-            Alle {ROADS.length} Roads <ArrowRight size={16} />
+            {tx(`Alle ${ROADS.length} Roads`, `All ${ROADS.length} roads`)} <ArrowRight size={16} />
           </a>
         </div>
         <motion.div className="hroads-track" ref={track} style={pinned ? { x } : undefined}>
@@ -371,7 +370,7 @@ function Roads() {
 
 /* 7 ------------------------------------------------------------------ Garage */
 function GarageSection() {
-  const { t, locale } = useT()
+  const { t, tx, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const counts = VEHICLE_STATUS.map((s) => ({ s, n: vehicles.filter((v) => v.status === s).length }))
   return (
@@ -401,7 +400,7 @@ function GarageSection() {
                 <div className="veh-body">
                   <StatusPill status={v.status} />
                   <h3>{vehicleTitle(v)}</h3>
-                  <span className="muted small mono">{v.landed ? fmtMoney(v.landed.amount, v.landed.cur, locale) + ' bis vor die Tür' : v.price ? fmtMoney(v.price.amount, v.price.cur, locale) : ''}</span>
+                  <span className="muted small mono">{v.landed ? fmtMoney(v.landed.amount, v.landed.cur, locale) + tx(' bis vor die Tür', ' landed') : v.price ? fmtMoney(v.price.amount, v.price.cur, locale) : ''}</span>
                 </div>
               </a>
             ))}
@@ -411,10 +410,10 @@ function GarageSection() {
             <p>{t('empty.garage.text')}</p>
             <div className="row gap wrap">
               <a className="btn primary" href={href('own/garage')}>
-                Garage öffnen <ArrowRight size={16} />
+                {tx('Garage öffnen', 'Open garage')} <ArrowRight size={16} />
               </a>
               <a className="btn" href={href('discover/search')}>
-                Fahrzeugsuche
+                {tx('Fahrzeugsuche', 'Vehicle search')}
               </a>
             </div>
           </div>
@@ -425,14 +424,25 @@ function GarageSection() {
 }
 
 /* 8 ------------------------------------------------------------------ Passport */
-const SAMPLE = [
-  { d: '2026-03-14', k: 'Kauf', t: 'Zuschlag bei einer Auktion in Japan' },
-  { d: '2026-05-02', k: 'Import', t: 'Ankunft in Bremerhaven, verzollt' },
-  { d: '2026-06-10', k: 'Zulassung', t: 'Vollabnahme und H-Kennzeichen' },
-  { d: '2026-09-21', k: 'Fahrt', t: 'Großglockner-Hochalpenstraße' },
+// Beispiel-Zeitleiste (Demo, gekennzeichnet), solange der Passport leer ist
+const SAMPLE: { d: string; k: PassportKind; t: { de: string; en: string } }[] = [
+  { d: '2026-03-14', k: 'purchase', t: { de: 'Zuschlag bei einer Auktion in Japan', en: 'Winning bid at an auction in Japan' } },
+  { d: '2026-05-02', k: 'import', t: { de: 'Ankunft in Bremerhaven, verzollt', en: 'Arrived in Bremerhaven, cleared' } },
+  { d: '2026-06-10', k: 'registration', t: { de: 'Vollabnahme und H-Kennzeichen', en: 'Full inspection and historic plate' } },
+  { d: '2026-09-21', k: 'trip', t: { de: 'Großglockner-Hochalpenstraße', en: 'Grossglockner High Alpine Road' } },
 ]
+const PKIND: Record<PassportKind, { de: string; en: string }> = {
+  purchase: { de: 'Kauf', en: 'Purchase' },
+  import: { de: 'Import', en: 'Import' },
+  registration: { de: 'Zulassung', en: 'Registration' },
+  service: { de: 'Wartung', en: 'Service' },
+  mod: { de: 'Umbau', en: 'Modification' },
+  trip: { de: 'Fahrt', en: 'Drive' },
+  document: { de: 'Dokument', en: 'Document' },
+  note: { de: 'Notiz', en: 'Note' },
+}
 function PassportSection() {
-  const { t, locale } = useT()
+  const { t, tx, L, locale } = useT()
   const entries = useStore((s) => s.passport)
   const vehicles = useStore((s) => s.vehicles)
   const real = entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4)
@@ -445,22 +455,22 @@ function PassportSection() {
           <h2>{t('home.passport.title')}</h2>
           <p className="sec-text">{t('home.passport.sub')}</p>
           <a className="btn" href={href('own/passport')}>
-            Passport öffnen <ArrowRight size={16} />
+            {tx('Passport öffnen', 'Open passport')} <ArrowRight size={16} />
           </a>
         </Reveal>
       </div>
       <Reveal className="hpass-card">
         <div className="hpass-top">
           <span>Automotive Passport</span>
-          {real.length ? <b>{v ? vehicleTitle(v) : ''}</b> : <Badge kind="demo">Beispiel</Badge>}
+          {real.length ? <b>{v ? vehicleTitle(v) : ''}</b> : <Badge kind="demo">{tx('Beispiel', 'Example')}</Badge>}
         </div>
         <ol className="timeline compact">
-          {(real.length ? real.map((e) => ({ d: e.date, k: e.kind, t: e.title })) : SAMPLE).map((e, k) => (
+          {(real.length ? real.map((e) => ({ d: e.date, k: e.kind, t: e.title })) : SAMPLE.map((e) => ({ ...e, t: L(e.t) }))).map((e, k) => (
             <li key={k} className="tl">
               <span className="tl-date mono">{fmtDate(e.d, locale)}</span>
               <span className="tl-dot" />
               <div className="tl-body">
-                <span className="tl-kind">{e.k}</span>
+                <span className="tl-kind">{L(PKIND[e.k])}</span>
                 <b>{e.t}</b>
               </div>
             </li>

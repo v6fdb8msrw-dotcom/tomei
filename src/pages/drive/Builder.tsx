@@ -53,7 +53,7 @@ function RouteSketch({ trip }: { trip: Trip }) {
   }, [trip])
   if (!pts) return <div className="sketch empty-sketch">Noch keine Punkte</div>
   return (
-    <svg className="sketch" viewBox={`0 0 ${pts.W} ${pts.H}`} role="img" aria-label="Skizze der Route aus den Wegpunkten">
+    <svg className="sketch" viewBox={`0 0 ${pts.W} ${pts.H}`} role="img" aria-label="Route sketch">
       <defs>
         <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
           <path d="M 30 0 L 0 0 0 30" className="sk-grid" />
@@ -79,7 +79,7 @@ export default function Builder({ tripId }: { tripId?: string }) {
 }
 
 function TripList() {
-  const { t, locale } = useT()
+  const { t, tx, locale } = useT()
   const trips = useStore((s) => s.trips)
   const vehicles = useStore((s) => s.vehicles)
   const file = useRef<HTMLInputElement>(null)
@@ -94,18 +94,18 @@ function TripList() {
         eyebrow="Drive · Roadtrip-Builder"
         title={
           <>
-            Deine Route. <em>Deine Regeln.</em>
+            {tx('Deine Route. ', 'Your route. ')}<em>{tx('Deine Regeln.', 'Your rules.')}</em>
           </>
         }
-        sub="Wegpunkte setzen, Straßen aus dem Explorer übernehmen, GPX-Dateien aus Navi oder App einlesen und wieder ausgeben. Alles bleibt auf deinem Gerät."
+        sub={tx('Wegpunkte setzen, Straßen aus dem Explorer übernehmen, GPX-Dateien aus Navi oder App einlesen und wieder ausgeben. Alles bleibt auf deinem Gerät.', 'Set waypoints, take roads from the explorer, read GPX files from your sat nav or app and write them back out. Everything stays on your device.')}
         image={roadImg('atlantic')}
       >
         <div className="row gap wrap">
           <button className="btn primary" onClick={() => create(newTrip())}>
-            <Plus size={16} /> Neuer Roadtrip
+            <Plus size={16} /> {tx('Neuer Roadtrip', 'New road trip')}
           </button>
           <button className="btn" onClick={() => file.current?.click()}>
-            <FileUp size={16} /> GPX importieren
+            <FileUp size={16} /> {tx('GPX importieren', 'Import GPX')}
           </button>
           <input
             ref={file}
@@ -133,7 +133,7 @@ function TripList() {
             title={t('empty.trips.title')}
             text={t('empty.trips.text')}
             image={roadImg('trollstigen')}
-            actions={[{ to: 'drive/roads', label: 'Roads entdecken', primary: true }]}
+            actions={[{ to: 'drive/roads', label: tx('Roads entdecken', 'Explore roads'), primary: true }]}
           />
         ) : (
           <div className="trips">
@@ -148,7 +148,7 @@ function TripList() {
                   <div>
                     <h3>{tr.name}</h3>
                     <span className="muted small">
-                      {tr.waypoints.length} Wegpunkte{tr.track?.length ? ` · ${tr.track.length.toLocaleString(locale)} Spurpunkte` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} km Luftlinie
+                      {tr.waypoints.length} {tx('Wegpunkte', 'waypoints')}{tr.track?.length ? ` · ${tr.track.length.toLocaleString(locale)} ${tx('Spurpunkte', 'track points')}` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} {tx('km Luftlinie', 'km straight-line')}
                       {v ? ` · ${vehicleTitle(v)}` : ''}
                     </span>
                   </div>
@@ -163,7 +163,7 @@ function TripList() {
 }
 
 function Editor({ id }: { id: string }) {
-  const { locale } = useT()
+  const { tx, locale } = useT()
   const trip = useStore((s) => s.trips.find((t) => t.id === id))
   const vehicles = useStore((s) => s.vehicles)
   const [wp, setWp] = useState({ name: '', lat: '', lon: '' })
@@ -188,7 +188,7 @@ function Editor({ id }: { id: string }) {
 
   return (
     <>
-      <PageHead eyebrow="Roadtrip-Builder" title={trip.name || 'Roadtrip'} back={{ to: 'drive/builder', label: 'Alle Roadtrips' }} sub={road ? `Basiert auf ${road.name}.` : 'Eigene Route.'} />
+      <PageHead eyebrow="Roadtrip-Builder" title={trip.name || 'Roadtrip'} back={{ to: 'drive/builder', label: tx('Alle Roadtrips', 'All road trips') }} sub={road ? tx(`Basiert auf ${road.name}.`, `Based on ${road.name}.`) : tx('Eigene Route.', 'Custom route.')} />
       <section className="section builder">
         <div className="builder-main">
           <div className="gcard">
@@ -198,40 +198,40 @@ function Editor({ id }: { id: string }) {
                 <input className="input" value={trip.name} onChange={(e) => save({ name: e.target.value.slice(0, 160) })} />
               </label>
               <label className="field">
-                <span className="f-label">Datum</span>
+                <span className="f-label">{tx('Datum', 'Date')}</span>
                 <input className="input" type="date" value={trip.date ?? ''} onChange={(e) => save({ date: e.target.value || undefined })} />
               </label>
-              <VehicleSelect vehicles={vehicles} value={trip.vehicleId} onChange={(vid) => save({ vehicleId: vid || undefined })} allowNone="Ohne Fahrzeug" label="Mit welchem Auto?" />
+              <VehicleSelect vehicles={vehicles} value={trip.vehicleId} onChange={(vid) => save({ vehicleId: vid || undefined })} allowNone={tx('Ohne Fahrzeug', 'No vehicle')} label={tx('Mit welchem Auto?', 'Which car?')} />
               <label className="field">
-                <span className="f-label">Notizen</span>
-                <input className="input" value={trip.notes ?? ''} onChange={(e) => save({ notes: e.target.value.slice(0, 4000) })} placeholder="Tankstopps, Hotels, Fähren …" />
+                <span className="f-label">{tx('Notizen', 'Notes')}</span>
+                <input className="input" value={trip.notes ?? ''} onChange={(e) => save({ notes: e.target.value.slice(0, 4000) })} placeholder={tx('Tankstopps, Hotels, Fähren …', 'Fuel stops, hotels, ferries …')} />
               </label>
             </div>
           </div>
 
           <RouteSketch trip={trip} />
           <p className="muted small">
-            {trip.waypoints.length} Wegpunkte{trip.track?.length ? `, ${trip.track.length.toLocaleString(locale)} Spurpunkte aus GPX` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} km Luftlinie (keine Straßenlänge)
+            {trip.waypoints.length} {tx('Wegpunkte', 'waypoints')}{trip.track?.length ? `, ${trip.track.length.toLocaleString(locale)} ${tx('Spurpunkte aus GPX', 'track points from GPX')}` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} {tx('km Luftlinie (keine Straßenlänge)', 'km straight-line (not road distance)')}
           </p>
 
           <div className="gcard">
-            <h3>Wegpunkte</h3>
-            {trip.waypoints.length === 0 && <p className="muted">Noch keine Wegpunkte. Füge unten Koordinaten hinzu oder übernimm Punkte einer Straße.</p>}
+            <h3>{tx('Wegpunkte', 'Waypoints')}</h3>
+            {trip.waypoints.length === 0 && <p className="muted">{tx('Noch keine Wegpunkte. Füge unten Koordinaten hinzu oder übernimm Punkte einer Straße.', 'No waypoints yet. Add coordinates below or take the points of a road.')}</p>}
             <ol className="wps edit">
               {trip.waypoints.map((w, i) => (
                 <li key={i}>
-                  <input className="input" value={w.name} aria-label="Name des Wegpunkts" onChange={(e) => save({ waypoints: trip.waypoints.map((x, k) => (k === i ? { ...x, name: e.target.value.slice(0, 120) } : x)) })} />
+                  <input className="input" value={w.name} aria-label={tx('Name des Wegpunkts', 'Waypoint name')} onChange={(e) => save({ waypoints: trip.waypoints.map((x, k) => (k === i ? { ...x, name: e.target.value.slice(0, 120) } : x)) })} />
                   <span className="mono muted small">
                     {w.lat.toFixed(4)}, {w.lon.toFixed(4)}
                   </span>
                   <span className="wp-btns">
-                    <button className="icon-btn" onClick={() => move(i, -1)} aria-label="Nach oben" disabled={i === 0}>
+                    <button className="icon-btn" onClick={() => move(i, -1)} aria-label={tx('Nach oben', 'Move up')} disabled={i === 0}>
                       <ArrowUp size={15} />
                     </button>
-                    <button className="icon-btn" onClick={() => move(i, 1)} aria-label="Nach unten" disabled={i === trip.waypoints.length - 1}>
+                    <button className="icon-btn" onClick={() => move(i, 1)} aria-label={tx('Nach unten', 'Move down')} disabled={i === trip.waypoints.length - 1}>
                       <ArrowDown size={15} />
                     </button>
-                    <button className="icon-btn" onClick={() => save({ waypoints: trip.waypoints.filter((_, k) => k !== i) })} aria-label="Entfernen">
+                    <button className="icon-btn" onClick={() => save({ waypoints: trip.waypoints.filter((_, k) => k !== i) })} aria-label={tx('Entfernen', 'Remove')}>
                       <Trash2 size={15} />
                     </button>
                   </span>
@@ -240,8 +240,8 @@ function Editor({ id }: { id: string }) {
             </ol>
             <div className="wp-add">
               <input className="input" placeholder="Name" value={wp.name} onChange={(e) => setWp({ ...wp, name: e.target.value })} aria-label="Name" />
-              <input className="input" placeholder="Breite, z. B. 46.53" inputMode="decimal" value={wp.lat} onChange={(e) => setWp({ ...wp, lat: e.target.value })} aria-label="Breitengrad" />
-              <input className="input" placeholder="Länge, z. B. 10.45" inputMode="decimal" value={wp.lon} onChange={(e) => setWp({ ...wp, lon: e.target.value })} aria-label="Längengrad" />
+              <input className="input" placeholder={tx('Breite, z. B. 46.53', 'Latitude, e.g. 46.53')} inputMode="decimal" value={wp.lat} onChange={(e) => setWp({ ...wp, lat: e.target.value })} aria-label={tx('Breitengrad', 'Latitude')} />
+              <input className="input" placeholder={tx('Länge, z. B. 10.45', 'Longitude, e.g. 10.45')} inputMode="decimal" value={wp.lon} onChange={(e) => setWp({ ...wp, lon: e.target.value })} aria-label={tx('Längengrad', 'Longitude')} />
               <button
                 className="btn"
                 disabled={!okPt}
@@ -250,12 +250,12 @@ function Editor({ id }: { id: string }) {
                   setWp({ name: '', lat: '', lon: '' })
                 }}
               >
-                <Plus size={15} /> Punkt
+                <Plus size={15} /> {tx('Punkt', 'Point')}
               </button>
             </div>
             <div className="wp-add">
-              <select className="input" value={roadPick} onChange={(e) => setRoadPick(e.target.value)} aria-label="Straße">
-                <option value="">Punkte einer Straße anhängen …</option>
+              <select className="input" value={roadPick} onChange={(e) => setRoadPick(e.target.value)} aria-label={tx('Straße', 'Road')}>
+                <option value="">{tx('Punkte einer Straße anhängen …', 'Append points of a road …')}</option>
                 {ROADS.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -271,22 +271,22 @@ function Editor({ id }: { id: string }) {
                   setRoadPick('')
                 }}
               >
-                Anhängen
+                {tx('Anhängen', 'Append')}
               </button>
             </div>
-            <p className="muted small">Koordinaten findest du z. B. per Rechtsklick in OpenStreetMap oder Google Maps.</p>
+            <p className="muted small">{tx('Koordinaten findest du z. B. per Rechtsklick in OpenStreetMap oder Google Maps.', 'You can get coordinates e.g. by right-clicking in OpenStreetMap or Google Maps.')}</p>
           </div>
         </div>
 
         <aside className="builder-side">
           <div className="gcard">
-            <h3>Mitnehmen</h3>
+            <h3>{tx('Mitnehmen', 'Take along')}</h3>
             <div className="stack-btns">
               <button className="btn" disabled={!trip.waypoints.length && !trip.track?.length} onClick={() => downloadFile(`${(trip.name || 'roadtrip').replace(/[^\w-]+/g, '_')}.gpx`, toGpx(trip.name, trip.waypoints, trip.track ?? [], BRAND.ascii), 'application/gpx+xml')}>
-                <Download size={15} /> GPX exportieren
+                <Download size={15} /> {tx('GPX exportieren', 'Export GPX')}
               </button>
               <button className="btn" onClick={() => file.current?.click()}>
-                <FileUp size={15} /> GPX hinzuladen
+                <FileUp size={15} /> {tx('GPX hinzuladen', 'Add GPX')}
               </button>
               <input
                 ref={file}
@@ -300,7 +300,7 @@ function Editor({ id }: { id: string }) {
                   try {
                     const d = await readGpx(f)
                     save({ waypoints: [...trip.waypoints, ...d.waypoints], track: [...(trip.track ?? []), ...(d.track ?? [])].slice(0, 20000) })
-                    setMsg(`${d.waypoints.length} Wegpunkte und ${d.track?.length ?? 0} Spurpunkte übernommen.`)
+                    setMsg(tx(`${d.waypoints.length} Wegpunkte und ${d.track?.length ?? 0} Spurpunkte übernommen.`, `${d.waypoints.length} waypoints and ${d.track?.length ?? 0} track points added.`))
                   } catch (x) {
                     setMsg((x as Error).message)
                   }
@@ -318,40 +318,40 @@ function Editor({ id }: { id: string }) {
               )}
             </div>
             {msg && <p className="small">{msg}</p>}
-            {trip.waypoints.length > 10 && <p className="muted small">Google Maps nimmt höchstens 10 Punkte; der Link wählt sie gleichmäßig aus.</p>}
+            {trip.waypoints.length > 10 && <p className="muted small">{tx('Google Maps nimmt höchstens 10 Punkte; der Link wählt sie gleichmäßig aus.', 'Google Maps accepts at most 10 points; the link picks them evenly.')}</p>}
           </div>
 
           <div className="gcard">
             <h3>Passport</h3>
             {v ? (
               <>
-                <p className="small">Halte die Fahrt in der Geschichte von {vehicleTitle(v)} fest.</p>
+                <p className="small">{tx(`Halte die Fahrt in der Geschichte von ${vehicleTitle(v)} fest.`, `Record the drive in the history of ${vehicleTitle(v)}.`)}</p>
                 <button
                   className="btn"
                   onClick={() => {
                     addPassportEntry({ vehicleId: v.id, date: trip.date ?? today(), kind: 'trip', title: trip.name, notes: `${trip.waypoints.map((w) => w.name).join(' → ')}${trip.notes ? `\n${trip.notes}` : ''}` })
-                    setMsg('Im Passport eingetragen.')
+                    setMsg(tx('Im Passport eingetragen.', 'Added to passport.'))
                   }}
                 >
-                  <BookPlus size={15} /> Fahrt eintragen
+                  <BookPlus size={15} /> {tx('Fahrt eintragen', 'Log drive')}
                 </button>
-                {trip.date && <p className="muted small">Datum: {fmtDate(trip.date, locale)}</p>}
+                {trip.date && <p className="muted small">{tx('Datum', 'Date')}: {fmtDate(trip.date, locale)}</p>}
               </>
             ) : (
-              <p className="muted small">Wähle links ein Auto aus deiner Garage, dann kannst du die Fahrt in dessen Passport eintragen.</p>
+              <p className="muted small">{tx('Wähle links ein Auto aus deiner Garage, dann kannst du die Fahrt in dessen Passport eintragen.', 'Choose a car from your garage on the left to log the drive in its passport.')}</p>
             )}
           </div>
 
           <button
             className="btn danger"
             onClick={() => {
-              if (confirm(`Roadtrip „${trip.name}“ löschen?`)) {
+              if (confirm(tx(`Roadtrip „${trip.name}“ löschen?`, `Delete road trip “${trip.name}”?`))) {
                 removeTrip(trip.id)
                 navigate('drive/builder')
               }
             }}
           >
-            <Trash2 size={15} /> Roadtrip löschen
+            <Trash2 size={15} /> {tx('Roadtrip löschen', 'Delete road trip')}
           </button>
         </aside>
       </section>

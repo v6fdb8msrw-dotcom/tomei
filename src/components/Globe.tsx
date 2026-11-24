@@ -32,7 +32,7 @@ export function useGlobePoints(): GlobePoint[] {
 
 export function GlobeView({ compact }: { compact?: boolean }) {
   const points = useGlobePoints()
-  const { L } = useT()
+  const { L, lang } = useT()
   const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
   const [mode, setMode] = useState<'globe' | 'map'>(reduce ? 'map' : 'globe')
   const list = (
@@ -58,13 +58,13 @@ export function GlobeView({ compact }: { compact?: boolean }) {
           <i className="dot home" /> Japan
         </span>
         <span>
-          <i className="dot country" /> Märkte & Länder
+          <i className="dot country" /> {lang === 'en' ? 'Markets & countries' : 'Märkte & Länder'}
         </span>
         <span>
           <i className="dot road" /> Roads
         </span>
         <button className="link-btn" onClick={() => setMode(mode === 'globe' ? 'map' : 'globe')}>
-          {mode === 'globe' ? '2D-Karte' : '3D-Globus'}
+          {mode === 'globe' ? (lang === 'en' ? '2D map' : '2D-Karte') : lang === 'en' ? '3D globe' : '3D-Globus'}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'motion/react'
 import { ArrowUpRight } from 'lucide-react'
 import { useRef } from 'react'
 import { DASAI_URL, PARTS } from '../data.ts'
+import { useT } from '../i18n/i18n.ts'
 import { EASE, ProviderGrid, SectionHead } from '../components/motion.tsx'
 
 /** Das Mochi: kleines Display mit Augen, die blinzeln und umherschauen. */
@@ -23,6 +24,7 @@ function Mochi() {
 
 /** Teile-Shops und Dasai Mochi, eingebettet ins Build Studio */
 export function PartsShops() {
+  const { tx } = useT()
   const ref = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'center center'] })
   const scale = useTransform(scrollYProgress, [0, 1], [0.6, 1])
@@ -32,7 +34,7 @@ export function PartsShops() {
   return (
     <>
       <section className="section">
-        <SectionHead eyebrow="Shops" title={<>Teile direkt <em>aus Japan.</em></>} />
+        <SectionHead eyebrow="Shops" title={<>{tx('Teile direkt ', 'Parts straight ')}<em>{tx('aus Japan.', 'from Japan.')}</em></>} />
         <ProviderGrid items={PARTS} />
       </section>
 
@@ -43,8 +45,8 @@ export function PartsShops() {
         </motion.div>
         <motion.div className="mochi-copy" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9, ease: EASE }}>
           <p className="eyebrow">Dasai Mochi</p>
-          <h2>Dein Auto bekommt <em>ein Gesicht.</em></h2>
-          <p className="sec-text">Der kleine animierte Begleiter fürs Armaturenbrett reagiert auf Fahrt, Gas und Kurven.</p>
+          <h2>{tx('Dein Auto bekommt ', 'Your car gets ')}<em>{tx('ein Gesicht.', 'a face.')}</em></h2>
+          <p className="sec-text">{tx('Der kleine animierte Begleiter fürs Armaturenbrett reagiert auf Fahrt, Gas und Kurven.', 'The little animated dashboard companion reacts to driving, throttle and corners.')}</p>
           <motion.a className="btn red" href={DASAI_URL} target="_blank" rel="noopener noreferrer" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
             Shop the Mochi <ArrowUpRight size={18} />
           </motion.a>

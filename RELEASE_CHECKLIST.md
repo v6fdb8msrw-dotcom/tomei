@@ -8,7 +8,8 @@ Vor jedem `npm run deploy` von oben nach unten abhaken. **Deploy nur nach Tims a
 - [ ] `npm test` grün
 - [ ] `npm run lint` ohne Fehler
 - [ ] `npm run build` erfolgreich, `dist/index.html` hat den richtigen Titel
-- [ ] Preview lokal: Startseite, je eine Seite pro Welt, eine Straßen-Detailseite, 404 (`#/gibtsnicht`)
+- [ ] Preview lokal: Startseite, je eine Seite pro Welt, eine Straßen-Detailseite, 404 (`#/gibtsnicht`), Datenschutz, Impressum
+- [ ] Sprache auf EN umschalten und dieselben Seiten ansehen
 - [ ] Mobil (375 px): kein seitlicher Überlauf, untere Navigation erreichbar
 - [ ] Konsole ohne Fehler
 - [ ] Alte Links leiten weiter: `#/markets`, `#/import/rechner`, `#/service/anfrage`, `#/spots`, `#/rent`, `#/parts`
@@ -26,7 +27,7 @@ Vor jedem `npm run deploy` von oben nach unten abhaken. **Deploy nur nach Tims a
 ## Recht und Datenschutz
 
 - [ ] Name markenrechtlich geprüft (sonst nur `src/config/brand.ts` ändern)
-- [ ] Impressum und Datenschutzerklärung vorhanden (Inhalt von Tim)
+- [ ] Impressum und Datenschutz: `BRAND.operator` ausgefüllt, kein roter Platzhalter mehr auf `#/imprint` und `#/privacy`, Texte geprüft
 - [ ] `CONTACT_EMAIL` leer oder eine öffentliche Adresse, die Tim freigegeben hat – nie die private Adresse
 - [ ] Keine Anfragen an Dritte außer frankfurter.dev (Netzwerk-Tab prüfen)
 - [ ] Kein Cloudflare, Hosting nur GitHub Pages

@@ -1,5 +1,5 @@
-// i18n-Vorbereitung: Deutsch ist die Hauptsprache, Englisch deckt Navigation, Startseite, Welt-Übersichten
-// und alle Zustände (leer, Fehler, 404) ab. Werkzeuge mit viel Fachtext sind noch deutsch (siehe PROJECT_STATUS.md).
+// i18n: Deutsch ist die Hauptsprache. Gemeinsame Texte stehen hier als Schlüssel, Werkzeugtexte direkt im
+// Werkzeug als Paar über tx('Deutsch', 'English').
 import { useEffect } from 'react'
 import { setSettings, useStore } from '../store/store.ts'
 import type { Lang } from '../store/schema.ts'
@@ -171,6 +171,8 @@ export function useT() {
     lang,
     t: (key: TKey) => translate(lang, key),
     L: (v: { de: string; en: string }) => v[lang] ?? v.de,
+    /** Kurzform für Texte direkt im Werkzeug: tx('Deutsch', 'English') */
+    tx: (deText: string, enText: string) => (lang === 'en' ? enText : deText),
     setLang: (l: Lang) => setSettings({ lang: l }),
     locale: lang === 'en' ? 'en-GB' : 'de-DE',
   }

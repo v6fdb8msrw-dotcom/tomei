@@ -17,23 +17,23 @@ import { SpotsGrid } from '../Spots.tsx'
 import { BRAND } from '../../config/brand.ts'
 
 export function DriveHub() {
-  const { t } = useT()
+  const { t, tx } = useT()
   const trips = useStore((s) => s.trips.length)
   return (
     <WorldHub
       eyebrow="Drive"
       title={
         <>
-          Straßen, für die man <em>ein Auto kauft.</em>
+          {tx('Straßen, für die man ', 'Roads worth ')}<em>{tx('ein Auto kauft.', 'buying a car for.')}</em>
         </>
       }
       sub={t('world.drive.text')}
       image={roadImg('stelvio')}
       tools={[
-        { to: 'drive/roads', title: 'Roads', text: `${ROADS.length} Straßen in Japan, Europa und den USA, mit belegten Fakten und Route zum Mitnehmen.`, img: roadImg('trollstigen'), meta: 'Roadtrip-Explorer' },
-        { to: 'drive/builder', title: 'Roadtrip-Builder', text: 'Eigene Route aus Wegpunkten bauen, GPX importieren und exportieren, mit dem Auto aus deiner Garage verknüpfen.', img: roadImg('atlantic'), meta: trips ? `${trips} gespeichert` : 'GPX rein, GPX raus' },
-        { to: 'drive/atlas', title: 'Automotive Atlas', text: `${COUNTRIES.length} Länder: Märkte, Straßen, Importregeln und Mietwagen, verbunden über den Globus.`, img: roadImg('shimanami'), meta: 'Japan als Ausgangspunkt' },
-        { to: 'drive/rent', title: 'Sportwagen mieten', text: 'JDM-Legenden direkt in Japan mieten. Ein Verzeichnis ohne Provision.', img: img('rent-supra'), meta: `${RENT.length} Anbieter` },
+        { to: 'drive/roads', title: 'Roads', text: tx(`${ROADS.length} Straßen in Japan, Europa und den USA, mit belegten Fakten und Route zum Mitnehmen.`, `${ROADS.length} roads in Japan, Europe and the USA, with verified facts and a route to take along.`), img: roadImg('trollstigen'), meta: 'Roadtrip-Explorer' },
+        { to: 'drive/builder', title: 'Roadtrip-Builder', text: tx('Eigene Route aus Wegpunkten bauen, GPX importieren und exportieren, mit dem Auto aus deiner Garage verknüpfen.', 'Build your own route from waypoints, import and export GPX, link it to a car from your garage.'), img: roadImg('atlantic'), meta: trips ? tx(`${trips} gespeichert`, `${trips} saved`) : tx('GPX rein, GPX raus', 'GPX in, GPX out') },
+        { to: 'drive/atlas', title: 'Automotive Atlas', text: tx(`${COUNTRIES.length} Länder: Märkte, Straßen, Importregeln und Mietwagen, verbunden über den Globus.`, `${COUNTRIES.length} countries: markets, roads, import rules and rentals, connected via the globe.`), img: roadImg('shimanami'), meta: tx('Japan als Ausgangspunkt', 'Starting in Japan') },
+        { to: 'drive/rent', title: tx('Sportwagen mieten', 'Rent a sports car'), text: tx('JDM-Legenden direkt in Japan mieten. Ein Verzeichnis ohne Provision.', 'Rent JDM legends in Japan. A directory without commission.'), img: img('rent-supra'), meta: tx(`${RENT.length} Anbieter`, `${RENT.length} providers`) },
       ]}
     />
   )
@@ -42,7 +42,7 @@ export function DriveHub() {
 /* ------------------------------------------------------------------ Explorer */
 
 function RoadCard({ r, k }: { r: Road; k: number }) {
-  const { L } = useT()
+  const { L, tx, locale } = useT()
   const c = countryById(r.country)
   return (
     <motion.a href={href('drive/roads/' + r.id)} className="road" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.6, delay: (k % 3) * 0.06, ease: EASE }}>
@@ -55,10 +55,10 @@ function RoadCard({ r, k }: { r: Road; k: number }) {
         </span>
         <h3>{r.name}</h3>
         <span className="road-facts mono">
-          {r.lengthKm ? `${r.lengthKm.toLocaleString('de-DE')} km` : ''}
+          {r.lengthKm ? `${r.lengthKm.toLocaleString(locale)} km` : ''}
           {r.lengthKm && r.highestM ? ' · ' : ''}
-          {r.highestM ? `${r.highestM.toLocaleString('de-DE')} m` : ''}
-          {r.loop ? ' · Runde' : ''}
+          {r.highestM ? `${r.highestM.toLocaleString(locale)} m` : ''}
+          {r.loop ? tx(' · Runde', ' · loop') : ''}
         </span>
       </div>
     </motion.a>
@@ -66,7 +66,7 @@ function RoadCard({ r, k }: { r: Road; k: number }) {
 }
 
 export function RoadsExplorer() {
-  const { L } = useT()
+  const { L, tx } = useT()
   const [region, setRegion] = useState<Region | 'all'>('all')
   const [kind, setKind] = useState<Road['kind'] | 'all'>('all')
   const list = ROADS.filter((r) => (region === 'all' || countryById(r.country)?.region === region) && (kind === 'all' || r.kind === kind))
@@ -78,17 +78,17 @@ export function RoadsExplorer() {
         eyebrow="Drive · Roads"
         title={
           <>
-            {ROADS.length} Straßen. <em>Alle belegt.</em>
+            {ROADS.length} {tx('Straßen. ', 'roads. ')}<em>{tx('Alle belegt.', 'All sourced.')}</em>
           </>
         }
-        sub="Länge, Höhe und Endpunkte stammen aus der Wikipedia, die Fotos von Wikimedia Commons mit freier Lizenz. Jede Straße lässt sich als Roadtrip übernehmen und als GPX mitnehmen."
+        sub={tx('Länge, Höhe und Endpunkte stammen aus der Wikipedia, die Fotos von Wikimedia Commons mit freier Lizenz. Jede Straße lässt sich als Roadtrip übernehmen und als GPX mitnehmen.', 'Length, altitude and endpoints come from Wikipedia, the photos from Wikimedia Commons under free licences. Every road can become a road trip and be taken along as GPX.')}
         image={roadImg('glockner')}
       />
       <section className="section">
         <div className="toolbar">
           <div className="seg wrap">
             <button className={region === 'all' ? 'on' : ''} onClick={() => setRegion('all')}>
-              Alle Regionen
+              {tx('Alle Regionen', 'All regions')}
             </button>
             {regions.map((r) => (
               <button key={r} className={region === r ? 'on' : ''} onClick={() => setRegion(r)}>
@@ -98,7 +98,7 @@ export function RoadsExplorer() {
           </div>
           <div className="seg wrap">
             <button className={kind === 'all' ? 'on' : ''} onClick={() => setKind('all')}>
-              Alle Arten
+              {tx('Alle Arten', 'All types')}
             </button>
             {kinds.map((k) => (
               <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>
@@ -112,7 +112,7 @@ export function RoadsExplorer() {
             <RoadCard key={r.id} r={r} k={k} />
           ))}
         </div>
-        <p className="muted small">Fakten abgerufen am {ROADS_RETRIEVED}. Straßenzustand, Sperrungen und Maut ändern sich: vor der Fahrt beim Betreiber prüfen.</p>
+        <p className="muted small">{tx(`Fakten abgerufen am ${ROADS_RETRIEVED}. Straßenzustand, Sperrungen und Maut ändern sich: vor der Fahrt beim Betreiber prüfen.`, `Facts retrieved on ${ROADS_RETRIEVED}. Road conditions, closures and tolls change: check with the operator before you go.`)}</p>
       </section>
     </>
   )
@@ -128,7 +128,7 @@ export function startTripFromRoad(r: Road, vehicleId?: string) {
 }
 
 export function RoadDetail({ id }: { id: string }) {
-  const { L } = useT()
+  const { L, tx, locale } = useT()
   const r = ROADS.find((x) => x.id === id)
   const trips = useStore((s) => s.trips.filter((t) => t.roadId === id))
   if (!r) return <NotFound />
@@ -143,7 +143,7 @@ export function RoadDetail({ id }: { id: string }) {
         </div>
         <div className="road-hero-text">
           <a className="phead-back" href={href('drive/roads')}>
-            ← Alle Straßen
+            {tx('← Alle Straßen', '← All roads')}
           </a>
           <p className="eyebrow">
             {c.flag} {L(c.name)} · {r.region}
@@ -158,26 +158,26 @@ export function RoadDetail({ id }: { id: string }) {
           {r.lengthKm && (
             <div>
               <Route size={18} />
-              <b className="mono">{r.lengthKm.toLocaleString('de-DE')} km</b>
-              <span>{r.loop ? 'Rundenlänge' : 'Länge'}</span>
+              <b className="mono">{r.lengthKm.toLocaleString(locale)} km</b>
+              <span>{r.loop ? tx('Rundenlänge', 'Lap length') : tx('Länge', 'Length')}</span>
             </div>
           )}
           {r.highestM && (
             <div>
               <Mountain size={18} />
-              <b className="mono">{r.highestM.toLocaleString('de-DE')} m</b>
-              <span>höchster Punkt</span>
+              <b className="mono">{r.highestM.toLocaleString(locale)} m</b>
+              <span>{tx('höchster Punkt', 'highest point')}</span>
             </div>
           )}
           <div>
             <MapPin size={18} />
             <b className="mono">{r.waypoints.length}</b>
-            <span>Wegpunkte</span>
+            <span>{tx('Wegpunkte', 'Waypoints')}</span>
           </div>
           <div>
             <MapIcon size={18} />
             <b>{L(ROAD_KINDS[r.kind])}</b>
-            <span>{c.leftHand ? 'Linksverkehr' : 'Rechtsverkehr'}</span>
+            <span>{c.leftHand ? tx('Linksverkehr', 'Drives on the left') : tx('Rechtsverkehr', 'Drives on the right')}</span>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ export function RoadDetail({ id }: { id: string }) {
 
         <div className="road-cols">
           <div className="gcard">
-            <h3>Fakten</h3>
+            <h3>{tx('Fakten', 'Facts')}</h3>
             <ul className="facts">
               {r.facts.map((f) => (
                 <li key={f.de}>{L(f)}</li>
@@ -198,7 +198,7 @@ export function RoadDetail({ id }: { id: string }) {
             </ul>
             <div className="row gap wrap">
               <SourceLink url={r.source}>Wikipedia</SourceLink>
-              {r.official && <SourceLink url={r.official}>Betreiber / offizielle Seite</SourceLink>}
+              {r.official && <SourceLink url={r.official}>{tx('Betreiber / offizielle Seite', 'Operator / official site')}</SourceLink>}
             </div>
           </div>
           <div className="gcard">
@@ -213,7 +213,7 @@ export function RoadDetail({ id }: { id: string }) {
                 </li>
               ))}
             </ol>
-            {r.waypoints.length > 1 && <p className="muted small">Luftlinie über die Wegpunkte: {crow.toLocaleString('de-DE', { maximumFractionDigits: 0 })} km. Die Wegpunkte sind Orte an der Strecke, keine exakte Linienführung.</p>}
+            {r.waypoints.length > 1 && <p className="muted small">{tx('Luftlinie über die Wegpunkte', 'Straight-line distance via the waypoints')}: {crow.toLocaleString(locale, { maximumFractionDigits: 0 })} km. {tx('Die Wegpunkte sind Orte an der Strecke, keine exakte Linienführung.', 'The waypoints are places along the road, not the exact alignment.')}</p>}
             <div className="row gap wrap">
               <a className="btn small" href={mapsDirections(r.waypoints)} target="_blank" rel="noopener noreferrer">
                 Google Maps <ArrowUpRight size={13} />
@@ -230,16 +230,16 @@ export function RoadDetail({ id }: { id: string }) {
 
         <div className="road-cta">
           <div>
-            <h3>Als Roadtrip übernehmen</h3>
-            <p className="muted">Kopiert die Wegpunkte in den Builder. Dort ergänzt du Stopps, wählst dein Auto und exportierst GPX.</p>
+            <h3>{tx('Als Roadtrip übernehmen', 'Turn into a road trip')}</h3>
+            <p className="muted">{tx('Kopiert die Wegpunkte in den Builder. Dort ergänzt du Stopps, wählst dein Auto und exportierst GPX.', 'Copies the waypoints into the builder. There you add stops, choose your car and export GPX.')}</p>
           </div>
           <button className="btn primary" onClick={() => startTripFromRoad(r)}>
-            <Plus size={16} /> Roadtrip starten
+            <Plus size={16} /> {tx('Roadtrip starten', 'Start road trip')}
           </button>
         </div>
         {trips.length > 0 && (
           <p className="small">
-            Schon geplant:{' '}
+            {tx('Schon geplant:', 'Already planned:')}{' '}
             {trips.map((t, i) => (
               <span key={t.id}>
                 {i > 0 && ', '}
@@ -250,16 +250,16 @@ export function RoadDetail({ id }: { id: string }) {
         )}
 
         <p className="credit">
-          Foto: {r.photo.author}, <a href={r.photo.page} target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, {r.photo.licenceUrl ? <a href={r.photo.licenceUrl} target="_blank" rel="noopener noreferrer">{r.photo.licence}</a> : r.photo.licence} (verkleinert)
+          {tx('Foto', 'Photo')}: {r.photo.author}, <a href={r.photo.page} target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, {r.photo.licenceUrl ? <a href={r.photo.licenceUrl} target="_blank" rel="noopener noreferrer">{r.photo.licence}</a> : r.photo.licence} {tx('(verkleinert)', '(resized)')}
         </p>
       </section>
 
       {others.length > 0 && (
         <section className="section">
           <div className="sec-head">
-            <p className="eyebrow">In der Nähe</p>
+            <p className="eyebrow">{tx('In der Nähe', 'Nearby')}</p>
             <h2>
-              Noch mehr <em>{L(REGIONS[c.region])}.</em>
+              {tx('Noch mehr ', 'More ')}<em>{L(REGIONS[c.region])}.</em>
             </h2>
           </div>
           <div className="roads">
@@ -281,7 +281,7 @@ export function Atlas({ countryId }: { countryId?: string }) {
 }
 
 function AtlasIndex() {
-  const { L } = useT()
+  const { L, tx } = useT()
   const groups = useMemo(() => (Object.keys(REGIONS) as Region[]).map((r) => ({ r, list: COUNTRIES.filter((c) => c.region === r) })).filter((g) => g.list.length), [])
   return (
     <>
@@ -289,10 +289,10 @@ function AtlasIndex() {
         eyebrow="Drive · Automotive Atlas"
         title={
           <>
-            Japan ist der Anfang. <em>Die Welt ist groß.</em>
+            {tx('Japan ist der Anfang. ', 'Japan is where it starts. ')}<em>{tx('Die Welt ist groß.', 'The world is big.')}</em>
           </>
         }
-        sub="Jedes Land verbindet die drei Welten: wo man sucht, was der Import kostet, welche Straßen sich lohnen und wo man mieten kann."
+        sub={tx('Jedes Land verbindet die drei Welten: wo man sucht, was der Import kostet, welche Straßen sich lohnen und wo man mieten kann.', 'Each country connects the three worlds: where to search, what importing costs, which roads are worth it and where to rent.')}
       />
       <section className="section atlas-globe">
         <GlobeView />
@@ -304,13 +304,13 @@ function AtlasIndex() {
             <div className="atlas-grid">
               {g.list.map((c) => {
                 const roads = ROADS.filter((r) => r.country === c.id).length
-                const tags = [c.market && 'Markt', c.dest && 'Importziel', c.origin && c.origin !== 'jp' && 'Herkunft', roads && `${roads} Roads`, c.id === 'jp' && 'Spots & Mieten'].filter(Boolean)
+                const tags = [c.market && tx('Markt', 'Market'), c.dest && tx('Importziel', 'Import destination'), c.origin && c.origin !== 'jp' && tx('Herkunft', 'Origin'), roads && `${roads} Roads`, c.id === 'jp' && tx('Spots & Mieten', 'Spots & rentals')].filter(Boolean)
                 return (
                   <a key={c.id} href={href('drive/atlas/' + c.id)} className={'atlas-c' + (c.home ? ' home' : '')}>
                     <span className="atlas-flag">{c.flag}</span>
                     <span>
                       <b>{L(c.name)}</b>
-                      <small>{tags.join(' · ') || (c.leftHand ? 'Linksverkehr' : 'Rechtsverkehr')}</small>
+                      <small>{tags.join(' · ') || (c.leftHand ? tx('Linksverkehr', 'Drives on the left') : tx('Rechtsverkehr', 'Drives on the right'))}</small>
                     </span>
                     <ArrowRight size={16} />
                   </a>
@@ -325,7 +325,7 @@ function AtlasIndex() {
 }
 
 function CountryPage({ id }: { id: string }) {
-  const { L } = useT()
+  const { L, tx, locale } = useT()
   const c = countryById(id)
   if (!c) return <NotFound />
   const market = MARKETS.find((m) => m.id === c.market)
@@ -343,15 +343,20 @@ function CountryPage({ id }: { id: string }) {
             {c.flag} {L(c.name)}
           </>
         }
-        sub={[market?.text, c.home ? 'Ausgangspunkt von ' + BRAND.name + '.' : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'Eine Straße' : roads.length + ' Straßen'} im Roadtrip-Explorer${dest || origin ? ', dazu Importregeln im Rechner' : ''}.` : 'Noch wenig eingetragen.')}
+        sub={
+          tx(
+            [market?.text, c.home ? 'Ausgangspunkt von ' + BRAND.name + '.' : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'Eine Straße' : roads.length + ' Straßen'} im Roadtrip-Explorer${dest || origin ? ', dazu Importregeln im Rechner' : ''}.` : 'Noch wenig eingetragen.'),
+            [market ? `Public search pages of the local marketplaces (hub: ${market.hub}).` : '', c.home ? `Where ${BRAND.name} starts.` : ''].filter(Boolean).join(' ') || (roads.length ? `${roads.length === 1 ? 'One road' : roads.length + ' roads'} in the road trip explorer${dest || origin ? ', plus import rules in the calculator' : ''}.` : 'Not much here yet.'),
+          )
+        }
         back={{ to: 'drive/atlas', label: 'Atlas' }}
         image={cover}
       >
         <div className="chips">
-          <span className="chip">{c.leftHand ? 'Linksverkehr' : 'Rechtsverkehr'}</span>
-          {market && <span className="chip">Markt · {market.hub}</span>}
-          {dest && <span className="chip">Importziel im Rechner</span>}
-          {origin && <span className="chip">Herkunft im Rechner</span>}
+          <span className="chip">{c.leftHand ? tx('Linksverkehr', 'Drives on the left') : tx('Rechtsverkehr', 'Drives on the right')}</span>
+          {market && <span className="chip">{tx('Markt', 'Market')} · {market.hub}</span>}
+          {dest && <span className="chip">{tx('Importziel im Rechner', 'Destination in calculator')}</span>}
+          {origin && <span className="chip">{tx('Herkunft im Rechner', 'Origin in calculator')}</span>}
         </div>
       </PageHead>
 
@@ -360,7 +365,7 @@ function CountryPage({ id }: { id: string }) {
           <div className="sec-head">
             <p className="eyebrow">Roads</p>
             <h2>
-              Hier lohnt sich <em>die Fahrt.</em>
+              {tx('Hier lohnt sich ', 'Worth ')}<em>{tx('die Fahrt.', 'the drive.')}</em>
             </h2>
           </div>
           <div className="roads">
@@ -374,11 +379,11 @@ function CountryPage({ id }: { id: string }) {
       {market && (
         <section className="section">
           <div className="sec-head">
-            <p className="eyebrow">Markt</p>
+            <p className="eyebrow">{tx('Markt', 'Market')}</p>
             <h2>
-              Wo man <em>sucht.</em>
+              {tx('Wo man ', 'Where to ')}<em>{tx('sucht.', 'search.')}</em>
             </h2>
-            <p className="sec-text">Öffentliche Suchseiten der Portale, Beispiel: {q.make} {q.model}. Die eigene Suche über alle Länder läuft in der Fahrzeugsuche.</p>
+            <p className="sec-text">{tx('Öffentliche Suchseiten der Portale, Beispiel', 'Public search pages of the marketplaces, example')}: {q.make} {q.model}. {tx('Die eigene Suche über alle Länder läuft in der Fahrzeugsuche.', 'The search across all countries is in the vehicle search.')}</p>
           </div>
           <div className="portal-list">
             {market.portals.map((p) => (
@@ -390,7 +395,7 @@ function CountryPage({ id }: { id: string }) {
             ))}
           </div>
           <a className="btn" href={href('discover/search')}>
-            Zur Fahrzeugsuche <ArrowRight size={16} />
+            {tx('Zur Fahrzeugsuche', 'Vehicle search')} <ArrowRight size={16} />
           </a>
         </section>
       )}
@@ -400,23 +405,23 @@ function CountryPage({ id }: { id: string }) {
           <div className="sec-head">
             <p className="eyebrow">Import</p>
             <h2>
-              Regeln <em>und Kosten.</em>
+              {tx('Regeln ', 'Rules ')}<em>{tx('und Kosten.', 'and costs.')}</em>
             </h2>
           </div>
           {dest && (
             <div className="gcard">
               <h3>
-                Import nach {dest.name} <Badge kind="estimate">Gebühren geschätzt</Badge>
+                {tx('Import nach', 'Import to')} {dest.name} <Badge kind="estimate">{tx('Gebühren geschätzt', 'Fees estimated')}</Badge>
               </h3>
               <p>{dest.note}</p>
               <p className="mono small">
-                Zoll {dest.duty.toLocaleString('de-DE')} % · {dest.vatLabel} {dest.vat.toLocaleString('de-DE')} % · Hafen {dest.port}
+                {tx('Zoll', 'Duty')} {dest.duty.toLocaleString(locale)} % · {dest.vatLabel} {dest.vat.toLocaleString(locale)} % · {tx('Hafen', 'Port')} {dest.port}
               </p>
             </div>
           )}
           {origin && (
             <div className="gcard">
-              <h3>Kaufen in {origin.name}, Ziel Deutschland</h3>
+              <h3>{tx(`Kaufen in ${origin.name}, Ziel Deutschland`, `Buying in ${origin.name}, destination Germany`)}</h3>
               <p>{origin.note}</p>
               {origin.pref && (
                 <p className="small">
@@ -426,7 +431,7 @@ function CountryPage({ id }: { id: string }) {
             </div>
           )}
           <a className="btn primary" href={href('discover/calculator')}>
-            Im Importrechner durchrechnen <ArrowRight size={16} />
+            {tx('Im Importrechner durchrechnen', 'Calculate in the import calculator')} <ArrowRight size={16} />
           </a>
         </section>
       )}
@@ -436,9 +441,9 @@ function CountryPage({ id }: { id: string }) {
           <SpotsGrid />
           <section className="section">
             <div className="sec-head">
-              <p className="eyebrow">Mieten</p>
+              <p className="eyebrow">{tx('Mieten', 'Rent')}</p>
               <h2>
-                JDM <em>vor Ort fahren.</em>
+                JDM <em>{tx('vor Ort fahren.', 'on home ground.')}</em>
               </h2>
             </div>
             <ProviderGrid items={RENT} />
@@ -448,7 +453,7 @@ function CountryPage({ id }: { id: string }) {
 
       {!market && !roads.length && !dest && !origin && (
         <section className="section narrow">
-          <Note>Für dieses Land sind noch keine Märkte oder Straßen eingetragen.</Note>
+          <Note>{tx('Für dieses Land sind noch keine Märkte oder Straßen eingetragen.', 'No markets or roads have been added for this country yet.')}</Note>
         </section>
       )}
     </>

@@ -8,18 +8,23 @@ import { addPassportEntry, downloadFile, removeMaintenance, uid, updateVehicle, 
 import type { MaintenanceItem, MaintenanceKind } from '../../store/schema.ts'
 import { useT } from '../../i18n/i18n.ts'
 
-const KINDS: { k: MaintenanceKind; l: string }[] = [
-  { k: 'service', l: 'Service / Öl' },
-  { k: 'inspection', l: 'HU / Prüfung' },
-  { k: 'tyres', l: 'Reifen' },
-  { k: 'season', l: 'Saison (Ein-/Auswintern)' },
-  { k: 'repair', l: 'Reparatur' },
-  { k: 'other', l: 'Sonstiges' },
+const KINDS: { k: MaintenanceKind; l: { de: string; en: string } }[] = [
+  { k: 'service', l: { de: 'Service / Öl', en: 'Service / oil' } },
+  { k: 'inspection', l: { de: 'HU / Prüfung', en: 'Roadworthiness test' } },
+  { k: 'tyres', l: { de: 'Reifen', en: 'Tyres' } },
+  { k: 'season', l: { de: 'Saison (Ein-/Auswintern)', en: 'Season (storage in/out)' } },
+  { k: 'repair', l: { de: 'Reparatur', en: 'Repair' } },
+  { k: 'other', l: { de: 'Sonstiges', en: 'Other' } },
 ]
-const STATE_L = { overdue: 'Überfällig', soon: 'Bald fällig', ok: 'Im Plan', open: 'Ohne Termin' }
+const STATE_L = {
+  overdue: { de: 'Überfällig', en: 'Overdue' },
+  soon: { de: 'Bald fällig', en: 'Due soon' },
+  ok: { de: 'Im Plan', en: 'On schedule' },
+  open: { de: 'Ohne Termin', en: 'No date' },
+}
 
 export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
-  const { locale } = useT()
+  const { tx, L, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const all = useStore((s) => s.maintenance)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned')?.id ?? vehicles[0]?.id ?? '')
@@ -56,7 +61,7 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
     downloadFile(
       `${BRAND.ascii.toLowerCase()}-wartung.ics`,
       toIcs(
-        all.filter((m) => m.dueDate).map((m) => ({ title: `${m.title} · ${vehicleTitle(vehicles.find((x) => x.id === m.vehicleId) ?? { make: '', model: '' })}`, date: m.dueDate!, description: m.dueKm ? `oder bei ${m.dueKm.toLocaleString('de-DE')} km` : undefined })),
+        all.filter((m) => m.dueDate).map((m) => ({ title: `${m.title} · ${vehicleTitle(vehicles.find((x) => x.id === m.vehicleId) ?? { make: '', model: '' })}`, date: m.dueDate!, description: m.dueKm ? tx(`oder bei ${m.dueKm.toLocaleString(locale)} km`, `or at ${m.dueKm.toLocaleString(locale)} km`) : undefined })),
         `-//${BRAND.ascii}//Wartung//DE`,
       ),
       'text/calendar',
@@ -65,24 +70,24 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
   return (
     <>
       <PageHead
-        eyebrow="Own · Wartungsplaner"
+        eyebrow={tx('Own · Wartungsplaner', 'Own · Maintenance planner')}
         title={
           <>
-            Nichts vergessen. <em>Nichts verschleppen.</em>
+            {tx('Nichts vergessen. ', 'Forget nothing. ')}<em>{tx('Nichts verschleppen.', 'Delay nothing.')}</em>
           </>
         }
-        sub="Lege Intervalle nach Monaten oder Kilometern an. Was du erledigst, wandert mit Datum, Stand und Kosten in den Passport. Alle Termine lassen sich als Kalenderdatei exportieren."
+        sub={tx('Lege Intervalle nach Monaten oder Kilometern an. Was du erledigst, wandert mit Datum, Stand und Kosten in den Passport. Alle Termine lassen sich als Kalenderdatei exportieren.', 'Set intervals by months or kilometres. What you complete goes into the passport with date, mileage and cost. All due dates can be exported as a calendar file.')}
         image={img('parts-engine')}
       />
       <section className="section narrow">
         {vehicles.length === 0 ? (
-          <EmptyState title="Noch kein Auto in der Garage." text="Die Wartung hängt immer an einem Fahrzeug." image={img('parts-engine')} actions={[{ to: 'own/garage', label: 'Zur Garage', primary: true }]} />
+          <EmptyState title={tx('Noch kein Auto in der Garage.', 'No car in the garage yet.')} text={tx('Die Wartung hängt immer an einem Fahrzeug.', 'Maintenance always belongs to a vehicle.')} image={img('parts-engine')} actions={[{ to: 'own/garage', label: tx('Zur Garage', 'Go to garage'), primary: true }]} />
         ) : (
           <>
             <div className="build-head">
               <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} />
               <button className="btn" onClick={ics} disabled={!all.some((m) => m.dueDate)}>
-                <CalendarPlus size={16} /> Alle Termine als .ics
+                <CalendarPlus size={16} /> {tx('Alle Termine als .ics', 'All due dates as .ics')}
               </button>
             </div>
             {v && (
@@ -93,85 +98,85 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
                   add()
                 }}
               >
-                <h3>Neuer Eintrag</h3>
+                <h3>{tx('Neuer Eintrag', 'New entry')}</h3>
                 <div className="fields three">
                   <label className="field">
-                    <span className="f-label">Was</span>
-                    <input className="input" value={f.title} placeholder="z. B. Ölwechsel" onChange={(e) => setF({ ...f, title: e.target.value })} />
+                    <span className="f-label">{tx('Was', 'What')}</span>
+                    <input className="input" value={f.title} placeholder={tx('z. B. Ölwechsel', 'e.g. oil change')} onChange={(e) => setF({ ...f, title: e.target.value })} />
                   </label>
                   <label className="field">
-                    <span className="f-label">Art</span>
+                    <span className="f-label">{tx('Art', 'Type')}</span>
                     <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as MaintenanceKind })}>
                       {KINDS.map((k) => (
                         <option key={k.k} value={k.k}>
-                          {k.l}
+                          {L(k.l)}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label className="field">
-                    <span className="f-label">Zuletzt am</span>
+                    <span className="f-label">{tx('Zuletzt am', 'Last done')}</span>
                     <input className="input" type="date" value={f.lastDate} onChange={(e) => setF({ ...f, lastDate: e.target.value })} />
                   </label>
                   <label className="field">
-                    <span className="f-label">Alle … Monate</span>
+                    <span className="f-label">{tx('Alle … Monate', 'Every … months')}</span>
                     <input className="input" inputMode="numeric" value={f.months} onChange={(e) => setF({ ...f, months: e.target.value })} />
                   </label>
                   <label className="field">
-                    <span className="f-label">oder alle … km</span>
+                    <span className="f-label">{tx('oder alle … km', 'or every … km')}</span>
                     <input className="input" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} />
                   </label>
                   <label className="field">
-                    <span className="f-label">Stand zuletzt (km)</span>
+                    <span className="f-label">{tx('Stand zuletzt (km)', 'Mileage last time (km)')}</span>
                     <input className="input" inputMode="numeric" value={f.lastKm} placeholder={v.mileageKm ? String(v.mileageKm) : ''} onChange={(e) => setF({ ...f, lastKm: e.target.value })} />
                   </label>
                 </div>
-                <p className="muted small">Intervalle stehen in der Betriebsanleitung oder im Serviceheft deines Autos. {BRAND.name} gibt keine vor.</p>
+                <p className="muted small">{tx(`Intervalle stehen in der Betriebsanleitung oder im Serviceheft deines Autos. ${BRAND.name} gibt keine vor.`, `Intervals are in your car’s owner’s manual or service book. ${BRAND.name} does not prescribe any.`)}</p>
                 <button className="btn primary" disabled={!f.title.trim()}>
-                  <Plus size={16} /> Anlegen
+                  <Plus size={16} /> {tx('Anlegen', 'Add')}
                 </button>
               </form>
             )}
             {sorted.length === 0 ? (
-              <p className="muted">Für dieses Auto ist noch nichts geplant.</p>
+              <p className="muted">{tx('Für dieses Auto ist noch nichts geplant.', 'Nothing planned for this car yet.')}</p>
             ) : (
               <ul className="maint">
                 {sorted.map((m) => {
                   const st = dueState(m, today(), v?.mileageKm)
                   return (
                     <li key={m.id} className={'st-' + st}>
-                      <span className={'maint-state st-' + st}>{STATE_L[st]}</span>
+                      <span className={'maint-state st-' + st}>{L(STATE_L[st])}</span>
                       <div className="maint-main">
                         <b>{m.title}</b>
                         <span className="small muted">
-                          {KINDS.find((k) => k.k === m.kind)?.l}
-                          {m.intervalMonths ? ` · alle ${m.intervalMonths} Monate` : ''}
-                          {m.intervalKm ? ` · alle ${m.intervalKm.toLocaleString(locale)} km` : ''}
+                          {L(KINDS.find((k) => k.k === m.kind)?.l ?? KINDS[5].l)}
+                          {m.intervalMonths ? tx(` · alle ${m.intervalMonths} Monate`, ` · every ${m.intervalMonths} months`) : ''}
+                          {m.intervalKm ? tx(` · alle ${m.intervalKm.toLocaleString(locale)} km`, ` · every ${m.intervalKm.toLocaleString(locale)} km`) : ''}
                         </span>
                         <span className="small">
-                          Fällig: {m.dueDate ? fmtDate(m.dueDate, locale) : '–'}
-                          {m.dueKm ? ` oder ${m.dueKm.toLocaleString(locale)} km` : ''}
-                          {m.history.length > 0 && ` · zuletzt ${fmtDate(m.history[0].date, locale)}${m.history[0].cost ? `, ${fmtMoney(m.history[0].cost, 'EUR', locale)}` : ''}`}
+                          {tx('Fällig', 'Due')}: {m.dueDate ? fmtDate(m.dueDate, locale) : '–'}
+                          {m.dueKm ? tx(` oder ${m.dueKm.toLocaleString(locale)} km`, ` or ${m.dueKm.toLocaleString(locale)} km`) : ''}
+                          {m.history.length > 0 && `${tx(' · zuletzt', ' · last')} ${fmtDate(m.history[0].date, locale)}${m.history[0].cost ? `, ${fmtMoney(m.history[0].cost, 'EUR', locale)}` : ''}`}
                         </span>
                       </div>
                       <div className="maint-btns">
                         <button className="btn small" onClick={() => setDone({ id: m.id, date: today(), km: v?.mileageKm ? String(v.mileageKm) : '', cost: '' })}>
-                          <Check size={14} /> Erledigt
+                          <Check size={14} /> {tx('Erledigt', 'Done')}
                         </button>
-                        <button className="icon-btn" onClick={() => confirm(`„${m.title}“ löschen?`) && removeMaintenance(m.id)} aria-label="Löschen">
+                        <button className="icon-btn" onClick={() => confirm(tx(`„${m.title}“ löschen?`, `Delete “${m.title}”?`)) && removeMaintenance(m.id)} aria-label={tx('Löschen', 'Delete')}>
                           <Trash2 size={15} />
                         </button>
                       </div>
                       {done?.id === m.id && (
                         <div className="maint-done">
-                          <input className="input" type="date" value={done.date} onChange={(e) => setDone({ ...done, date: e.target.value })} aria-label="Datum" />
-                          <input className="input" inputMode="numeric" placeholder="km-Stand" value={done.km} onChange={(e) => setDone({ ...done, km: e.target.value })} aria-label="Kilometerstand" />
-                          <input className="input" inputMode="numeric" placeholder="Kosten €" value={done.cost} onChange={(e) => setDone({ ...done, cost: e.target.value })} aria-label="Kosten" />
+                          <input className="input" type="date" value={done.date} onChange={(e) => setDone({ ...done, date: e.target.value })} aria-label={tx('Datum', 'Date')} />
+                          <input className="input" inputMode="numeric" placeholder={tx('km-Stand', 'Mileage')} value={done.km} onChange={(e) => setDone({ ...done, km: e.target.value })} aria-label={tx('Kilometerstand', 'Mileage')} />
+                          <input className="input" inputMode="numeric" placeholder={tx('Kosten €', 'Cost €')} value={done.cost} onChange={(e) => setDone({ ...done, cost: e.target.value })} aria-label={tx('Kosten', 'Cost')} />
                           <button className="btn primary small" onClick={book}>
-                            Buchen
+                            {tx('Buchen', 'Log')}
                           </button>
                           <button className="btn small" onClick={() => setDone(null)}>
-                            Abbrechen
+                            {tx('Abbrechen', 'Cancel')}
                           </button>
                         </div>
                       )}

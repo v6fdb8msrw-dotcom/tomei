@@ -6,6 +6,8 @@ import { AUCTIONS, MARKETS, type MarketQuery } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack, RouteMap } from '../components/depth.tsx'
 import { Finds } from '../components/Finds.tsx'
+import { useT } from '../i18n/i18n.ts'
+import { BRAND } from '../config/brand.ts'
 import { ClassicFinder } from '../components/ClassicFinder.tsx'
 
 const MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Subaru', 'Mitsubishi', 'Lexus', 'Suzuki', 'Ford', 'Chevrolet', 'Dodge', 'Pontiac', 'Jeep', 'Holden', 'TVR', 'Lotus', 'Jaguar', 'Hyundai', 'Kia']
@@ -29,6 +31,7 @@ function load(): MarketQuery {
 }
 
 export function Markets() {
+  const { tx } = useT()
   const [q, setQ] = useState<MarketQuery>(load)
   const [active, setActive] = useState<string | undefined>()
   useEffect(() => {
@@ -49,20 +52,20 @@ export function Markets() {
       <section className="section mk-hero">
         <div className="mk-hero-text">
           <Reveal>
-            <p className="eyebrow">Märkte · weltweit</p>
+            <p className="eyebrow">{tx('Märkte · weltweit', 'Markets · worldwide')}</p>
             <h1 className="display">
-              Eine Suche.
+              {tx('Eine Suche.', 'One search.')}
               <br />
-              <em>Elf Märkte.</em>
+              <em>{tx('Elf Märkte.', 'Eleven markets.')}</em>
             </h1>
-            <p className="lead">Für Autos, die es hier kaum gibt: JDM aus Japan, Muscle-Cars aus den USA, Klassiker aus England und Australien. Sag TŌMEI, was du suchst, und spring direkt zu den Angeboten und Auktionen in jedem Land.</p>
+            <p className="lead">{tx(`Für Autos, die es hier kaum gibt: JDM aus Japan, Muscle-Cars aus den USA, Klassiker aus England und Australien. Sag ${BRAND.name}, was du suchst, und spring direkt zu den Angeboten und Auktionen in jedem Land.`, `For cars that are rare here: JDM from Japan, muscle cars from the USA, classics from England and Australia. Tell ${BRAND.name} what you’re looking for and jump straight to listings and auctions in each country.`)}</p>
           </Reveal>
         </div>
         <CarStack />
       </section>
 
       <section className="section tight" id="modelle">
-        <SectionHead eyebrow="Modell-Finder" title={<>Selten hier. <em>Zu finden dort.</em></>} text="Ältere, besondere Autos, die du in Deutschland kaum oder nur teuer bekommst. Filtere nach Land, Jahrzehnt und Oldtimer-Status." />
+        <SectionHead eyebrow={tx('Modell-Finder', 'Model finder')} title={<>{tx('Selten hier. ', 'Rare here. ')}<em>{tx('Zu finden dort.', 'Found there.')}</em></>} text={tx('Ältere, besondere Autos, die du in Deutschland kaum oder nur teuer bekommst. Filtere nach Land, Jahrzehnt und Oldtimer-Status.', 'Older, special cars that are hard or expensive to find in Germany. Filter by country, decade and classic status.')} />
         <ClassicFinder onSearch={search} />
       </section>
 
@@ -70,7 +73,7 @@ export function Markets() {
         <div className="gcard mk-search">
           <div className="mk-fields">
             <label className="field">
-              <span className="f-label">Marke</span>
+              <span className="f-label">{tx('Marke', 'Make')}</span>
               <input className="input" list="mk-makes" value={q.make} onChange={(e) => setQ({ ...q, make: e.target.value })} />
               <datalist id="mk-makes">
                 {MAKES.map((m) => (
@@ -79,11 +82,11 @@ export function Markets() {
               </datalist>
             </label>
             <label className="field">
-              <span className="f-label">Modell</span>
-              <input className="input" value={q.model} placeholder="z. B. Supra" onChange={(e) => setQ({ ...q, model: e.target.value })} />
+              <span className="f-label">{tx('Modell', 'Model')}</span>
+              <input className="input" value={q.model} placeholder={tx('z. B. Supra', 'e.g. Supra')} onChange={(e) => setQ({ ...q, model: e.target.value })} />
             </label>
             <label className="field small">
-              <span className="f-label">Baujahr ab</span>
+              <span className="f-label">{tx('Baujahr ab', 'Year from')}</span>
               <input className="input" type="number" min={1960} max={2030} value={q.from ?? ''} onChange={(e) => setQ({ ...q, from: e.target.value ? Number(e.target.value) : undefined })} />
             </label>
           </div>
@@ -98,11 +101,11 @@ export function Markets() {
       </section>
 
       <section className="section tight">
-        <SectionHead eyebrow="Netzwerk" title={<>Von dort <em>bis Bremerhaven.</em></>} text="Tippe auf ein Land, um nur dessen Angebote zu sehen. Die Linien zeigen den Seeweg nach Bremerhaven." />
+        <SectionHead eyebrow={tx('Netzwerk', 'Network')} title={<>{tx('Von dort ', 'From there ')}<em>{tx('bis Bremerhaven.', 'to Bremerhaven.')}</em></>} text={tx('Tippe auf ein Land, um nur dessen Angebote zu sehen. Die Linien zeigen den Seeweg nach Bremerhaven.', 'Tap a country to see only its listings. The lines show the sea route to Bremerhaven.')} />
         <RouteMap markets={MARKETS} active={active} onPick={(id) => setActive((a) => (a === id ? undefined : id))} />
         {active && (
           <button className="link mk-all" onClick={() => setActive(undefined)}>
-            Alle Länder zeigen
+            {tx('Alle Länder zeigen', 'Show all countries')}
           </button>
         )}
       </section>
@@ -128,7 +131,7 @@ export function Markets() {
                         <small>{p.kind}</small>
                       </span>
                       <span className="mk-go">
-                        {label || 'Alle'} <ArrowUpRight size={15} />
+                        {label || tx('Alle', 'All')} <ArrowUpRight size={15} />
                       </span>
                     </a>
                   ))}
@@ -138,24 +141,24 @@ export function Markets() {
           ))}
         </div>
         <p className="disclaimer">
-          <Search size={13} /> TŌMEI öffnet die öffentlichen Suchseiten der jeweiligen Portale. Die Angebote, Preise und Bilder gehören den Portalen und Händlern; TŌMEI speichert oder zeigt sie nicht selbst an.
+          <Search size={13} /> {tx(`${BRAND.name} öffnet die öffentlichen Suchseiten der jeweiligen Portale. Die Angebote, Preise und Bilder gehören den Portalen und Händlern; ${BRAND.name} speichert oder zeigt sie nicht selbst an.`, `${BRAND.name} opens the public search pages of each marketplace. Listings, prices and images belong to the marketplaces and dealers; ${BRAND.name} does not store or display them.`)}
         </p>
       </section>
 
       <section className="section tight" id="merkliste">
-        <SectionHead eyebrow="Merkliste" title={<>Gefunden? <em>Durchrechnen.</em></>} text="Halte Inserate aus allen Märkten mit Link und Preis fest. Jedes Auto geht mit einem Klick in den Import-Rechner, mit den Durchschnittsgebühren der Export-Agenten." />
+        <SectionHead eyebrow={tx('Merkliste', 'Watchlist')} title={<>{tx('Gefunden? ', 'Found it? ')}<em>{tx('Durchrechnen.', 'Run the numbers.')}</em></>} text={tx('Halte Inserate aus allen Märkten mit Link und Preis fest. Jedes Auto geht mit einem Klick in den Import-Rechner, mit den Durchschnittsgebühren der Export-Agenten.', 'Save listings from all markets with link and price. Each car goes into the import calculator in one click, with the average export agent fees.')} />
         <Finds defaultTitle={label} />
       </section>
 
       <section className="section">
         <SectionHead
-          eyebrow="Auktionen"
-          title={<>Die echten Preise <em>entstehen hier.</em></>}
-          text="In den USA, England und Australien darf jeder mitbieten, die Ergebnisse sind meist öffentlich. In Japan und Korea laufen die meisten Autos über Händlerauktionen, dort geht der Weg über einen Auktions-Agenten oder den TŌMEI Service."
+          eyebrow={tx('Auktionen', 'Auctions')}
+          title={<>{tx('Die echten Preise ', 'Real prices ')}<em>{tx('entstehen hier.', 'are made here.')}</em></>}
+          text={tx(`In den USA, England und Australien darf jeder mitbieten, die Ergebnisse sind meist öffentlich. In Japan und Korea laufen die meisten Autos über Händlerauktionen, dort geht der Weg über einen Auktions-Agenten oder den ${BRAND.name} Service.`, `In the USA, England and Australia anyone may bid and results are usually public. In Japan and Korea most cars go through dealer auctions; there you need an auction agent or the ${BRAND.name} service.`)}
         />
         {[
-          { t: 'Offene Auktionen', l: AUCTIONS.filter((a) => a.open) },
-          { t: 'Händlerauktionen Japan & Korea', l: AUCTIONS.filter((a) => !a.open) },
+          { t: tx('Offene Auktionen', 'Public auctions'), l: AUCTIONS.filter((a) => a.open) },
+          { t: tx('Händlerauktionen Japan & Korea', 'Dealer auctions Japan & Korea'), l: AUCTIONS.filter((a) => !a.open) },
         ].map((g) => (
           <div key={g.t} className="mk-auction-group">
             <p className="f-label">{g.t}</p>
@@ -181,10 +184,10 @@ export function Markets() {
         ))}
         <div className="mk-cta">
           <a className="btn red" href="#/discover/service">
-            <ShieldCheck size={18} /> Über TŌMEI ersteigern lassen
+            <ShieldCheck size={18} /> {tx(`Über ${BRAND.name} ersteigern lassen`, `Bid via ${BRAND.name}`)}
           </a>
           <a className="btn" href="#/discover/calculator/rechner">
-            Kosten bis vor die Tür berechnen
+            {tx('Kosten bis vor die Tür berechnen', 'Calculate landed cost')}
           </a>
         </div>
       </section>

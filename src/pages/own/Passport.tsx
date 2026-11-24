@@ -4,16 +4,24 @@ import { motion } from 'motion/react'
 import { useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
 import { countryById } from '../../data/countries.ts'
-import { EmptyState, EASE, PageHead, StatusPill, VehicleSelect, fmtDate, fmtMoney, img, today, vehicleTitle } from '../../components/ui.tsx'
+import { EmptyState, EASE, PageHead, StatusPill, VehicleSelect, VehicleVisual, fmtDate, fmtMoney, img, today, vehicleTitle } from '../../components/ui.tsx'
 import { addPassportEntry, downloadFile, nowIso, removePassportEntry, useStore } from '../../store/store.ts'
 import type { PassportKind } from '../../store/schema.ts'
 import { useT } from '../../i18n/i18n.ts'
-import { VehicleVisual } from './Own.tsx'
 
-const KIND: Record<PassportKind, string> = { purchase: 'Kauf', import: 'Import', registration: 'Zulassung', service: 'Wartung', mod: 'Umbau', trip: 'Fahrt', document: 'Dokument', note: 'Notiz' }
+const KIND: Record<PassportKind, { de: string; en: string }> = {
+  purchase: { de: 'Kauf', en: 'Purchase' },
+  import: { de: 'Import', en: 'Import' },
+  registration: { de: 'Zulassung', en: 'Registration' },
+  service: { de: 'Wartung', en: 'Service' },
+  mod: { de: 'Umbau', en: 'Modification' },
+  trip: { de: 'Fahrt', en: 'Drive' },
+  document: { de: 'Dokument', en: 'Document' },
+  note: { de: 'Notiz', en: 'Note' },
+}
 
 export default function Passport({ vehicleId }: { vehicleId?: string }) {
-  const { locale } = useT()
+  const { tx, L, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const passport = useStore((s) => s.passport)
   const maintenance = useStore((s) => s.maintenance)
@@ -36,22 +44,22 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
         eyebrow="Own · Automotive Passport"
         title={
           <>
-            Jedes Auto <em>hat eine Geschichte.</em>
+            {tx('Jedes Auto ', 'Every car ')}<em>{tx('hat eine Geschichte.', 'has a story.')}</em>
           </>
         }
-        sub="Kauf, Import, Zulassung, Wartung, Umbauten und Fahrten. Einträge aus Wartungsplaner, Build Studio, Roadtrip-Builder und Import-Journey landen automatisch hier."
+        sub={tx('Kauf, Import, Zulassung, Wartung, Umbauten und Fahrten. Einträge aus Wartungsplaner, Build Studio, Roadtrip-Builder und Import-Journey landen automatisch hier.', 'Purchase, import, registration, service, modifications and drives. Entries from the maintenance planner, build studio, road trip builder and import journey appear here automatically.')}
         image={img('fuji-lakes')}
       />
       <section className="section narrow">
         {vehicles.length === 0 ? (
-          <EmptyState title="Der Passport beginnt mit einem Auto." text="Leg dein Fahrzeug in der Garage an, dann schreibt sich seine Geschichte hier." image={img('cars/r34')} actions={[{ to: 'own/garage', label: 'Zur Garage', primary: true }]} />
+          <EmptyState title={tx('Der Passport beginnt mit einem Auto.', 'The passport starts with a car.')} text={tx('Leg dein Fahrzeug in der Garage an, dann schreibt sich seine Geschichte hier.', 'Add your vehicle in the garage and its story will be written here.')} image={img('cars/r34')} actions={[{ to: 'own/garage', label: tx('Zur Garage', 'Go to garage'), primary: true }]} />
         ) : (
           <>
             <div className="build-head no-print">
               <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} />
               <div className="row gap">
                 <button className="btn" onClick={() => print()} disabled={!v}>
-                  <Printer size={16} /> Drucken / PDF
+                  <Printer size={16} /> {tx('Drucken / PDF', 'Print / PDF')}
                 </button>
                 <button className="btn" onClick={exportOne} disabled={!v}>
                   <Download size={16} /> Export
@@ -80,26 +88,28 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                       </dd>
                       {v.mileageKm !== undefined && (
                         <>
-                          <dt>Kilometerstand</dt>
+                          <dt>{tx('Kilometerstand', 'Mileage')}</dt>
                           <dd className="mono">{v.mileageKm.toLocaleString(locale)} km</dd>
                         </>
                       )}
                       {v.market && (
                         <>
-                          <dt>Herkunft</dt>
-                          <dd>{countryById(v.market)?.flag} {countryById(v.market)?.name.de ?? v.market.toUpperCase()}</dd>
+                          <dt>{tx('Herkunft', 'Origin')}</dt>
+                          <dd>
+                            {countryById(v.market)?.flag} {countryById(v.market) ? L(countryById(v.market)!.name) : v.market.toUpperCase()}
+                          </dd>
                         </>
                       )}
                       {v.landed && (
                         <>
-                          <dt>Importkosten</dt>
+                          <dt>{tx('Importkosten', 'Landed cost')}</dt>
                           <dd className="mono">{fmtMoney(v.landed.amount, v.landed.cur, locale)}</dd>
                         </>
                       )}
-                      <dt>Einträge</dt>
+                      <dt>{tx('Einträge', 'Entries')}</dt>
                       <dd className="mono">
                         {entries.length}
-                        {total > 0 ? ` · ${fmtMoney(total, 'EUR', locale)} belegt` : ''}
+                        {total > 0 ? ` · ${fmtMoney(total, 'EUR', locale)} ${tx('belegt', 'documented')}` : ''}
                       </dd>
                     </dl>
                   </div>
@@ -115,23 +125,23 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                     setF({ ...f, title: '', km: '', notes: '' })
                   }}
                 >
-                  <input className="input" type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} aria-label="Datum" />
-                  <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as PassportKind })} aria-label="Art">
+                  <input className="input" type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} aria-label={tx('Datum', 'Date')} />
+                  <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as PassportKind })} aria-label={tx('Art', 'Type')}>
                     {(Object.keys(KIND) as PassportKind[]).map((k) => (
                       <option key={k} value={k}>
-                        {KIND[k]}
+                        {L(KIND[k])}
                       </option>
                     ))}
                   </select>
-                  <input className="input grow" placeholder="Eintrag, z. B. Zulassung mit H-Kennzeichen" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label="Eintrag" />
-                  <input className="input short" placeholder="km" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} aria-label="Kilometerstand" />
+                  <input className="input grow" placeholder={tx('Eintrag, z. B. Zulassung mit H-Kennzeichen', 'Entry, e.g. registered with historic plate')} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label={tx('Eintrag', 'Entry')} />
+                  <input className="input short" placeholder="km" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} aria-label={tx('Kilometerstand', 'Mileage')} />
                   <button className="btn primary" disabled={!f.title.trim()}>
-                    <Plus size={16} /> Eintragen
+                    <Plus size={16} /> {tx('Eintragen', 'Add entry')}
                   </button>
                 </form>
 
                 {entries.length === 0 ? (
-                  <p className="muted pp-empty">Noch keine Einträge. Trag den Kauf ein, buche eine Wartung als erledigt oder schließe die Import-Journey ab.</p>
+                  <p className="muted pp-empty">{tx('Noch keine Einträge. Trag den Kauf ein, buche eine Wartung als erledigt oder schließe die Import-Journey ab.', 'No entries yet. Log the purchase, mark a service as done or complete the import journey.')}</p>
                 ) : (
                   <ol className="timeline">
                     {entries.map((e, k) => (
@@ -139,7 +149,7 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                         <span className="tl-date mono">{fmtDate(e.date, locale)}</span>
                         <span className="tl-dot" />
                         <div className="tl-body">
-                          <span className="tl-kind">{KIND[e.kind]}</span>
+                          <span className="tl-kind">{L(KIND[e.kind])}</span>
                           <b>{e.title}</b>
                           {(e.km || e.cost) && (
                             <span className="small mono muted">
@@ -150,7 +160,7 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                           )}
                           {e.notes && <p className="small">{e.notes}</p>}
                         </div>
-                        <button className="icon-btn no-print" onClick={() => confirm('Eintrag löschen?') && removePassportEntry(e.id)} aria-label="Eintrag löschen">
+                        <button className="icon-btn no-print" onClick={() => confirm(tx('Eintrag löschen?', 'Delete entry?')) && removePassportEntry(e.id)} aria-label={tx('Eintrag löschen', 'Delete entry')}>
                           <Trash2 size={14} />
                         </button>
                       </motion.li>
@@ -158,7 +168,7 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                   </ol>
                 )}
                 <footer className="pp-foot">
-                  Erstellt mit {BRAND.name} am {fmtDate(today(), locale)}. Selbst geführte Aufzeichnung, kein amtliches Dokument.
+                  {tx(`Erstellt mit ${BRAND.name} am ${fmtDate(today(), locale)}. Selbst geführte Aufzeichnung, kein amtliches Dokument.`, `Created with ${BRAND.name} on ${fmtDate(today(), locale)}. Self-kept record, not an official document.`)}
                 </footer>
               </article>
             )}

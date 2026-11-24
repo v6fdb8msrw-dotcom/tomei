@@ -7,6 +7,7 @@ import { Badge, PageHead, img } from '../components/ui.tsx'
 import { ScenarioPanel } from '../components/ScenarioPanel.tsx'
 import { range3 } from '../lib/scenarios.ts'
 import { int, landedCost, money, yen } from '../lib/calc.ts'
+import { useT } from '../i18n/i18n.ts'
 import { useFx } from '../lib/fx.ts'
 
 const COLORS = {
@@ -132,6 +133,7 @@ function Fold({ title, children }: { title: string; children: ReactNode }) {
 
 export function Import() {
   const { rates, live } = useFx()
+  const { tx, locale } = useT()
   const [origin, setOrigin] = useState<OriginKey>('jp')
   const O = origin === 'jp' ? null : ORIGIN[origin]
   const [house, setHouse] = useState('')
@@ -304,33 +306,33 @@ export function Import() {
 
   const ofmt = (v: number) => (O ? money(v, O.cur) : yen(v))
   const layers = [
-    { key: 'vehicle', label: 'Fahrzeug', val: vehicle },
-    { key: 'japan', label: O ? 'Kauf & Export' : 'Japan', val: japanFees * rate },
-    { key: 'freight', label: 'Fracht', val: freight },
-    { key: 'insurance', label: 'Versicherung', val: calc.insurance },
-    { key: 'duty', label: 'Zoll', val: calc.duty },
+    { key: 'vehicle', label: tx('Fahrzeug', 'Vehicle'), val: vehicle },
+    { key: 'japan', label: O ? tx('Kauf & Export', 'Purchase & export') : 'Japan', val: japanFees * rate },
+    { key: 'freight', label: tx('Fracht', 'Freight'), val: freight },
+    { key: 'insurance', label: tx('Versicherung', 'Insurance'), val: calc.insurance },
+    { key: 'duty', label: tx('Zoll', 'Duty'), val: calc.duty },
     { key: 'vat', label: dest.vatLabel, val: calc.vat },
-    { key: 'dest', label: 'Zulassung & Co.', val: calc.destFees },
+    { key: 'dest', label: tx('Zulassung & Co.', 'Registration etc.'), val: calc.destFees },
   ].filter((l) => l.val > 0) as { key: keyof typeof COLORS; label: string; val: number }[]
 
   const ledger: ({ label: string; val: number; sub?: string } | { divider: string; val: number })[] = [
-    { label: O ? 'Fahrzeugwert (Zuschlag / Kaufpreis)' : 'Fahrzeugwert (Auktion)', val: vehicle, sub: priceIn === 'ORIG' ? ofmt(price) : undefined },
+    { label: O ? tx('Fahrzeugwert (Zuschlag / Kaufpreis)', 'Vehicle value (hammer / purchase price)') : tx('Fahrzeugwert (Auktion)', 'Vehicle value (auction)'), val: vehicle, sub: priceIn === 'ORIG' ? ofmt(price) : undefined },
     ...(O
       ? [
-          { label: `Aufgeld ${pickedHouse!.name}`, val: premium * rate, sub: ofmt(premium) },
-          { label: 'Transport zum Hafen', val: toPort * rate, sub: ofmt(toPort) },
+          { label: tx(`Aufgeld ${pickedHouse!.name}`, `Buyer’s premium ${pickedHouse!.name}`), val: premium * rate, sub: ofmt(premium) },
+          { label: tx('Transport zum Hafen', 'Transport to port'), val: toPort * rate, sub: ofmt(toPort) },
         ]
-      : [{ label: agent === 'manual' ? 'Japan-Gebühren & Export' : `Agent & Export (${picked ? picked.name : 'Ø ' + AGENTS.length + ' Agenten'})`, val: japanFees * rate, sub: yen(japanFees) }]),
-    { label: O ? `${pickedShip!.selfDrive ? 'Überfahrt' : 'Seefracht'} (${pickedShip!.label})` : `Seefracht (${ship === 'roro' ? 'RoRo' : 'Container'})`, val: freight },
-    { label: 'Transportversicherung', val: calc.insurance },
-    { divider: 'Zollwert (CIF)', val: calc.cif },
-    { label: `Zoll · ${dutyPct.toLocaleString('de-DE')} %`, val: calc.duty },
-    { label: `${dest.vatLabel} · ${vatPct.toLocaleString('de-DE')} %`, val: calc.vat, sub: `auf ${money(calc.vatBase, cur)}` },
-    { label: 'Zollabwicklung', val: fees.clearance },
-    { label: 'Agent / Provision', val: fees.agent },
-    { label: `Inlandstransport (${dest.port} → Tür)`, val: fees.inland },
+      : [{ label: agent === 'manual' ? tx('Japan-Gebühren & Export', 'Japan fees & export') : `Agent & Export (${picked ? picked.name : 'Ø ' + AGENTS.length + tx(' Agenten', ' agents')})`, val: japanFees * rate, sub: yen(japanFees) }]),
+    { label: O ? `${pickedShip!.selfDrive ? tx('Überfahrt', 'Crossing') : tx('Seefracht', 'Sea freight')} (${pickedShip!.label})` : `${tx('Seefracht', 'Sea freight')} (${ship === 'roro' ? 'RoRo' : 'Container'})`, val: freight },
+    { label: tx('Transportversicherung', 'Transport insurance'), val: calc.insurance },
+    { divider: tx('Zollwert (CIF)', 'Customs value (CIF)'), val: calc.cif },
+    { label: `${tx('Zoll', 'Duty')} · ${dutyPct.toLocaleString(locale)} %`, val: calc.duty },
+    { label: `${dest.vatLabel} · ${vatPct.toLocaleString(locale)} %`, val: calc.vat, sub: `${tx('auf', 'on')} ${money(calc.vatBase, cur)}` },
+    { label: tx('Zollabwicklung', 'Customs clearance'), val: fees.clearance },
+    { label: tx('Agent / Provision', 'Agent / commission'), val: fees.agent },
+    { label: `${tx('Inlandstransport', 'Inland transport')} (${dest.port} → ${tx('Tür', 'door')})`, val: fees.inland },
     { label: dest.inspectionLabel, val: fees.inspection },
-    { label: 'Zulassung & Umbau', val: fees.reg },
+    { label: tx('Zulassung & Umbau', 'Registration & conversion'), val: fees.reg },
   ]
 
   // Agenten-Vergleich: gleiche Rechnung, nur mit den veröffentlichten Gebühren der jeweiligen Firma
@@ -339,7 +341,7 @@ export function Import() {
     ? O.houses
         .map((h) => {
           const f = h.fee(hammer)
-          return { id: h.id, name: h.name, url: h.url, source: h.source, type: h.id === 'private' ? 'ohne Auktion' : 'Aufgeld ' + money(f, O.cur), text: h.text, jp: f, landed: landedCost({ ...base, japanFees: (f + toPort) * rate, fees }).landed as number | null }
+          return { id: h.id, name: h.name, url: h.url, source: h.source, type: h.id === 'private' ? tx('ohne Auktion', 'no auction') : tx('Aufgeld ', 'Premium ') + money(f, O.cur), text: h.text, jp: f, landed: landedCost({ ...base, japanFees: (f + toPort) * rate, fees }).landed as number | null }
         })
         .sort((a, b) => (a.landed ?? Infinity) - (b.landed ?? Infinity))
     : [
@@ -383,19 +385,20 @@ export function Import() {
       ? { make: carParts[0], model: carParts.slice(1).join(' '), year: shownCar.year, image: 'cars/' + shownCar.id, market: 'jp' }
       : undefined
 
-  const rateNote = O && manualRate === 0 ? (live ? `EZB-Kurs vom ${new Date(live.date).toLocaleDateString('de-DE')}` : 'Ersatzkurs vom 16.11.2026') : manualRate > 0 ? 'eigener Kurs' : live ? `EZB-Kurs vom ${new Date(live.date).toLocaleDateString('de-DE')}` : 'Ersatzkurs vom 27.10.2026'
+  const ecb = live ? tx(`EZB-Kurs vom ${new Date(live.date).toLocaleDateString(locale)}`, `ECB rate of ${new Date(live.date).toLocaleDateString(locale)}`) : ''
+  const rateNote = O && manualRate === 0 ? (live ? ecb : tx('Ersatzkurs vom 16.11.2026', 'fallback rate of 16 Nov 2026')) : manualRate > 0 ? tx('eigener Kurs', 'own rate') : live ? ecb : tx('Ersatzkurs vom 27.10.2026', 'fallback rate of 27 Oct 2026')
 
   return (
     <>
       <PageHead
-        eyebrow="Discover · Importrechner 2.0"
-        title={<>Bis vor die Tür. <em>In vier Szenarien.</em></>}
-        sub="Was ein Auto aus Japan, den USA, England, Kanada oder Australien bis vor die Tür kostet: mit Tageskurs der EZB, veröffentlichten Gebühren und vier Szenarien."
+        eyebrow={tx('Discover · Importrechner 2.0', 'Discover · Import calculator 2.0')}
+        title={<>{tx('Bis vor die Tür. ', 'To your door. ')}<em>{tx('In vier Szenarien.', 'In four scenarios.')}</em></>}
+        sub={tx('Was ein Auto aus Japan, den USA, England, Kanada oder Australien bis vor die Tür kostet: mit Tageskurs der EZB, veröffentlichten Gebühren und vier Szenarien.', 'What a car from Japan, the USA, England, Canada or Australia costs to your door: with the ECB daily rate, published fees and four scenarios.')}
         image={img('import-ship')}
       />
 
       <section className="section narrow" id="rechner">
-        <SectionHead eyebrow="Rechner" title={<>Jeder Yen <em>sichtbar.</em></>} />
+        <SectionHead eyebrow={tx('Rechner', 'Calculator')} title={<>{tx('Jeder Yen ', 'Every yen ')}<em>{tx('sichtbar.', 'visible.')}</em></>} />
 
         <Reveal className="calc glass">
           <div className="car-stage">
@@ -403,7 +406,7 @@ export function Import() {
               <motion.img
                 key={(find || O) && !carId ? 'find' : shownCar.id}
                 src={(find || O) && !carId ? `${import.meta.env.BASE_URL}images/import-port.jpg` : shownCar.img}
-                alt={find && !carId ? find.title : O && !carId ? 'Dein Auto' : shownCar.model}
+                alt={find && !carId ? find.title : O && !carId ? tx('Dein Auto', 'Your car') : shownCar.model}
                 initial={{ opacity: 0, scale: 1.12 }}
                 animate={{ opacity: 1, scale: 1.02 }}
                 exit={{ opacity: 0 }}
@@ -413,8 +416,8 @@ export function Import() {
             <div className="car-stage-veil" />
             <AnimatePresence mode="wait">
               <motion.div key={shownCar.id + (carId ? '' : '-x')} className="car-stage-text" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.5, ease: EASE }}>
-                <span className="tag">{carId ? shownCar.tag : find ? (find.id.startsWith('cf-') ? 'Modell-Finder' : 'Merkliste') : 'Eigener Preis'}</span>
-                <strong>{carId ? shownCar.model : find ? find.title : 'Dein Auto'}</strong>
+                <span className="tag">{carId ? shownCar.tag : find ? (find.id.startsWith('cf-') ? tx('Modell-Finder', 'Model finder') : tx('Merkliste', 'Watchlist')) : tx('Eigener Preis', 'Own price')}</span>
+                <strong>{carId ? shownCar.model : find ? find.title : tx('Dein Auto', 'Your car')}</strong>
                 {carId && (
                   <span className="muted mono small">
                     {shownCar.chassis} · {shownCar.year} · {int(shownCar.km)} km · Grade {shownCar.grade}
@@ -425,7 +428,7 @@ export function Import() {
           </div>
 
           <p className="cars-note">
-            <Badge kind="demo">Beispielautos</Badge> Preise zur Orientierung, keine echten Inserate. Eigene Fundstücke kommen aus der Fahrzeugsuche oder der Garage.
+            <Badge kind="demo">{tx('Beispielautos', 'Example cars')}</Badge> {tx('Preise zur Orientierung, keine echten Inserate. Eigene Fundstücke kommen aus der Fahrzeugsuche oder der Garage.', 'Prices for orientation only, not real listings. Your own finds come from the vehicle search or the garage.')}
           </p>
           <div className="cars">
             {CARS.map((c) => (
@@ -440,7 +443,7 @@ export function Import() {
           </div>
 
           <div className="calc-step origin-step">
-            <span className="step-label">Herkunft</span>
+            <span className="step-label">{tx('Herkunft', 'Origin')}</span>
             <div className="dest-row origin-row">
               {ORIGIN_KEYS.map((k) => (
                 <button key={k} className={'dest' + (k === origin ? ' on' : '')} onClick={() => k !== origin && (applyOrigin(k), k === 'jp' ? pickCar(CARS[0].id) : (setPrice(0), setFind(null)))} title={k === 'jp' ? 'Japan' : ORIGIN[k].name}>
@@ -452,9 +455,9 @@ export function Import() {
 
           <div className="calc-row">
             <div className="calc-step">
-              <span className="step-label">Zielland</span>
+              <span className="step-label">{tx('Zielland', 'Destination')}</span>
               {O ? (
-                <p className="hint dest-fixed">🇩🇪 Deutschland · ab {O.name} rechnet der Rechner bis vor die Tür in Deutschland.</p>
+                <p className="hint dest-fixed">{tx(`🇩🇪 Deutschland · ab ${O.name} rechnet der Rechner bis vor die Tür in Deutschland.`, `🇩🇪 Germany · from ${O.name} the calculator works out the cost to your door in Germany.`)}</p>
               ) : (
                 <div className="dest-row">
                   {(Object.keys(DEST) as DestKey[]).map((k) => (
@@ -466,7 +469,7 @@ export function Import() {
               )}
             </div>
             <div className="calc-step">
-              <span className="step-label">{O ? 'Zuschlag / Kaufpreis' : 'Hammerpreis'}</span>
+              <span className="step-label">{O ? tx('Zuschlag / Kaufpreis', 'Hammer / purchase price') : tx('Hammerpreis', 'Hammer price')}</span>
               <span className="input big">
                 <span className="adorn">{priceIn === 'ORIG' ? osym : cur}</span>
                 <input
@@ -484,13 +487,13 @@ export function Import() {
           </div>
 
           <div className="total-block">
-            <span className="muted">Kosten bis vor die Tür · {dest.name}</span>
+            <span className="muted">{tx('Kosten bis vor die Tür', 'Landed cost')} · {dest.name}</span>
             <div className="total">
               <Counter value={calc.landed} format={(v) => money(v, cur)} />
             </div>
-            {freightMissing && <span className="total-warn">Noch ohne Seefracht: {pickedShip!.text}</span>}
+            {freightMissing && <span className="total-warn">{tx('Noch ohne Seefracht', 'Sea freight not yet included')}: {pickedShip!.text}</span>}
             <span className="total-sub">
-              <b>×{calc.multiplier.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> vom Fahrzeugwert · davon {money(calc.taxes, cur)} Steuern & Zoll
+              <b>×{calc.multiplier.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</b> {tx('vom Fahrzeugwert · davon', 'of vehicle value · of which')} {money(calc.taxes, cur)} {tx('Steuern & Zoll', 'taxes & duty')}
             </span>
           </div>
 
@@ -511,7 +514,7 @@ export function Import() {
           {O && (
             <>
               <div className="agent-pick">
-                <span className="step-label">Gekauft bei · {O.name}</span>
+                <span className="step-label">{tx('Gekauft bei', 'Bought at')} · {O.name}</span>
                 <div className="mk-ideas">
                   {O.houses.map((h) => (
                     <button key={h.id} className={'chip' + (pickedHouse?.id === h.id ? ' on' : '')} onClick={() => setHouse(h.id)} title={h.text}>
@@ -526,18 +529,18 @@ export function Import() {
                     <>
                       {' '}
                       <a href={pickedHouse!.source} target="_blank" rel="noopener noreferrer">
-                        Quelle
+                        {tx('Quelle', 'Source')}
                       </a>
                     </>
                   )}
                 </p>
               </div>
               <div className="agent-pick">
-                <span className="step-label">Nach Deutschland</span>
+                <span className="step-label">{tx('Nach Deutschland', 'To Germany')}</span>
                 <div className="mk-ideas">
                   {O.ship.map((m) => (
                     <button key={m.id} className={'chip' + (pickedShip?.id === m.id ? ' on' : '')} onClick={() => pickShip(m.id)}>
-                      {m.label} · {m.cost === null ? 'Angebot einholen' : money(m.cost, m.cur)}
+                      {m.label} · {m.cost === null ? tx('Angebot einholen', 'Get a quote') : money(m.cost, m.cur)}
                     </button>
                   ))}
                 </div>
@@ -547,7 +550,7 @@ export function Import() {
                     <>
                       {' '}
                       <a href={pickedShip!.source} target="_blank" rel="noopener noreferrer">
-                        Quelle
+                        {tx('Quelle', 'Source')}
                       </a>
                     </>
                   )}
@@ -559,28 +562,28 @@ export function Import() {
 
           {!O && (
           <div className="agent-pick">
-            <span className="step-label">Export-Agent in Japan</span>
+            <span className="step-label">{tx('Export-Agent in Japan', 'Export agent in Japan')}</span>
             <div className="mk-ideas">
               <button className={'chip' + (agent === 'avg' ? ' on' : '')} onClick={() => setAgent('avg')}>
-                Ø Durchschnitt · {yen(avgFees)}
+                {tx('Ø Durchschnitt', 'Ø average')} · {yen(avgFees)}
               </button>
               {AGENTS.map((a) => {
                 const t = agentTotal(a, hammer)
                 return (
                   <button key={a.id} className={'chip' + (agent === a.id ? ' on' : '')} disabled={t === null} onClick={() => setAgent(a.id)} title={a.text}>
-                    {a.name} · {t === null ? 'auf Anfrage' : yen(t)}
+                    {a.name} · {t === null ? tx('auf Anfrage', 'on request') : yen(t)}
                   </button>
                 )
               })}
-              {agent === 'manual' && <span className="chip on">Eigene Zahl · {yen(japanFees)}</span>}
+              {agent === 'manual' && <span className="chip on">{tx('Eigene Zahl', 'Own figure')} · {yen(japanFees)}</span>}
             </div>
-            <p className="hint">Service-Gebühr + feste Posten + Transport zum Hafen ({yen(25000)} typisch), nach den veröffentlichten Preisen der Firmen (Stand 17.11.2026).</p>
+            <p className="hint">{tx(`Service-Gebühr + feste Posten + Transport zum Hafen (${yen(25000)} typisch), nach den veröffentlichten Preisen der Firmen (Stand 17.11.2026).`, `Service fee + fixed items + transport to port (${yen(25000)} typical), based on the companies’ published prices (as of 17 Nov 2026).`)}</p>
           </div>
           )}
 
           {(finds.length > 0 || find) && (
             <div className="agent-pick">
-              <span className="step-label">Aus deiner Merkliste</span>
+              <span className="step-label">{tx('Aus deiner Merkliste', 'From your watchlist')}</span>
               <div className="mk-ideas">
                 {finds.map((f) => (
                   <button key={f.id} className={'chip' + (find?.id === f.id ? ' on' : '')} onClick={() => loadFind(f)}>
@@ -588,11 +591,11 @@ export function Import() {
                   </button>
                 ))}
               </div>
-              {find && find.market !== 'jp' && !isOrigin(find.market) && <p className="hint">Gerechnet mit Fracht und Gebühren ab Japan. Ab {find.market.toUpperCase()} können Fracht und Exportkosten abweichen; trag sie unter „Kosten anpassen“ ein, sobald du ein Angebot hast.</p>}
+              {find && find.market !== 'jp' && !isOrigin(find.market) && <p className="hint">{tx(`Gerechnet mit Fracht und Gebühren ab Japan. Ab ${find.market.toUpperCase()} können Fracht und Exportkosten abweichen; trag sie unter „Kosten anpassen“ ein, sobald du ein Angebot hast.`, `Calculated with freight and fees from Japan. From ${find.market.toUpperCase()} freight and export costs may differ; enter them under “Adjust costs” once you have a quote.`)}</p>}
             </div>
           )}
 
-          <Fold title="Aufschlüsselung">
+          <Fold title={tx('Aufschlüsselung', 'Breakdown')}>
             <div className="ledger">
               {ledger.map((r, k) =>
                 'divider' in r ? (
@@ -613,58 +616,58 @@ export function Import() {
                 ),
               )}
               <div className="ledger-total">
-                <span>Gesamt</span>
+                <span>{tx('Gesamt', 'Total')}</span>
                 <span className="mono">{money(calc.landed, cur)}</span>
               </div>
             </div>
             <p className="small muted">{O ? O.note : dest.note}</p>
           </Fold>
 
-          <Fold title="Kosten anpassen">
+          <Fold title={tx('Kosten anpassen', 'Adjust costs')}>
             <div className="actions">
               {!O && (
                 <button className="btn small" onClick={example}>
-                  <Sparkles size={14} /> Beispiel laden
+                  <Sparkles size={14} /> {tx('Beispiel laden', 'Load example')}
                 </button>
               )}
               <button className="btn small" onClick={reset}>
-                <RotateCcw size={14} /> Zurücksetzen
+                <RotateCcw size={14} /> {tx('Zurücksetzen', 'Reset')}
               </button>
             </div>
             <div className="opt-row">
-              <span>Preis in</span>
+              <span>{tx('Preis in', 'Price in')}</span>
               <Seg value={priceIn} onChange={switchPriceIn} options={[{ v: 'ORIG', l: osym }, { v: 'LOCAL', l: cur }]} />
             </div>
             {!O && <div className="opt-row">
-              <span>Versand</span>
+              <span>{tx('Versand', 'Shipping')}</span>
               <Seg value={ship} onChange={(m) => { setShip(m); setFreight(dest.freight[m]) }} options={[{ v: 'roro', l: 'RoRo' }, { v: 'container', l: 'Container' }]} />
             </div>}
             {prefOk && (
               <div className="opt-row">
-                <span>{O ? O.pref!.label.replace(' (0 %)', '') : 'EU-Japan-Abkommen'}</span>
-                <Seg value={epa ? 'epa' : 'mfn'} onChange={(v) => setEpa(v === 'epa')} options={[{ v: 'mfn', l: `${duty} % Zoll` }, { v: 'epa', l: '0 %' }]} />
+                <span>{O ? O.pref!.label.replace(' (0 %)', '') : tx('EU-Japan-Abkommen', 'EU-Japan agreement')}</span>
+                <Seg value={epa ? 'epa' : 'mfn'} onChange={(v) => setEpa(v === 'epa')} options={[{ v: 'mfn', l: tx(`${duty} % Zoll`, `${duty} % duty`) }, { v: 'epa', l: '0 %' }]} />
               </div>
             )}
             {O?.pref && epa && !classicOn && (
               <p className="hint">
                 {O.pref.text}{' '}
                 <a href={O.pref.source} target="_blank" rel="noopener noreferrer">
-                  Quelle
+                  {tx('Quelle', 'Source')}
                 </a>
               </p>
             )}
             {destKey === 'DE' && (
               <div className="opt-row">
-                <span title="Ab 30 Jahren im Originalzustand kann der Zoll das Auto als Sammlungsstück (Pos. 9705) einreihen: 0 % Zoll, 7 % EUSt. Die Entscheidung trifft der Zoll (Quelle: ADAC Oldtimer-Ratgeber).">Oldtimer (30+ Jahre, Original)</span>
+                <span title={tx('Ab 30 Jahren im Originalzustand kann der Zoll das Auto als Sammlungsstück (Pos. 9705) einreihen: 0 % Zoll, 7 % EUSt. Die Entscheidung trifft der Zoll (Quelle: ADAC Oldtimer-Ratgeber).', 'From 30 years in original condition, German customs can classify the car as a collector’s item (heading 9705): 0 % duty, 7 % import VAT. Customs decides (source: ADAC classic car guide).')}>{tx('Oldtimer (30+ Jahre, Original)', 'Classic (30+ years, original)')}</span>
                 <label className="switch">
                   <input type="checkbox" checked={classic} onChange={(e) => setClassic(e.target.checked)} />
                   <span />
                 </label>
               </div>
             )}
-            {classicOn && <p className="hint">Als Sammlungsstück: 0 % Zoll und 7 % EUSt statt 10 % und 19 %. Nur bei Originalzustand, der Zoll entscheidet bei der Anmeldung.</p>}
+            {classicOn && <p className="hint">{tx('Als Sammlungsstück: 0 % Zoll und 7 % EUSt statt 10 % und 19 %. Nur bei Originalzustand, der Zoll entscheidet bei der Anmeldung.', 'As a collector’s item: 0 % duty and 7 % import VAT instead of 10 % and 19 %. Only in original condition; customs decides at declaration.')}</p>}
             <div className="opt-row">
-              <span>Transportversicherung</span>
+              <span>{tx('Transportversicherung', 'Transport insurance')}</span>
               <label className="switch">
                 <input type="checkbox" checked={insureOn} onChange={(e) => setInsureOn(e.target.checked)} />
                 <span />
@@ -672,30 +675,30 @@ export function Import() {
             </div>
             <div className="fields">
               {O ? (
-                <NumField label="Transport zum Hafen" prefix={osym} value={toPort} onChange={setToPort} hint={`im Herkunftsland, je nach Entfernung`} />
+                <NumField label={tx('Transport zum Hafen', 'Transport to port')} prefix={osym} value={toPort} onChange={setToPort} hint={tx('im Herkunftsland, je nach Entfernung', 'in the origin country, depending on distance')} />
               ) : (
-                <NumField label="Japan-Gebühren" prefix="¥" value={japanFees} onChange={(v) => { setJapanFees(v); setAgent('manual') }} hint="Agent, Auktion, Transport, Export" />
+                <NumField label={tx('Japan-Gebühren', 'Japan fees')} prefix="¥" value={japanFees} onChange={(v) => { setJapanFees(v); setAgent('manual') }} hint={tx('Agent, Auktion, Transport, Export', 'Agent, auction, transport, export')} />
               )}
-              <NumField label={`Kurs (1 ${cur} = … ${osym})`} step={0.1} suffix="¥" value={manualRate > 0 ? manualRate : Math.round((1 / liveRate) * 10) / 10} onChange={setManualRate} hint={rateNote} />
-              <NumField label={pickedShip?.selfDrive ? 'Überfahrt' : 'Seefracht'} prefix={cur} value={freight} onChange={setFreight} hint={freightMissing ? 'Angebot eintragen' : undefined} />
-              <NumField label="Versicherung" step={0.1} suffix="%" value={insurePct} onChange={setInsurePct} disabled={!insureOn} />
-              <NumField label="Zoll" step={0.5} suffix="%" value={dutyPct} onChange={(v) => { setDuty(v); setEpa(false) }} disabled={prefOk && epa} />
+              <NumField label={tx(`Kurs (1 ${cur} = … ${osym})`, `Rate (1 ${cur} = … ${osym})`)} step={0.1} suffix="¥" value={manualRate > 0 ? manualRate : Math.round((1 / liveRate) * 10) / 10} onChange={setManualRate} hint={rateNote} />
+              <NumField label={pickedShip?.selfDrive ? tx('Überfahrt', 'Crossing') : tx('Seefracht', 'Sea freight')} prefix={cur} value={freight} onChange={setFreight} hint={freightMissing ? tx('Angebot eintragen', 'Enter quote') : undefined} />
+              <NumField label={tx('Versicherung', 'Insurance')} step={0.1} suffix="%" value={insurePct} onChange={setInsurePct} disabled={!insureOn} />
+              <NumField label={tx('Zoll', 'Duty')} step={0.5} suffix="%" value={dutyPct} onChange={(v) => { setDuty(v); setEpa(false) }} disabled={prefOk && epa} />
               <NumField label={dest.vatLabel} step={0.5} suffix="%" value={vat} onChange={setVat} />
-              <NumField label="Zollabwicklung" prefix={cur} value={fees.clearance} onChange={setFee('clearance')} />
-              <NumField label="Agent / Provision" prefix={cur} value={fees.agent} onChange={setFee('agent')} />
-              <NumField label="Inlandstransport" prefix={cur} value={fees.inland} onChange={setFee('inland')} />
+              <NumField label={tx('Zollabwicklung', 'Customs clearance')} prefix={cur} value={fees.clearance} onChange={setFee('clearance')} />
+              <NumField label={tx('Agent / Provision', 'Agent / commission')} prefix={cur} value={fees.agent} onChange={setFee('agent')} />
+              <NumField label={tx('Inlandstransport', 'Inland transport')} prefix={cur} value={fees.inland} onChange={setFee('inland')} />
               <NumField label={dest.inspectionLabel} prefix={cur} value={fees.inspection} onChange={setFee('inspection')} />
-              <NumField label="Zulassung & Umbau" prefix={cur} value={fees.reg} onChange={setFee('reg')} />
+              <NumField label={tx('Zulassung & Umbau', 'Registration & conversion')} prefix={cur} value={fees.reg} onChange={setFee('reg')} />
             </div>
             {manualRate > 0 && (
               <button className="link" onClick={() => setManualRate(0)}>
-                Wieder den Tageskurs nutzen
+                {tx('Wieder den Tageskurs nutzen', 'Use the daily rate again')}
               </button>
             )}
           </Fold>
 
           <p className="disclaimer">
-            Schätzung · 1 {cur} = {(1 / rate).toLocaleString('de-DE', { maximumFractionDigits: 2 })} {osym} ({rateNote}). Zoll (HS 8703) und Gebühren mit einem Zollagenten bestätigen. Ohne Kfz-Steuer, Versicherung und Reparaturen.
+            {tx('Schätzung', 'Estimate')} · 1 {cur} = {(1 / rate).toLocaleString(locale, { maximumFractionDigits: 2 })} {osym} ({rateNote}). {tx('Zoll (HS 8703) und Gebühren mit einem Zollagenten bestätigen. Ohne Kfz-Steuer, Versicherung und Reparaturen.', 'Confirm duty (HS 8703) and fees with a customs agent. Excludes vehicle tax, insurance and repairs.')}
           </p>
         </Reveal>
       </section>
@@ -711,16 +714,16 @@ export function Import() {
             basis={scenBasis}
             linkedId={find?.id}
             suggestion={suggestion}
-            fxLabel={`Kursänderung bis zur Zahlung, wirkt auf alles in ${origCur}`}
+            fxLabel={tx(`Kursänderung bis zur Zahlung, wirkt auf alles in ${origCur}`, `Rate change until payment, applies to everything in ${origCur}`)}
           />
         </Reveal>
       </section>
 
       <section className="section narrow" id="agenten">
         {O ? (
-          <SectionHead eyebrow={`Auktionshäuser · ${O.name}`} title={<>Am günstigsten <em>über …</em></>} text={<>Dein Auto mit dem veröffentlichten Aufgeld jedes Hauses gerechnet, bis vor die Tür in Deutschland.</>} />
+          <SectionHead eyebrow={tx(`Auktionshäuser · ${O.name}`, `Auction houses · ${O.name}`)} title={<>{tx('Am günstigsten ', 'Cheapest ')}<em>{tx('über …', 'via …')}</em></>} text={tx('Dein Auto mit dem veröffentlichten Aufgeld jedes Hauses gerechnet, bis vor die Tür in Deutschland.', 'Your car calculated with each house’s published buyer’s premium, to your door in Germany.')} />
         ) : (
-          <SectionHead eyebrow="Agenten & Importeure" title={<>Am günstigsten <em>über …</em></>} text={<>Dein Auto mit den veröffentlichten Gebühren jeder Firma gerechnet. Ø aller Agenten: <b>{money(avgLanded, cur)}</b> bis vor die Tür.</>} />
+          <SectionHead eyebrow={tx('Agenten & Importeure', 'Agents & importers')} title={<>{tx('Am günstigsten ', 'Cheapest ')}<em>{tx('über …', 'via …')}</em></>} text={<>{tx('Dein Auto mit den veröffentlichten Gebühren jeder Firma gerechnet. Ø aller Agenten:', 'Your car calculated with each company’s published fees. Average of all agents:')} <b>{money(avgLanded, cur)}</b> {tx('bis vor die Tür.', 'to your door.')}</>} />
         )}
         <div className="brokers">
           {brokers.map((b, k) => (
@@ -733,9 +736,9 @@ export function Import() {
                 <span className="broker-name">{b.name}</span>
               )}
               <span className="broker-type">{b.type}</span>
-              <span className="broker-cost mono">{b.landed === null ? 'auf Anfrage' : k === 0 ? money(b.landed, cur) : '+' + money(b.landed - cheapest, cur)}</span>
+              <span className="broker-cost mono">{b.landed === null ? tx('auf Anfrage', 'on request') : k === 0 ? money(b.landed, cur) : '+' + money(b.landed - cheapest, cur)}</span>
               {b.source ? (
-                <a className="broker-src" href={b.source} target="_blank" rel="noopener noreferrer" title="Preisquelle">
+                <a className="broker-src" href={b.source} target="_blank" rel="noopener noreferrer" title={tx('Preisquelle', 'Price source')}>
                   <ArrowUpRight size={16} />
                 </a>
               ) : (
@@ -744,11 +747,11 @@ export function Import() {
             </motion.div>
           ))}
         </div>
-        <p className="small muted">{O ? 'Aufgeld laut Gebührenübersicht von CLASSIC.com bzw. den Bedingungen des Hauses, Stand 18.11.2026.' : 'Nur Firmen, die ihre Preise öffentlich nennen; Werte von deren Webseiten, Stand 17.11.2026.'} Preise können sich ändern, verbindlich ist das Angebot der Firma.</p>
+        <p className="small muted">{O ? tx('Aufgeld laut Gebührenübersicht von CLASSIC.com bzw. den Bedingungen des Hauses, Stand 18.11.2026.', 'Premium per CLASSIC.com’s fee overview or the house’s terms, as of 18 Nov 2026.') : tx('Nur Firmen, die ihre Preise öffentlich nennen; Werte von deren Webseiten, Stand 17.11.2026.', 'Only companies that publish their prices; values from their websites, as of 17 Nov 2026.')} {tx('Preise können sich ändern, verbindlich ist das Angebot der Firma.', 'Prices may change; the company’s quote is binding.')}</p>
       </section>
 
       <section className="section">
-        <SectionHead eyebrow="Importeure" title={<>Wer dein Auto <em>holt.</em></>} />
+        <SectionHead eyebrow={tx('Importeure', 'Importers')} title={<>{tx('Wer dein Auto ', 'Who brings ')}<em>{tx('holt.', 'your car.')}</em></>} />
         <ProviderGrid items={IMPORTERS} />
       </section>
     </>

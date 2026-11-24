@@ -7,16 +7,29 @@ import { href, useAnchor, useRoute } from './lib/router.ts'
 import { useStore } from './store/store.ts'
 import { ErrorBoundary, NotFound, SubNav, type SubItem } from './components/ui.tsx'
 import { Home } from './pages/Home.tsx'
-import { Import } from './pages/Import.tsx'
-import { Markets } from './pages/Markets.tsx'
-import { Service } from './pages/Service.tsx'
-import { Rent } from './pages/Rent.tsx'
-import { DiscoverHub, Auctions, Partners, Journey } from './pages/discover/Discover.tsx'
-import { DriveHub, RoadsExplorer, RoadDetail, Atlas } from './pages/drive/Drive.tsx'
-import { OwnHub, Garage } from './pages/own/Own.tsx'
-import { DataPage } from './pages/DataPage.tsx'
 
-// Selten genutzte, größere Werkzeuge erst bei Bedarf laden
+// Alles außer der Startseite erst bei Bedarf laden (kleineres Hauptbündel)
+const named = <K extends string>(load: () => Promise<Record<K, unknown>>, key: K) =>
+  lazy(() => load().then((m) => ({ default: m[key] as React.ComponentType<Record<string, unknown>> })))
+const discover = () => import('./pages/discover/Discover.tsx')
+const drive = () => import('./pages/drive/Drive.tsx')
+const own = () => import('./pages/own/Own.tsx')
+const Import = named(() => import('./pages/Import.tsx'), 'Import')
+const Markets = named(() => import('./pages/Markets.tsx'), 'Markets')
+const Service = named(() => import('./pages/Service.tsx'), 'Service')
+const Rent = named(() => import('./pages/Rent.tsx'), 'Rent')
+const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
+const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
+const DiscoverHub = named(discover, 'DiscoverHub')
+const Auctions = named(discover, 'Auctions')
+const Partners = named(discover, 'Partners')
+const Journey = named(discover, 'Journey')
+const DriveHub = named(drive, 'DriveHub')
+const RoadsExplorer = named(drive, 'RoadsExplorer')
+const RoadDetail = named(drive, 'RoadDetail')
+const Atlas = named(drive, 'Atlas')
+const OwnHub = named(own, 'OwnHub')
+const Garage = named(own, 'Garage')
 const Builder = lazy(() => import('./pages/drive/Builder.tsx'))
 const Simulator = lazy(() => import('./pages/own/Simulator.tsx'))
 const BuildStudio = lazy(() => import('./pages/own/BuildStudio.tsx'))
@@ -60,6 +73,7 @@ function Page({ path }: { path: string[] }): ReactNode {
   const [w, sub, id] = path
   if (!w) return <Home />
   if (w === 'data' && !sub) return <DataPage />
+  if ((w === 'privacy' || w === 'imprint') && !sub) return <Legal kind={w} />
   if (w === 'discover') {
     if (!sub) return <DiscoverHub />
     if (sub === 'search') return <Markets />
@@ -107,9 +121,9 @@ export default function App() {
   useAnchor(anchorOf(route.path))
 
   useEffect(() => {
-    const names: Record<string, string> = { discover: 'Discover', drive: 'Drive', own: 'Own', data: t('nav.data') }
+    const names: Record<string, string> = { discover: 'Discover', drive: 'Drive', own: 'Own', data: t('nav.data'), privacy: lang === 'en' ? 'Privacy' : 'Datenschutz', imprint: lang === 'en' ? 'Imprint' : 'Impressum' }
     document.title = route.path[0] ? `${names[route.path[0]] ?? '404'} · ${BRAND.name}` : `${BRAND.name} · ${BRAND.claim}`
-  }, [route.path, t])
+  }, [route.path, t, lang])
 
   const top = [
     { id: 'discover', label: t('nav.discover'), icon: Compass },
@@ -120,7 +134,7 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <a className="skip" href="#main" onClick={(e) => (e.preventDefault(), document.getElementById('main')?.focus())}>
-        Zum Inhalt
+        {lang === 'en' ? 'Skip to content' : 'Zum Inhalt'}
       </a>
       <header className="nav">
         <a className="brand" href="#/" aria-label={BRAND.name + ' Start'}>
@@ -191,6 +205,8 @@ export default function App() {
           <nav>
             <b>{BRAND.name}</b>
             <a href="#/data">{t('nav.data')}</a>
+            <a href="#/privacy">{lang === 'en' ? 'Privacy' : 'Datenschutz'}</a>
+            <a href="#/imprint">{lang === 'en' ? 'Imprint' : 'Impressum'}</a>
             <a href={BRAND.repo + '/blob/main/DATA_SOURCES.md'} target="_blank" rel="noopener noreferrer">
               {t('footer.sources')}
             </a>

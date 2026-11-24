@@ -41,7 +41,7 @@ Stand: 24.11.2026. Grundregeln für jede Phase: alles kostenlos und dauerhaft fr
 
 ## Phase 3 – Inhalte vertiefen (als Nächstes)
 
-1. **Englisch vollständig**: Texte der Werkzeuge (Rechner, Märkte, Service, Builder …) in `src/i18n` übernehmen.
+1. **Englisch vollständig**: Werkzeuge sind übersetzt (alpha.2); offen sind die Beschreibungstexte in `src/data.ts` und `src/classics.ts`.
 2. **Mehr Länder im Rechner**: Zielländer Österreich, Schweiz, Niederlande (Zoll/Steuer nur mit amtlicher Quelle).
 3. **Mehr Roads**: weitere Straßen in Japan (z. B. Irohazaka, Venus Line, Bandai-Azuma Skyline), Europa und USA – jeweils mit Wikipedia-Fakten und Commons-Foto.
 4. **Vermietung außerhalb Japans**: nur Anbieter, die Preise öffentlich nennen; ohne Bewertungen.
@@ -58,7 +58,7 @@ Stand: 24.11.2026. Grundregeln für jede Phase: alles kostenlos und dauerhaft fr
 ## Phase 5 – Release
 
 - Markenrechtliche Prüfung des Namens (Branding nur in `brand.ts` ändern).
-- Impressum und Datenschutzerklärung (Pflicht für eine öffentliche Seite in Deutschland) – Inhalt muss Tim liefern; `CONTACT_EMAIL` bleibt bis dahin leer.
+- Impressum und Datenschutzerklärung: Entwurf steht (`#/imprint`, `#/privacy`); Tim muss die Angaben in `BRAND.operator` liefern und die Texte prüfen lassen. `CONTACT_EMAIL` bleibt bis dahin leer.
 - `RELEASE_CHECKLIST.md` abarbeiten, dann `npm run deploy` **nur nach Tims Ja**.
 
 ## Bewusst nicht geplant

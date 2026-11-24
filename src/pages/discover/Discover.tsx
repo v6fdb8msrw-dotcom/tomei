@@ -14,7 +14,7 @@ import { roadImg } from '../../data/roads.ts'
 import { BRAND } from '../../config/brand.ts'
 
 export function DiscoverHub() {
-  const { t } = useT()
+  const { t, tx } = useT()
   const watch = useStore((s) => s.vehicles.filter((v) => v.status === 'watchlist' || v.status === 'dream').length)
   return (
     <WorldHub
@@ -27,12 +27,12 @@ export function DiscoverHub() {
       sub={t('world.discover.text')}
       image={img('cars/fd')}
       tools={[
-        { to: 'discover/search', title: 'Fahrzeugsuche', text: 'Eine Suche, elf Märkte von Japan bis Australien, mit Modell-Finder für seltene Klassiker.', img: img('cars/r34'), meta: watch ? `${watch} in deiner Garage` : 'Such-Zentrale' },
-        { to: 'discover/auctions', title: 'Auktionshäuser', text: 'Offene Auktionen und Händlerauktionen als Verzeichnis, mit direkten Suchlinks. Keine kopierten Inserate.', img: img('parts-show'), meta: `${AUCTIONS.length} Häuser` },
-        { to: 'discover/partners', title: 'Import-Partner', text: 'Agenten, Importeure und Speditionen nach Herkunft und Leistung, mit veröffentlichten Preisen und Quelle.', img: img('import-port'), meta: 'Ohne Bewertungen, ohne Provision' },
-        { to: 'discover/calculator', title: 'Importrechner 2.0', text: 'Best, Expected, Worst und Custom: die Spanne bis vor die Tür, mit Tageskurs der EZB.', img: img('import-ship'), meta: '5 Herkunfts-, 6 Zielländer' },
-        { to: 'discover/journey', title: 'Import-Journey', text: 'Vom Fund bis zur Zulassung in neun Schritten, mit Häkchen pro Fahrzeug.', img: roadImg('wangan'), meta: 'Fortschritt je Auto' },
-        { to: 'discover/service', title: 'Service', text: 'Komplettpaket kaufen, verschiffen, zulassen. Anfrage vorbereiten, die Daten bleiben bei dir.', img: img('cars/s15'), meta: 'In Vorbereitung' },
+        { to: 'discover/search', title: tx('Fahrzeugsuche', 'Vehicle search'), text: tx('Eine Suche, elf Märkte von Japan bis Australien, mit Modell-Finder für seltene Klassiker.', 'One search, eleven markets from Japan to Australia, with a model finder for rare classics.'), img: img('cars/r34'), meta: watch ? tx(`${watch} in deiner Garage`, `${watch} in your garage`) : tx('Such-Zentrale', 'Search hub') },
+        { to: 'discover/auctions', title: tx('Auktionshäuser', 'Auction houses'), text: tx('Offene Auktionen und Händlerauktionen als Verzeichnis, mit direkten Suchlinks. Keine kopierten Inserate.', 'Public and dealer-only auctions as a directory, with direct search links. No copied listings.'), img: img('parts-show'), meta: tx(`${AUCTIONS.length} Häuser`, `${AUCTIONS.length} houses`) },
+        { to: 'discover/partners', title: tx('Import-Partner', 'Import partners'), text: tx('Agenten, Importeure und Speditionen nach Herkunft und Leistung, mit veröffentlichten Preisen und Quelle.', 'Agents, importers and shippers by origin and service, with published prices and sources.'), img: img('import-port'), meta: tx('Ohne Bewertungen, ohne Provision', 'No ratings, no commission') },
+        { to: 'discover/calculator', title: tx('Importrechner 2.0', 'Import calculator 2.0'), text: tx('Best, Expected, Worst und Custom: die Spanne bis vor die Tür, mit Tageskurs der EZB.', 'Best, expected, worst and custom: the range to your door, with the ECB daily rate.'), img: img('import-ship'), meta: tx('5 Herkunfts-, 6 Zielländer', '5 origin, 6 destination countries') },
+        { to: 'discover/journey', title: 'Import-Journey', text: tx('Vom Fund bis zur Zulassung in neun Schritten, mit Häkchen pro Fahrzeug.', 'From find to registration in nine steps, ticked off per vehicle.'), img: roadImg('wangan'), meta: tx('Fortschritt je Auto', 'Progress per car') },
+        { to: 'discover/service', title: 'Service', text: tx('Komplettpaket kaufen, verschiffen, zulassen. Anfrage vorbereiten, die Daten bleiben bei dir.', 'Full package: buy, ship, register. Prepare a request; your data stays with you.'), img: img('cars/s15'), meta: tx('In Vorbereitung', 'Coming soon') },
       ]}
     />
   )
@@ -50,6 +50,7 @@ function auctionSearch(name: string, q: MarketQuery): string | undefined {
 }
 
 export function Auctions() {
+  const { tx } = useT()
   const [kind, setKind] = useState<'all' | 'open' | 'dealer'>('all')
   const [text, setText] = useState('')
   const q: MarketQuery = useMemo(() => {
@@ -60,13 +61,13 @@ export function Auctions() {
   return (
     <>
       <PageHead
-        eyebrow="Discover · Auktionshäuser"
+        eyebrow={tx('Discover · Auktionshäuser', 'Discover · Auction houses')}
         title={
           <>
-            Wer versteigert, <em>wer darf bieten.</em>
+            {tx('Wer versteigert, ', 'Who auctions, ')}<em>{tx('wer darf bieten.', 'who may bid.')}</em>
           </>
         }
-        sub="Ein Verzeichnis, keine Auktionsplattform. Offene Häuser lassen jeden mitbieten; die großen Händlerauktionen in Japan und Korea erreichst du nur über einen Agenten. Ergebnisse und Inserate stehen bei den Häusern selbst."
+        sub={tx('Ein Verzeichnis, keine Auktionsplattform. Offene Häuser lassen jeden mitbieten; die großen Händlerauktionen in Japan und Korea erreichst du nur über einen Agenten. Ergebnisse und Inserate stehen bei den Häusern selbst.', 'A directory, not an auction platform. Public houses let anyone bid; the big dealer auctions in Japan and Korea are only reachable through an agent. Results and listings are on the houses’ own sites.')}
         image={img('parts-show')}
       />
       <section className="section">
@@ -74,13 +75,13 @@ export function Auctions() {
           <div className="seg">
             {(['all', 'open', 'dealer'] as const).map((k) => (
               <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>
-                {k === 'all' ? 'Alle' : k === 'open' ? 'Offen für alle' : 'Nur Händler'}
+                {k === 'all' ? tx('Alle', 'All') : k === 'open' ? tx('Offen für alle', 'Open to all') : tx('Nur Händler', 'Dealers only')}
               </button>
             ))}
           </div>
           <label className="search-field">
             <Search size={17} />
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Modell für die Suchlinks, z. B. Toyota Supra" aria-label="Modell" />
+            <input value={text} onChange={(e) => setText(e.target.value)} placeholder={tx('Modell für die Suchlinks, z. B. Toyota Supra', 'Model for the search links, e.g. Toyota Supra')} aria-label={tx('Modell', 'Model')} />
           </label>
         </div>
         <div className="dir">
@@ -92,24 +93,24 @@ export function Auctions() {
                 <div className="dir-main">
                   <h3>{a.name}</h3>
                   <span className="dir-sub">
-                    {a.country} · {a.open ? 'offen für alle' : 'nur registrierte Händler'}
+                    {a.country} · {a.open ? tx('offen für alle', 'open to all') : tx('nur registrierte Händler', 'registered dealers only')}
                   </span>
                   <p>{a.text}</p>
                 </div>
                 <div className="dir-actions">
                   {link && (
                     <a className="btn small primary" href={link} target="_blank" rel="noopener noreferrer">
-                      „{text.trim()}“ suchen <ArrowUpRight size={14} />
+                      {tx(`„${text.trim()}“ suchen`, `Search “${text.trim()}”`)} <ArrowUpRight size={14} />
                     </a>
                   )}
                   {a.url && (
                     <a className="btn small" href={a.url} target="_blank" rel="noopener noreferrer">
-                      Webseite <ExternalLink size={13} />
+                      {tx('Webseite', 'Website')} <ExternalLink size={13} />
                     </a>
                   )}
                   {!a.open && (
                     <a className="btn small" href={href('discover/partners')}>
-                      Über Agent bieten
+                      {tx('Über Agent bieten', 'Bid via agent')}
                     </a>
                   )}
                 </div>
@@ -118,7 +119,7 @@ export function Auctions() {
           })}
         </div>
         <Note>
-          {`${BRAND.name} zeigt keine Auktionslisten, Ergebnisse oder Preise der Häuser: Die Daten gehören den Häusern, Auslesen ist nicht erlaubt. Gebühren der offenen Häuser rechnet der Importrechner mit (Herkunft USA, UK, Australien).`}
+          {tx(`${BRAND.name} zeigt keine Auktionslisten, Ergebnisse oder Preise der Häuser: Die Daten gehören den Häusern, Auslesen ist nicht erlaubt. Gebühren der offenen Häuser rechnet der Importrechner mit (Herkunft USA, UK, Australien).`, `${BRAND.name} shows no auction lists, results or prices: the data belongs to the houses and scraping is not allowed. Buyer’s premiums of the public houses are included in the import calculator (origin USA, UK, Australia).`)}
         </Note>
       </section>
     </>
@@ -130,7 +131,11 @@ export function Auctions() {
 type PartnerRole = 'agent' | 'complete' | 'shipping'
 type Partner = { id: string; name: string; url: string; origins: string[]; roles: PartnerRole[]; text: string; price?: string; source?: string }
 
-const ROLE: Record<PartnerRole, string> = { agent: 'Kauf vor Ort / Agent', complete: 'Komplett-Import', shipping: 'Verschiffung & Zoll' }
+const ROLE: Record<PartnerRole, { de: string; en: string }> = {
+  agent: { de: 'Kauf vor Ort / Agent', en: 'Local purchase / agent' },
+  complete: { de: 'Komplett-Import', en: 'Full import' },
+  shipping: { de: 'Verschiffung & Zoll', en: 'Shipping & customs' },
+}
 
 function buildPartners(): Partner[] {
   const roleOf: Record<string, { origins: string[]; roles: PartnerRole[] }> = {
@@ -162,6 +167,7 @@ function buildPartners(): Partner[] {
 }
 
 export function Partners() {
+  const { tx, L } = useT()
   const all = useMemo(buildPartners, [])
   const [origin, setOrigin] = useState('jp')
   const [role, setRole] = useState<PartnerRole | 'all'>('all')
@@ -169,20 +175,20 @@ export function Partners() {
   const origins = [
     { id: 'jp', l: '🇯🇵 Japan' },
     { id: 'us', l: '🇺🇸 USA' },
-    { id: 'uk', l: '🇬🇧 Großbritannien' },
-    { id: 'ca', l: '🇨🇦 Kanada' },
-    { id: 'au', l: '🇦🇺 Australien' },
+    { id: 'uk', l: tx('🇬🇧 Großbritannien', '🇬🇧 United Kingdom') },
+    { id: 'ca', l: tx('🇨🇦 Kanada', '🇨🇦 Canada') },
+    { id: 'au', l: tx('🇦🇺 Australien', '🇦🇺 Australia') },
   ]
   return (
     <>
       <PageHead
-        eyebrow="Discover · Import-Partner"
+        eyebrow={tx('Discover · Import-Partner', 'Discover · Import partners')}
         title={
           <>
-            Wer dein Auto holt. <em>Mit offenen Preisen.</em>
+            {tx('Wer dein Auto holt. ', 'Who brings your car. ')}<em>{tx('Mit offenen Preisen.', 'With open prices.')}</em>
           </>
         }
-        sub="Agenten vor Ort, Komplett-Importeure und Speditionen. Ohne Ranking, ohne Sterne, ohne Provision: Preise nur, wenn die Firma sie selbst veröffentlicht, mit Link zur Quelle."
+        sub={tx('Agenten vor Ort, Komplett-Importeure und Speditionen. Ohne Ranking, ohne Sterne, ohne Provision: Preise nur, wenn die Firma sie selbst veröffentlicht, mit Link zur Quelle.', 'Local agents, full-service importers and shippers. No ranking, no stars, no commission: prices only where the company publishes them, with a link to the source.')}
         image={img('import-port')}
       />
       <section className="section">
@@ -197,17 +203,17 @@ export function Partners() {
           <div className="seg wrap">
             {(['all', 'agent', 'complete', 'shipping'] as const).map((r) => (
               <button key={r} className={role === r ? 'on' : ''} onClick={() => setRole(r)}>
-                {r === 'all' ? 'Alle Leistungen' : ROLE[r]}
+                {r === 'all' ? tx('Alle Leistungen', 'All services') : L(ROLE[r])}
               </button>
             ))}
           </div>
         </div>
         {list.length === 0 ? (
           <EmptyState
-            title="Noch keine Partner mit veröffentlichten Angaben."
-            text={`Für ${origins.find((o) => o.id === origin)?.l.slice(5)} kennen wir keine Firma, die Preise oder Leistungen offen nennt. Im Importrechner kannst du ein eigenes Angebot eintragen.`}
+            title={tx('Noch keine Partner mit veröffentlichten Angaben.', 'No partners with published details yet.')}
+            text={tx(`Für ${origins.find((o) => o.id === origin)?.l.slice(5)} kennen wir keine Firma, die Preise oder Leistungen offen nennt. Im Importrechner kannst du ein eigenes Angebot eintragen.`, `For ${origins.find((o) => o.id === origin)?.l.slice(5)} we know of no company that publishes prices or services. You can enter your own quote in the import calculator.`)}
             image={img('import-ship')}
-            actions={[{ to: 'discover/calculator', label: 'Zum Importrechner', primary: true }]}
+            actions={[{ to: 'discover/calculator', label: tx('Zum Importrechner', 'Open calculator'), primary: true }]}
           />
         ) : (
           <div className="partners">
@@ -215,26 +221,26 @@ export function Partners() {
               <motion.article key={p.id} className="partner" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (k % 3) * 0.05, ease: EASE }}>
                 <div className="partner-top">
                   <h3>{p.name}</h3>
-                  <a className="icon-btn" href={p.url} target="_blank" rel="noopener noreferrer" aria-label={`${p.name} öffnen`}>
+                  <a className="icon-btn" href={p.url} target="_blank" rel="noopener noreferrer" aria-label={tx(`${p.name} öffnen`, `Open ${p.name}`)}>
                     <ArrowUpRight size={17} />
                   </a>
                 </div>
                 <div className="chips">
                   {p.roles.map((r) => (
                     <span key={r} className="chip">
-                      {ROLE[r]}
+                      {L(ROLE[r])}
                     </span>
                   ))}
-                  {p.price ? <Badge kind="ok">Preis veröffentlicht</Badge> : <Badge kind="warn">Preis auf Anfrage</Badge>}
+                  {p.price ? <Badge kind="ok">{tx('Preis veröffentlicht', 'Price published')}</Badge> : <Badge kind="warn">{tx('Preis auf Anfrage', 'Price on request')}</Badge>}
                 </div>
                 <p>{p.text}</p>
                 {p.price && <p className="partner-price mono">{p.price}</p>}
-                {p.source && <SourceLink url={p.source}>Preisquelle</SourceLink>}
+                {p.source && <SourceLink url={p.source}>{tx('Preisquelle', 'Price source')}</SourceLink>}
               </motion.article>
             ))}
           </div>
         )}
-        <Note>Die Liste ist keine Empfehlung. Prüfe Impressum, Vertrag und Zahlungsweg jeder Firma selbst; zahle große Beträge nie ohne schriftliches Angebot. Preise: Stand 17./18.11.2026 laut den verlinkten Seiten.</Note>
+        <Note>{tx('Die Liste ist keine Empfehlung. Prüfe Impressum, Vertrag und Zahlungsweg jeder Firma selbst; zahle große Beträge nie ohne schriftliches Angebot. Preise: Stand 17./18.11.2026 laut den verlinkten Seiten.', 'This list is not a recommendation. Check each company’s legal details, contract and payment method yourself; never pay large sums without a written quote. Prices as of 17/18 Nov 2026 according to the linked pages.')}</Note>
       </section>
     </>
   )
@@ -243,18 +249,19 @@ export function Partners() {
 /* ------------------------------------------------------------------ Import-Journey */
 
 export const JOURNEY = [
-  { id: 'find', t: 'Finden & merken', d: 'Inserat oder Auktion finden, Link und Preis in die Garage übernehmen.', to: 'discover/search' },
-  { id: 'check', t: 'Prüfen', d: 'Auktionsblatt bzw. Zustandsbericht übersetzen lassen, Fotos, Historie und Rost prüfen, Zulassungsregeln im Zielland klären.', to: 'drive/atlas/de' },
-  { id: 'calc', t: 'Durchrechnen', d: 'Best, Expected und Worst Case im Importrechner, Ergebnis am Fahrzeug speichern.', to: 'discover/calculator' },
-  { id: 'partner', t: 'Partner wählen', d: 'Agent, Importeur oder Spedition auswählen, schriftliches Angebot einholen.', to: 'discover/partners' },
-  { id: 'buy', t: 'Kaufen / Bieten', d: 'Zuschlag oder Kaufvertrag, Zahlung nur nach Rechnung und an das Firmenkonto.', to: '' },
-  { id: 'ship', t: 'Verschiffen', d: 'RoRo oder Container, Transportversicherung, Exportpapiere (in Japan: Export Certificate).', to: '' },
-  { id: 'customs', t: 'Verzollen', d: 'Zollanmeldung mit Rechnung und Frachtbrief, Zoll und Einfuhrumsatzsteuer zahlen.', to: '' },
-  { id: 'register', t: 'Abnahme & Zulassung', d: 'In Deutschland: Vollabnahme nach § 21 StVZO, ggf. Umbau (Licht), danach Zulassung. Ab 30 Jahren ist ein H-Kennzeichen möglich.', to: 'own/maintenance' },
-  { id: 'arrived', t: 'Angekommen', d: 'Status „In Besitz“, erster Eintrag im Passport, Wartung planen.', to: 'own/passport' },
+  { id: 'find', t: { de: 'Finden & merken', en: 'Find & save' }, d: { de: 'Inserat oder Auktion finden, Link und Preis in die Garage übernehmen.', en: 'Find a listing or auction, save link and price to your garage.' }, to: 'discover/search' },
+  { id: 'check', t: { de: 'Prüfen', en: 'Inspect' }, d: { de: 'Auktionsblatt bzw. Zustandsbericht übersetzen lassen, Fotos, Historie und Rost prüfen, Zulassungsregeln im Zielland klären.', en: 'Have the auction sheet or condition report translated, check photos, history and rust, clarify registration rules in the destination country.' }, to: 'drive/atlas/de' },
+  { id: 'calc', t: { de: 'Durchrechnen', en: 'Calculate' }, d: { de: 'Best, Expected und Worst Case im Importrechner, Ergebnis am Fahrzeug speichern.', en: 'Best, expected and worst case in the import calculator, save the result to the vehicle.' }, to: 'discover/calculator' },
+  { id: 'partner', t: { de: 'Partner wählen', en: 'Choose a partner' }, d: { de: 'Agent, Importeur oder Spedition auswählen, schriftliches Angebot einholen.', en: 'Pick an agent, importer or shipper and get a written quote.' }, to: 'discover/partners' },
+  { id: 'buy', t: { de: 'Kaufen / Bieten', en: 'Buy / bid' }, d: { de: 'Zuschlag oder Kaufvertrag, Zahlung nur nach Rechnung und an das Firmenkonto.', en: 'Winning bid or purchase contract; pay only against an invoice and to the company account.' }, to: '' },
+  { id: 'ship', t: { de: 'Verschiffen', en: 'Ship' }, d: { de: 'RoRo oder Container, Transportversicherung, Exportpapiere (in Japan: Export Certificate).', en: 'RoRo or container, transport insurance, export papers (in Japan: export certificate).' }, to: '' },
+  { id: 'customs', t: { de: 'Verzollen', en: 'Clear customs' }, d: { de: 'Zollanmeldung mit Rechnung und Frachtbrief, Zoll und Einfuhrumsatzsteuer zahlen.', en: 'Customs declaration with invoice and bill of lading, pay duty and import VAT.' }, to: '' },
+  { id: 'register', t: { de: 'Abnahme & Zulassung', en: 'Inspection & registration' }, d: { de: 'In Deutschland: Vollabnahme nach § 21 StVZO, ggf. Umbau (Licht), danach Zulassung. Ab 30 Jahren ist ein H-Kennzeichen möglich.', en: 'In Germany: full inspection under § 21 StVZO, modifications if needed (lights), then registration. From 30 years an H plate (historic) is possible.' }, to: 'own/maintenance' },
+  { id: 'arrived', t: { de: 'Angekommen', en: 'Arrived' }, d: { de: 'Status „In Besitz“, erster Eintrag im Passport, Wartung planen.', en: 'Status “Owned”, first passport entry, plan maintenance.' }, to: 'own/passport' },
 ] as const
 
 export function Journey({ vehicleId }: { vehicleId?: string }) {
+  const { tx, L } = useT()
   const vehicles = useStore((s) => s.vehicles.filter((v) => v.status !== 'sold'))
   const [sel, setSel] = useState(vehicleId ?? vehicles[0]?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
@@ -270,7 +277,7 @@ export function Journey({ vehicleId }: { vehicleId?: string }) {
     if (id === 'buy' && next.has('buy') && ['dream', 'watchlist', 'planned'].includes(v.status)) patch.status = 'import'
     if (id === 'arrived' && next.has('arrived') && v.status !== 'owned') {
       patch.status = 'owned'
-      addPassportEntry({ vehicleId: v.id, date: new Date().toISOString().slice(0, 10), kind: 'import', title: 'Import abgeschlossen' })
+      addPassportEntry({ vehicleId: v.id, date: new Date().toISOString().slice(0, 10), kind: 'import', title: tx('Import abgeschlossen', 'Import completed') })
     }
     updateVehicle(v.id, patch)
   }
@@ -281,21 +288,21 @@ export function Journey({ vehicleId }: { vehicleId?: string }) {
         eyebrow="Discover · Import-Journey"
         title={
           <>
-            Vom Fund <em>bis zur Zulassung.</em>
+            {tx('Vom Fund ', 'From find ')}<em>{tx('bis zur Zulassung.', 'to registration.')}</em>
           </>
         }
-        sub="Neun Schritte, die jeder Import durchläuft. Hake sie pro Fahrzeug ab: Der Status in der Garage zieht mit, und am Ende beginnt der Passport."
+        sub={tx('Neun Schritte, die jeder Import durchläuft. Hake sie pro Fahrzeug ab: Der Status in der Garage zieht mit, und am Ende beginnt der Passport.', 'Nine steps every import goes through. Tick them off per vehicle: the garage status follows, and at the end the passport begins.')}
         image={roadImg('wangan')}
       />
       <section className="section narrow">
         {vehicles.length === 0 ? (
           <EmptyState
-            title="Leg zuerst ein Fahrzeug an."
-            text="Die Journey merkt sich den Fortschritt je Auto. Starte mit einem Traumauto oder einem Fund aus der Fahrzeugsuche."
+            title={tx('Leg zuerst ein Fahrzeug an.', 'Add a vehicle first.')}
+            text={tx('Die Journey merkt sich den Fortschritt je Auto. Starte mit einem Traumauto oder einem Fund aus der Fahrzeugsuche.', 'The journey tracks progress per car. Start with a dream car or a find from the vehicle search.')}
             image={img('cars/evo')}
             actions={[
-              { to: 'own/garage', label: 'Zur Garage', primary: true },
-              { to: 'discover/search', label: 'Fahrzeugsuche' },
+              { to: 'own/garage', label: tx('Zur Garage', 'Go to garage'), primary: true },
+              { to: 'discover/search', label: tx('Fahrzeugsuche', 'Vehicle search') },
             ]}
           />
         ) : (
@@ -317,16 +324,16 @@ export function Journey({ vehicleId }: { vehicleId?: string }) {
                 const on = done.has(s.id)
                 return (
                   <li key={s.id} className={on ? 'done' : ''}>
-                    <button className="j-check" onClick={() => toggle(s.id)} aria-pressed={on} aria-label={`${s.t} ${on ? 'erledigt' : 'offen'}`}>
+                    <button className="j-check" onClick={() => toggle(s.id)} aria-pressed={on} aria-label={`${L(s.t)} ${on ? tx('erledigt', 'done') : tx('offen', 'open')}`}>
                       {on ? <Check size={16} /> : <CircleDot size={16} />}
                     </button>
                     <div>
-                      <span className="j-n">Schritt {k + 1}</span>
-                      <h3>{s.t}</h3>
-                      <p>{s.d}</p>
+                      <span className="j-n">{tx('Schritt', 'Step')} {k + 1}</span>
+                      <h3>{L(s.t)}</h3>
+                      <p>{L(s.d)}</p>
                       {s.to && (
                         <a className="link" href={href(s.to)}>
-                          Werkzeug öffnen →
+                          {tx('Werkzeug öffnen →', 'Open tool →')}
                         </a>
                       )}
                     </div>
@@ -334,7 +341,7 @@ export function Journey({ vehicleId }: { vehicleId?: string }) {
                 )
               })}
             </ol>
-            {v && <p className="muted small">Fahrzeug: {vehicleTitle(v)}. Fortschritt bleibt auf diesem Gerät gespeichert.</p>}
+            {v && <p className="muted small">{tx('Fahrzeug', 'Vehicle')}: {vehicleTitle(v)}. {tx('Fortschritt bleibt auf diesem Gerät gespeichert.', 'Progress is stored on this device.')}</p>}
           </>
         )}
       </section>

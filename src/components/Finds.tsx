@@ -7,6 +7,7 @@ import { MARKETS, sendToCalc, toJpy, type Find } from '../data.ts'
 import { addVehicle, removeVehicle, useStore } from '../store/store.ts'
 import { StatusPill } from './ui.tsx'
 import { int, yen } from '../lib/calc.ts'
+import { useT } from '../i18n/i18n.ts'
 import { useFx } from '../lib/fx.ts'
 
 export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
@@ -18,6 +19,7 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [price, setPrice] = useState('')
+  const { tx } = useT()
 
   const amount = parseInt(price.replace(/[^\d]/g, ''), 10) || 0
   const okUrl = /^https:\/\/\S+$/.test(url.trim())
@@ -34,17 +36,17 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
     <div className="gcard finds">
       <div className="mk-fields">
         <label className="field">
-          <span className="f-label">Was hast du gefunden?</span>
-          <input className="input" value={title} placeholder={defaultTitle || 'z. B. Supra RZ 1997'} onChange={(e) => setTitle(e.target.value)} />
+          <span className="f-label">{tx('Was hast du gefunden?', 'What did you find?')}</span>
+          <input className="input" value={title} placeholder={defaultTitle || tx('z. B. Supra RZ 1997', 'e.g. Supra RZ 1997')} onChange={(e) => setTitle(e.target.value)} />
         </label>
         <label className="field">
-          <span className="f-label">Link zum Inserat</span>
+          <span className="f-label">{tx('Link zum Inserat', 'Listing link')}</span>
           <input className="input" value={url} placeholder="https://…" onChange={(e) => setUrl(e.target.value)} />
         </label>
       </div>
       <div className="mk-fields">
         <label className="field small">
-          <span className="f-label">Land</span>
+          <span className="f-label">{tx('Land', 'Country')}</span>
           <select className="input" value={market} onChange={(e) => setMarket(e.target.value)}>
             {MARKETS.map((m) => (
               <option key={m.id} value={m.id}>
@@ -54,14 +56,14 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
           </select>
         </label>
         <label className="field">
-          <span className="f-label">Preis im Inserat ({cur})</span>
+          <span className="f-label">{tx('Preis im Inserat', 'Listing price')} ({cur})</span>
           <input className="input" inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
         </label>
         <button className="btn red finds-add" disabled={!amount} onClick={add}>
-          <Plus size={18} /> Merken
+          <Plus size={18} /> {tx('Merken', 'Save')}
         </button>
       </div>
-      {amount > 0 && cur !== 'JPY' && <p className="hint">≈ {yen(toJpy(amount, cur, rates))} zum Tageskurs</p>}
+      {amount > 0 && cur !== 'JPY' && <p className="hint">≈ {yen(toJpy(amount, cur, rates))} {tx('zum Tageskurs', 'at today’s rate')}</p>}
 
       <AnimatePresence initial={false}>
         {list.map((v) => {
@@ -76,21 +78,21 @@ export function Finds({ defaultTitle = '' }: { defaultTitle?: string }) {
               </small>
             </span>
             {f.url && (
-              <a className="icon-btn" href={f.url} target="_blank" rel="noopener noreferrer" title="Inserat öffnen">
+              <a className="icon-btn" href={f.url} target="_blank" rel="noopener noreferrer" title={tx('Inserat öffnen', 'Open listing')}>
                 <ExternalLink size={16} />
               </a>
             )}
             <button className="btn small red" onClick={() => sendToCalc(f)}>
-              <Calculator size={14} /> Durchrechnen
+              <Calculator size={14} /> {tx('Durchrechnen', 'Calculate')}
             </button>
-            <button className="icon-btn" title="Aus der Garage entfernen" onClick={() => confirm(`„${f.title}“ aus der Garage entfernen?`) && removeVehicle(v.id)}>
+            <button className="icon-btn" title={tx('Aus der Garage entfernen', 'Remove from garage')} onClick={() => confirm(tx(`„${f.title}“ aus der Garage entfernen?`, `Remove “${f.title}” from the garage?`)) && removeVehicle(v.id)}>
               <Trash2 size={16} />
             </button>
           </motion.div>
           )
         })}
       </AnimatePresence>
-      {list.length === 0 && <p className="muted small">Noch nichts gemerkt. Öffne oben ein Portal, kopier Link und Preis hierher und rechne das Auto mit einem Klick bis vor deine Tür durch. Alles Gemerkte steht auch in deiner Garage.</p>}
+      {list.length === 0 && <p className="muted small">{tx('Noch nichts gemerkt. Öffne oben ein Portal, kopier Link und Preis hierher und rechne das Auto mit einem Klick bis vor deine Tür durch. Alles Gemerkte steht auch in deiner Garage.', 'Nothing saved yet. Open a marketplace above, copy link and price here and calculate the landed cost in one click. Everything you save also appears in your garage.')}</p>}
     </div>
   )
 }

@@ -19,4 +19,14 @@ export const BRAND = {
   /** Öffentliche Webseite (GitHub Pages) */
   url: 'https://v6fdb8msrw-dotcom.github.io/tomei/',
   repo: 'https://github.com/v6fdb8msrw-dotcom/tomei',
+  /**
+   * Angaben für Impressum und Datenschutz. Bleiben leer, bis Tim sie liefert. Solange etwas fehlt, zeigt die
+   * Seite einen deutlichen Entwurfs-Hinweis. Nie die private E-Mail-Adresse eintragen.
+   */
+  operator: {
+    name: '',
+    street: '',
+    city: '',
+    email: '',
+  },
 } as const

@@ -1,6 +1,6 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.1 · Zweig `tomei-2.0` · nicht deployt**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.2 (erster Entwurf) · Zweig `tomei-2.0` · nicht deployt**
 
 Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt weiterhin den alten Stand 1.x. Dieser Stand ist nur lokal geprüft (Preview-Server). Deploy erst nach Tims ausdrücklichem Ja.
 
@@ -27,10 +27,11 @@ Alle Welten teilen einen lokalen, versionierten Datenspeicher. Beispiele für Ve
 |---|---|
 | `npx tsc -b` | ohne Fehler |
 | `npm test` (Vitest) | 20 Tests grün: Rechnung, Szenarien, GPX lesen/schreiben, Speicher (Migration, alte Merkliste, Sicherung, Zusammenführen, unsichere Links), Wartung, Unterhalt, ICS |
-| `npm run build` | erfolgreich; Hinweis: Hauptbündel ~590 KB (Globus, Builder, Simulator, Build Studio, Wartung, Passport schon ausgelagert) |
+| `npm run build` | erfolgreich; Hauptbündel ~469 KB (vorher ~590 KB): alle Seiten außer der Startseite werden erst bei Bedarf geladen |
 | `npm run lint` (oxlint) | nur Warnungen (Fast-Refresh-Hinweise), keine Fehler |
 | Browser Desktop 1440×900 | Startseite (alle 9 Sektionen), alle Welt-Seiten, Detailseiten, 404 geprüft; keine Konsolenfehler außer bekannten Abbrüchen von View-Transitions (abgefangen) |
 | Browser Mobil 375×812 | alle Routen ohne seitlichen Überlauf, Unternavigation scrollt zum aktiven Punkt |
+| Sprache | alle Seiten auf Deutsch und Englisch durchgeschaltet (Desktop), `<html lang>` zieht mit |
 | Abläufe | Traum merken → Garage; Rechner → Worst Case speichern → Garage; Straße → Roadtrip → Builder; Sprache DE/EN; alte Links (`#/markets`, `#/import/rechner`, `#/spots`, `#/parts`) leiten weiter |
 
 Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus Navis (nur Testdaten), Druckansicht des Passports auf Papier, Screenreader.
@@ -58,13 +59,22 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
 
+## Erster Entwurf (alpha.2)
+
+- **Englisch** für alle Werkzeuge: Oberfläche, Beschriftungen, Hinweise, Leer- und Fehlerzustände. Texte stehen als Paar direkt im Werkzeug (`tx('Deutsch', 'English')`), gemeinsame Texte in `src/i18n/i18n.ts`.
+- **Datenschutz** (`#/privacy`) und **Impressum** (`#/imprint`) als Entwurf, im Footer verlinkt. Der Datenschutztext beschreibt nur, was die Seite technisch tut (GitHub Pages, lokaler Speicher, EZB-Kurs über frankfurter.dev, keine Cookies). Die Angaben zum Betreiber stehen leer in `BRAND.operator` (`src/config/brand.ts`); solange sie fehlen, zeigt die Seite einen roten Platzhalter und einen Entwurfs-Hinweis.
+- **Kleineres Hauptbündel:** alle Seiten außer der Startseite werden nachgeladen.
+- Behoben: Die Passport-Vorschau auf der Startseite zeigte bei echten Einträgen die interne Art (z. B. „service“) statt „Wartung“.
+- Behoben: Die 3D-Routenkarte der Fahrzeugsuche stand bei 1024 px Breite seitlich über.
+
 ## Offene Punkte
 
-1. **Englisch** deckt Navigation, Startseite, Übersichten und Zustände ab; Werkzeugtexte sind noch deutsch.
-2. **Impressum/Datenschutz** fehlen; vor einem öffentlichen Release nötig (Inhalt von Tim).
-3. **Bundle-Größe** (~590 KB): weiteres Code-Splitting.
+1. **Englisch, Datentexte:** Beschreibungen aus `src/data.ts` und `src/classics.ts` (Portale, Auktionshäuser, Agenten, Vermieter, Teile-Shops, Spots, Klassiker, Hinweise der Zielländer) sind noch deutsch; Straßen und Länder sind schon zweisprachig.
+2. **Impressum/Datenschutz:** Name, Anschrift und öffentliche E-Mail von Tim in `BRAND.operator` eintragen, Texte rechtlich prüfen lassen. Ohne das kein öffentlicher Release.
+3. **Bundle-Größe** (~469 KB): Motion und React bilden den Großteil; weiteres Aufteilen bringt wenig.
 4. **Ziel-Gebühren im Rechner** (DEST in `src/data.ts`) sind Schätzwerte ohne Einzelquelle; nach Quellen ersetzen oder deutlicher kennzeichnen.
 5. **Service** ist nur eine Anfrage-Vorlage; `CONTACT_EMAIL` bleibt leer, bis Tim eine öffentliche Adresse nennt.
 6. **Karte mit Kacheln** im Builder nur nach Tims OK (neuer externer Dienst).
+7. **Dasai-Mochi-Bereich** (Build Studio, aus 1.x): zeigt eine mit CSS gezeichnete Nachbildung eines Produkts. Nach der Regel „nur echte Fotos“ durch ein lizenziertes Foto ersetzen oder entfernen (Tims Entscheidung).
 
 Roadmap: `ROADMAP.md` · Quellen: `DATA_SOURCES.md` · Bildrechte: `ASSET_LICENSES.md` · Bibliotheken: `THIRD_PARTY_NOTICES.md` · Release: `RELEASE_CHECKLIST.md`

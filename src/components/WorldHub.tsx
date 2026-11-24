@@ -3,11 +3,13 @@ import { ArrowRight } from 'lucide-react'
 import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { href } from '../lib/router.ts'
+import { useT } from '../i18n/i18n.ts'
 import { EASE, PageHead } from './ui.tsx'
 
 export type Tool = { to: string; title: string; text: string; img: string; meta?: string }
 
 export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyebrow: string; title: ReactNode; sub: string; image: string; tools: Tool[]; children?: ReactNode }) {
+  const { tx } = useT()
   return (
     <>
       <PageHead eyebrow={eyebrow} title={title} sub={sub} image={image} />
@@ -29,7 +31,7 @@ export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyeb
                 <h3>{t.title}</h3>
                 <p>{t.text}</p>
                 <span className="tool-go">
-                  Öffnen <ArrowRight size={15} />
+                  {tx('Öffnen', 'Open')} <ArrowRight size={15} />
                 </span>
               </div>
               <div className="tool-img">

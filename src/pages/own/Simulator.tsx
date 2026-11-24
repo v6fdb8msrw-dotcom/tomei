@@ -12,21 +12,23 @@ import { useT } from '../../i18n/i18n.ts'
 /** Klar gekennzeichnete Beispielwerte zum Ausprobieren, keine Marktdaten */
 const DEMO: OwnershipInput = { years: 5, kmPerYear: 6000, consumption: 11, fuelPrice: 1.8, insurance: 600, tax: H_PLATE_TAX.eur, maintenance: 1200, other: 600, valueChangePct: 0, purchase: 40000 }
 
-const FIELDS: { k: keyof OwnershipInput; l: string; unit: string; step?: number; hint?: string }[] = [
-  { k: 'purchase', l: 'Kaufpreis bzw. Importkosten', unit: '€', step: 500 },
-  { k: 'years', l: 'Haltedauer', unit: 'Jahre', step: 1 },
-  { k: 'kmPerYear', l: 'Fahrleistung', unit: 'km/Jahr', step: 500 },
-  { k: 'consumption', l: 'Verbrauch', unit: 'l/100 km', step: 0.1 },
-  { k: 'fuelPrice', l: 'Spritpreis', unit: '€/l', step: 0.01 },
-  { k: 'insurance', l: 'Versicherung', unit: '€/Jahr', step: 50 },
-  { k: 'tax', l: 'Kfz-Steuer', unit: '€/Jahr', step: 10 },
-  { k: 'maintenance', l: 'Wartung & Reparatur', unit: '€/Jahr', step: 100 },
-  { k: 'other', l: 'Stellplatz, Pflege, Sonstiges', unit: '€/Jahr', step: 50 },
-  { k: 'valueChangePct', l: 'Wertänderung', unit: '%/Jahr', step: 0.5, hint: 'negativ = Wertverlust' },
+type Tx = { de: string; en: string }
+const YR: Tx = { de: '€/Jahr', en: '€/year' }
+const FIELDS: { k: keyof OwnershipInput; l: Tx; unit: Tx; step?: number; hint?: Tx }[] = [
+  { k: 'purchase', l: { de: 'Kaufpreis bzw. Importkosten', en: 'Purchase or landed cost' }, unit: { de: '€', en: '€' }, step: 500 },
+  { k: 'years', l: { de: 'Haltedauer', en: 'Holding period' }, unit: { de: 'Jahre', en: 'years' }, step: 1 },
+  { k: 'kmPerYear', l: { de: 'Fahrleistung', en: 'Distance' }, unit: { de: 'km/Jahr', en: 'km/year' }, step: 500 },
+  { k: 'consumption', l: { de: 'Verbrauch', en: 'Consumption' }, unit: { de: 'l/100 km', en: 'l/100 km' }, step: 0.1 },
+  { k: 'fuelPrice', l: { de: 'Spritpreis', en: 'Fuel price' }, unit: { de: '€/l', en: '€/l' }, step: 0.01 },
+  { k: 'insurance', l: { de: 'Versicherung', en: 'Insurance' }, unit: YR, step: 50 },
+  { k: 'tax', l: { de: 'Kfz-Steuer', en: 'Vehicle tax' }, unit: YR, step: 10 },
+  { k: 'maintenance', l: { de: 'Wartung & Reparatur', en: 'Service & repairs' }, unit: YR, step: 100 },
+  { k: 'other', l: { de: 'Stellplatz, Pflege, Sonstiges', en: 'Parking, care, other' }, unit: YR, step: 50 },
+  { k: 'valueChangePct', l: { de: 'Wertänderung', en: 'Change in value' }, unit: { de: '%/Jahr', en: '%/year' }, step: 0.5, hint: { de: 'negativ = Wertverlust', en: 'negative = depreciation' } },
 ]
 
 export default function Simulator({ vehicleId }: { vehicleId?: string }) {
-  const { locale } = useT()
+  const { tx, L, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned' || v.status === 'planned')?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
@@ -48,28 +50,28 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
   return (
     <>
       <PageHead
-        eyebrow="Own · Ownership-Simulator"
+        eyebrow={tx('Own · Ownership-Simulator', 'Own · Ownership simulator')}
         title={
           <>
-            Was es kostet, <em>es zu behalten.</em>
+            {tx('Was es kostet, ', 'What it costs ')}<em>{tx('es zu behalten.', 'to keep it.')}</em>
           </>
         }
-        sub="Sprit, Versicherung, Steuer, Wartung und Wertänderung über die Haltedauer. Der Simulator rechnet nur mit deinen Zahlen; Versicherung und Steuer hängen von Fahrzeug, Wohnort und Tarif ab."
+        sub={tx('Sprit, Versicherung, Steuer, Wartung und Wertänderung über die Haltedauer. Der Simulator rechnet nur mit deinen Zahlen; Versicherung und Steuer hängen von Fahrzeug, Wohnort und Tarif ab.', 'Fuel, insurance, tax, maintenance and change in value over the holding period. The simulator only uses your numbers; insurance and tax depend on vehicle, location and policy.')}
         image={img('cars/fd')}
       />
       <section className="section sim">
         <div className="sim-inputs gcard">
-          <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} allowNone="Ohne Fahrzeug rechnen" />
+          <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} allowNone={tx('Ohne Fahrzeug rechnen', 'Calculate without a vehicle')} />
           {v?.landed && (
             <p className="small muted">
-              Importkosten aus dem Rechner: {fmtMoney(v.landed.amount, v.landed.cur, locale)}
-              {v.landed.cur !== 'EUR' && ' (nicht in Euro, bitte umrechnen)'}
+              {tx('Importkosten aus dem Rechner', 'Landed cost from the calculator')}: {fmtMoney(v.landed.amount, v.landed.cur, locale)}
+              {v.landed.cur !== 'EUR' && tx(' (nicht in Euro, bitte umrechnen)', ' (not in euros, please convert)')}
             </p>
           )}
           <div className="fields two">
             {FIELDS.map((f) => (
               <label key={f.k} className="field">
-                <span className="f-label">{f.l}</span>
+                <span className="f-label">{L(f.l)}</span>
                 <span className="input">
                   <input
                     type="number"
@@ -82,16 +84,16 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
                       setSaved(false)
                     }}
                   />
-                  <span className="adorn">{f.unit}</span>
+                  <span className="adorn">{L(f.unit)}</span>
                 </span>
-                {f.hint && <span className="hint">{f.hint}</span>}
+                {f.hint && <span className="hint">{L(f.hint)}</span>}
               </label>
             ))}
           </div>
           <div className="row gap wrap">
             {classic && (
               <button className="btn small" onClick={() => setInp({ ...inp, tax: H_PLATE_TAX.eur })}>
-                H-Kennzeichen: {H_PLATE_TAX.eur.toLocaleString('de-DE')} €/Jahr
+                {tx('H-Kennzeichen', 'H plate (historic)')}: {H_PLATE_TAX.eur.toLocaleString(locale)} {tx('€/Jahr', '€/year')}
               </button>
             )}
             <button
@@ -101,43 +103,43 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
                 setDemo(true)
               }}
             >
-              Beispielwerte laden
+              {tx('Beispielwerte laden', 'Load example values')}
             </button>
           </div>
           <p className="small muted">
-            Kfz-Steuer mit H-Kennzeichen: {H_PLATE_TAX.eur.toLocaleString('de-DE')} € pauschal (<SourceLink url={H_PLATE_TAX.source}>{H_PLATE_TAX.label}</SourceLink>). Sonst die Steuer beim Zoll berechnen lassen: <SourceLink url="https://www.bundesfinanzministerium.de/Web/DE/Service/Apps_Rechner/KfzRechner/KfzRechner.html">Kfz-Steuer-Rechner des BMF</SourceLink>.
+            {tx('Kfz-Steuer mit H-Kennzeichen', 'German vehicle tax with H plate')}: {H_PLATE_TAX.eur.toLocaleString(locale)} {tx('€ pauschal', '€ flat rate')} (<SourceLink url={H_PLATE_TAX.source}>{H_PLATE_TAX.label}</SourceLink>). {tx('Sonst die Steuer beim Zoll berechnen lassen', 'Otherwise calculate the tax with the official tool')}: <SourceLink url="https://www.bundesfinanzministerium.de/Web/DE/Service/Apps_Rechner/KfzRechner/KfzRechner.html">{tx('Kfz-Steuer-Rechner des BMF', 'BMF vehicle tax calculator')}</SourceLink>.
           </p>
         </div>
 
         <div className="sim-out">
           <div className="gcard sim-total">
-            {demo && <Badge kind="demo">Beispielwerte, keine Marktdaten</Badge>}
-            <span className="muted">Kosten über {r.years} Jahre</span>
+            {demo && <Badge kind="demo">{tx('Beispielwerte, keine Marktdaten', 'Example values, not market data')}</Badge>}
+            <span className="muted">{tx(`Kosten über ${r.years} Jahre`, `Cost over ${r.years} years`)}</span>
             <b className="mono">{m(r.total)}</b>
             <div className="sim-kpis">
               <span>
-                <b className="mono">{m(r.perMonth)}</b> pro Monat
+                <b className="mono">{m(r.perMonth)}</b> {tx('pro Monat', 'per month')}
               </span>
               <span>
-                <b className="mono">{r.perKm ? r.perKm.toLocaleString(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }) : '–'}</b> pro km
+                <b className="mono">{r.perKm ? r.perKm.toLocaleString(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }) : '–'}</b> {tx('pro km', 'per km')}
               </span>
               <span>
-                <b className="mono">{m(r.runningPerYear)}</b> laufend pro Jahr
+                <b className="mono">{m(r.runningPerYear)}</b> {tx('laufend pro Jahr', 'running per year')}
               </span>
               <span>
-                <b className="mono">{r.valueDelta >= 0 ? '−' + m(r.valueDelta) : '+' + m(-r.valueDelta)}</b> {r.valueDelta >= 0 ? 'Wertverlust' : 'Wertgewinn'}
+                <b className="mono">{r.valueDelta >= 0 ? '−' + m(r.valueDelta) : '+' + m(-r.valueDelta)}</b> {r.valueDelta >= 0 ? tx('Wertverlust', 'depreciation') : tx('Wertgewinn', 'appreciation')}
               </span>
             </div>
           </div>
 
           <div className="gcard">
-            <h3>Jahr für Jahr</h3>
-            <div className="sim-bars" role="table" aria-label="Kumulierte Kosten pro Jahr">
+            <h3>{tx('Jahr für Jahr', 'Year by year')}</h3>
+            <div className="sim-bars" role="table" aria-label={tx('Kumulierte Kosten pro Jahr', 'Cumulative cost per year')}>
               {r.rows.map((row) => {
                 const loss = Math.max(0, inp.purchase - row.value)
                 return (
                   <div key={row.year} className="sim-row" role="row">
-                    <span role="cell">Jahr {row.year}</span>
+                    <span role="cell">{tx('Jahr', 'Year')} {row.year}</span>
                     <span className="sim-bar" role="cell">
                       <motion.i className="run" initial={{ width: 0 }} animate={{ width: (row.cumulative / maxBar) * 100 + '%' }} transition={{ duration: 0.5, ease: EASE }} />
                       <motion.i className="loss" initial={{ width: 0 }} animate={{ width: (loss / maxBar) * 100 + '%' }} transition={{ duration: 0.5, ease: EASE }} />
@@ -151,13 +153,13 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
             </div>
             <div className="legend-inline">
               <span>
-                <i className="run" /> laufende Kosten
+                <i className="run" /> {tx('laufende Kosten', 'running costs')}
               </span>
               <span>
-                <i className="loss" /> Wertverlust
+                <i className="loss" /> {tx('Wertverlust', 'depreciation')}
               </span>
             </div>
-            <p className="small muted">Restwert nach {r.years} Jahren: {m(r.resale)}. Inflation und Finanzierung sind nicht eingerechnet.</p>
+            <p className="small muted">{tx(`Restwert nach ${r.years} Jahren`, `Residual value after ${r.years} years`)}: {m(r.resale)}. {tx('Inflation und Finanzierung sind nicht eingerechnet.', 'Inflation and financing are not included.')}</p>
           </div>
 
           {v ? (
@@ -168,11 +170,11 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
                 setSaved(true)
               }}
             >
-              {saved ? <Check size={16} /> : <Save size={16} />} {saved ? 'Gespeichert' : `Bei ${vehicleTitle(v)} speichern`}
+              {saved ? <Check size={16} /> : <Save size={16} />} {saved ? tx('Gespeichert', 'Saved') : tx(`Bei ${vehicleTitle(v)} speichern`, `Save to ${vehicleTitle(v)}`)}
             </button>
           ) : (
             <Note>
-              Mit einem Fahrzeug aus der <a href={href('own/garage')}>Garage</a> werden die Werte am Auto gespeichert.
+              {tx('Mit einem Fahrzeug aus der ', 'With a vehicle from the ')}<a href={href('own/garage')}>Garage</a>{tx(' werden die Werte am Auto gespeichert.', ' the values are saved to the car.')}
             </Note>
           )}
         </div>

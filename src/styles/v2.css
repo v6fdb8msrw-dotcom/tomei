@@ -647,3 +647,11 @@ span.chip { height: 26px; padding: 0 10px; font-size: 12.5px; background: var(--
 @media (max-width: 720px) {
   .pipeline, .hpipe { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Impressum / Datenschutz */
+.legal .gcard h4 { margin: 26px 0 6px; font-family: var(--display); font-size: 1rem; }
+.legal .gcard p { line-height: 1.65; }
+.legal-gap { display: inline-block; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--signal, #D64B3C) 10%, transparent); color: var(--signal, #D64B3C); font-weight: 600; }
+
+/* 3D-Routenkarte der Fahrzeugsuche: die Neigung darf nicht seitlich überstehen */
+.routemap { overflow-x: clip; }

@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import { CLASSICS, ORIGINS, PRICE_SOURCE, type Classic, type Origin } from '../classics.ts'
 import { FX_FALLBACK, MARKETS, ORIGIN, sendToCalc, type MarketQuery } from '../data.ts'
 import { money } from '../lib/calc.ts'
+import { useT } from '../i18n/i18n.ts'
 import { useFx } from '../lib/fx.ts'
 
 const YEAR = new Date().getFullYear()
@@ -21,6 +22,7 @@ const usd = (v: number) => '$ ' + new Intl.NumberFormat('de-DE', { maximumFracti
 
 export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: Origin) => void }) {
   const { rates } = useFx()
+  const { tx } = useT()
   const [origin, setOrigin] = useState<Origin | 'all'>('all')
   const [era, setEra] = useState('all')
   const [classic, setClassic] = useState(false)
@@ -37,7 +39,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
     <div className="cf">
       <div className="gcard cf-filters">
         <div className="mk-ideas">
-          {[{ id: 'all' as const, label: 'Alle Länder' }, ...ORIGINS].map((o) => (
+          {[{ id: 'all' as const, label: tx('Alle Länder', 'All countries') }, ...ORIGINS].map((o) => (
             <button key={o.id} className={'chip' + (origin === o.id ? ' on' : '')} onClick={() => setOrigin(o.id)}>
               {o.label}
             </button>
@@ -46,7 +48,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
         <div className="mk-ideas">
           {ERAS.map((e) => (
             <button key={e.id} className={'chip' + (era === e.id ? ' on' : '')} onClick={() => setEra(e.id)}>
-              {e.label}
+              {e.id === 'all' ? tx('Alle Jahre', 'All years') : tx(e.label, e.label.replace('er', 's').replace('er', 's'))}
             </button>
           ))}
         </div>
@@ -56,16 +58,16 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
               <input type="checkbox" checked={classic} onChange={(e) => setClassic(e.target.checked)} />
               <span />
             </span>
-            Nur Oldtimer (30+ Jahre)
+            {tx('Nur Oldtimer (30+ Jahre)', 'Classics only (30+ years)')}
           </label>
           <div className="seg cf-sort">
             {(['year', 'price'] as const).map((s) => (
               <button key={s} className={sort === s ? 'on' : ''} onClick={() => setSort(s)}>
-                {s === 'year' ? 'Nach Baujahr' : 'Nach Preis'}
+                {s === 'year' ? tx('Nach Baujahr', 'By year') : tx('Nach Preis', 'By price')}
               </button>
             ))}
           </div>
-          <span className="muted small">{list.length} Modelle</span>
+          <span className="muted small">{list.length} {tx('Modelle', 'models')}</span>
         </div>
       </div>
 
@@ -80,7 +82,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
                 <header>
                   <span className="mk-code small-code">{market?.code}</span>
                   <span className="cf-kind">{c.kind}</span>
-                  <span className={'cf-badge' + (oldOk ? ' ok' : '')}>{oldOk ? 'Oldtimer-fähig' : `Oldtimer ab ${c.from + 30}`}</span>
+                  <span className={'cf-badge' + (oldOk ? ' ok' : '')}>{oldOk ? tx('Oldtimer-fähig', 'Classic-eligible') : tx(`Oldtimer ab ${c.from + 30}`, `Classic from ${c.from + 30}`)}</span>
                 </header>
                 <h3>{c.name}</h3>
                 <p className="muted small mono">
@@ -89,24 +91,24 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
                 <p className="cf-why">{c.why}</p>
                 {c.price ? (
                   <div className="cf-price">
-                    <span>Typischer Angebotspreis in Japan (Median)</span>
+                    <span>{tx('Typischer Angebotspreis in Japan (Median)', 'Typical asking price in Japan (median)')}</span>
                     <b>{usd(c.price.jp)}</b>
                     <small>
                       ≈ {money(c.price.jp * eurPerUsd, 'EUR')}
-                      {c.price.out ? ` · außerhalb Japans ${usd(c.price.out)}` : ''}
-                      {c.price.n ? ` · ${c.price.n} Inserate` : ''}
+                      {c.price.out ? tx(` · außerhalb Japans ${usd(c.price.out)}`, ` · outside Japan ${usd(c.price.out)}`) : ''}
+                      {c.price.n ? tx(` · ${c.price.n} Inserate`, ` · ${c.price.n} listings`) : ''}
                     </small>
                     {c.price.note && <small>{c.price.note}</small>}
                   </div>
                 ) : (
                   <div className="cf-price none">
-                    <span>Preise</span>
-                    <small>Keine frei lizenzierte Statistik. Die aktuellen Angebote und Ergebnisse siehst du direkt bei {results?.name}.</small>
+                    <span>{tx('Preise', 'Prices')}</span>
+                    <small>{tx(`Keine frei lizenzierte Statistik. Die aktuellen Angebote und Ergebnisse siehst du direkt bei ${results?.name}.`, `No freely licensed statistics. See current listings and results directly at ${results?.name}.`)}</small>
                   </div>
                 )}
                 <div className="cf-actions">
                   <button className="btn small" onClick={() => onSearch(c.q, c.origin)}>
-                    <Search size={14} /> Inserate suchen
+                    <Search size={14} /> {tx('Inserate suchen', 'Search listings')}
                   </button>
                   <button
                     className="btn small red"
@@ -122,7 +124,7 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
                       })
                     }
                   >
-                    <Calculator size={14} /> Durchrechnen
+                    <Calculator size={14} /> {tx('Durchrechnen', 'Calculate')}
                   </button>
                   {!c.price && results && (
                     <a className="btn small" href={results.url(c.q)} target="_blank" rel="noopener noreferrer">
@@ -136,15 +138,19 @@ export function ClassicFinder({ onSearch }: { onSearch: (q: MarketQuery, origin:
         </AnimatePresence>
       </motion.div>
       <p className="disclaimer">
-        Preise Japan: Median der Angebotspreise, nicht Verkaufspreise, von{' '}
+        {tx('Preise Japan: Median der Angebotspreise, nicht Verkaufspreise, von', 'Prices Japan: median asking prices, not sale prices, from')}{' '}
         <a href={PRICE_SOURCE.url} target="_blank" rel="noopener noreferrer">
           {PRICE_SOURCE.name}
         </a>{' '}
-        (Stand {PRICE_SOURCE.date}, Lizenz{' '}
+        ({tx('Stand', 'as of')} {PRICE_SOURCE.date}, {tx('Lizenz', 'licence')}{' '}
         <a href={PRICE_SOURCE.licenceUrl} target="_blank" rel="noopener noreferrer">
           {PRICE_SOURCE.licence}
         </a>
-        ). Oldtimer-fähig heißt: alt genug für die Einreihung als Sammlungsstück (0 % Zoll, 7 % EUSt), sofern im Originalzustand; die Entscheidung trifft der Zoll. „Durchrechnen“ ohne Preis öffnet den Rechner mit dem Herkunftsland; trag dort den Preis aus dem Inserat ein.
+        ).{' '}
+        {tx(
+          'Oldtimer-fähig heißt: alt genug für die Einreihung als Sammlungsstück (0 % Zoll, 7 % EUSt), sofern im Originalzustand; die Entscheidung trifft der Zoll. „Durchrechnen“ ohne Preis öffnet den Rechner mit dem Herkunftsland; trag dort den Preis aus dem Inserat ein.',
+          'Classic-eligible means old enough to be classified as a collector’s item in Germany (0 % duty, 7 % import VAT) if in original condition; customs decides. “Calculate” without a price opens the calculator with the origin country; enter the listing price there.',
+        )}
       </p>
     </div>
   )

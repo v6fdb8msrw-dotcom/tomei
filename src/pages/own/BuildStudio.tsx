@@ -8,16 +8,19 @@ import type { Mod, ModStatus } from '../../store/schema.ts'
 import { PartsShops } from '../Parts.tsx'
 import { useT } from '../../i18n/i18n.ts'
 
-const COLS: { s: ModStatus; l: string }[] = [
-  { s: 'idea', l: 'Idee' },
-  { s: 'planned', l: 'Geplant' },
-  { s: 'ordered', l: 'Bestellt' },
-  { s: 'installed', l: 'Verbaut' },
+const COLS: { s: ModStatus; l: { de: string; en: string } }[] = [
+  { s: 'idea', l: { de: 'Idee', en: 'Idea' } },
+  { s: 'planned', l: { de: 'Geplant', en: 'Planned' } },
+  { s: 'ordered', l: { de: 'Bestellt', en: 'Ordered' } },
+  { s: 'installed', l: { de: 'Verbaut', en: 'Installed' } },
 ]
+// Gespeichert wird der deutsche Name, angezeigt je nach Sprache
 const CATS = ['Fahrwerk', 'Felgen & Reifen', 'Bremsen', 'Motor', 'Abgas', 'Innenraum', 'Karosserie', 'Licht', 'Elektronik', 'Pflege', 'Sonstiges']
+const CAT_EN: Record<string, string> = { Fahrwerk: 'Suspension', 'Felgen & Reifen': 'Wheels & tyres', Bremsen: 'Brakes', Motor: 'Engine', Abgas: 'Exhaust', Innenraum: 'Interior', Karosserie: 'Body', Licht: 'Lighting', Elektronik: 'Electronics', Pflege: 'Care', Sonstiges: 'Other' }
 
 export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
-  const { locale } = useT()
+  const { tx, L, lang, locale } = useT()
+  const catLabel = (c: string) => (lang === 'en' ? (CAT_EN[c] ?? c) : c)
   const vehicles = useStore((s) => s.vehicles)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned')?.id ?? vehicles[0]?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
@@ -43,15 +46,15 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
         eyebrow="Own · Build Studio"
         title={
           <>
-            Dein Build. <em>Schritt für Schritt.</em>
+            {tx('Dein Build. ', 'Your build. ')}<em>{tx('Schritt für Schritt.', 'Step by step.')}</em>
           </>
         }
-        sub="Umbauten sammeln, planen, bestellen, verbauen. Was verbaut ist, landet automatisch im Passport. Preise trägst du selbst ein."
+        sub={tx('Umbauten sammeln, planen, bestellen, verbauen. Was verbaut ist, landet automatisch im Passport. Preise trägst du selbst ein.', 'Collect, plan, order and install modifications. Whatever is installed goes into the passport automatically. You enter prices yourself.')}
         image={img('parts-wheel')}
       />
       <section className="section">
         {vehicles.length === 0 ? (
-          <EmptyState title="Für einen Build brauchst du ein Auto." text="Leg in der Garage ein Fahrzeug an, dann planst du hier seine Umbauten." image={img('parts-engine')} actions={[{ to: 'own/garage', label: 'Zur Garage', primary: true }]} />
+          <EmptyState title={tx('Für einen Build brauchst du ein Auto.', 'A build needs a car.')} text={tx('Leg in der Garage ein Fahrzeug an, dann planst du hier seine Umbauten.', 'Add a vehicle in the garage, then plan its modifications here.')} image={img('parts-engine')} actions={[{ to: 'own/garage', label: tx('Zur Garage', 'Go to garage'), primary: true }]} />
         ) : (
           <>
             <div className="build-head">
@@ -59,13 +62,13 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
               {v && (
                 <div className="build-sum">
                   <span>
-                    Gesamt <b className="mono">{fmtMoney(sum(), 'EUR', locale)}</b>
+                    {tx('Gesamt', 'Total')} <b className="mono">{fmtMoney(sum(), 'EUR', locale)}</b>
                   </span>
                   <span>
-                    Verbaut <b className="mono">{fmtMoney(sum('installed'), 'EUR', locale)}</b>
+                    {tx('Verbaut', 'Installed')} <b className="mono">{fmtMoney(sum('installed'), 'EUR', locale)}</b>
                   </span>
                   <span>
-                    Offen <b className="mono">{fmtMoney(sum() - sum('installed'), 'EUR', locale)}</b>
+                    {tx('Offen', 'Open')} <b className="mono">{fmtMoney(sum() - sum('installed'), 'EUR', locale)}</b>
                   </span>
                 </div>
               )}
@@ -79,19 +82,21 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
                     add()
                   }}
                 >
-                  <input className="input" placeholder="Teil oder Umbau, z. B. Gewindefahrwerk" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label="Teil" />
-                  <select className="input" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} aria-label="Kategorie">
+                  <input className="input" placeholder={tx('Teil oder Umbau, z. B. Gewindefahrwerk', 'Part or mod, e.g. coilovers')} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label={tx('Teil', 'Part')} />
+                  <select className="input" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} aria-label={tx('Kategorie', 'Category')}>
                     {CATS.map((c) => (
-                      <option key={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {catLabel(c)}
+                      </option>
                     ))}
                   </select>
                   <span className="input short">
-                    <input inputMode="numeric" placeholder="Preis" value={f.cost} onChange={(e) => setF({ ...f, cost: e.target.value })} aria-label="Preis in Euro" />
+                    <input inputMode="numeric" placeholder={tx('Preis', 'Price')} value={f.cost} onChange={(e) => setF({ ...f, cost: e.target.value })} aria-label={tx('Preis in Euro', 'Price in euros')} />
                     <span className="adorn">€</span>
                   </span>
-                  <input className="input" placeholder="Link (optional)" value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} aria-label="Link" />
+                  <input className="input" placeholder={tx('Link (optional)', 'Link (optional)')} value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} aria-label="Link" />
                   <button className="btn primary" disabled={!f.title.trim()}>
-                    <Plus size={16} /> Hinzufügen
+                    <Plus size={16} /> {tx('Hinzufügen', 'Add')}
                   </button>
                 </form>
                 <div className="kanban">
@@ -100,26 +105,26 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
                     return (
                       <div key={c.s} className="kan-col">
                         <h3>
-                          {c.l} <span className="muted">{items.length}</span>
+                          {L(c.l)} <span className="muted">{items.length}</span>
                         </h3>
                         {items.length === 0 && <p className="kan-empty">–</p>}
                         {items.map((m) => (
                           <motion.div key={m.id} layout className="kan-card" transition={{ duration: 0.35, ease: EASE }}>
-                            <span className="chip">{m.category}</span>
+                            <span className="chip">{catLabel(m.category)}</span>
                             <b>{m.title}</b>
                             {m.cost && <span className="mono small">{fmtMoney(m.cost.amount, m.cost.cur, locale)}</span>}
                             <div className="kan-btns">
                               {m.url && (
-                                <a className="icon-btn" href={m.url} target="_blank" rel="noopener noreferrer" aria-label="Link öffnen">
+                                <a className="icon-btn" href={m.url} target="_blank" rel="noopener noreferrer" aria-label={tx('Link öffnen', 'Open link')}>
                                   <ExternalLink size={14} />
                                 </a>
                               )}
-                              <button className="icon-btn" onClick={() => setMods(v.mods.filter((x) => x.id !== m.id))} aria-label="Entfernen">
+                              <button className="icon-btn" onClick={() => setMods(v.mods.filter((x) => x.id !== m.id))} aria-label={tx('Entfernen', 'Remove')}>
                                 <Trash2 size={14} />
                               </button>
                               {ci < COLS.length - 1 && (
                                 <button className="btn small" onClick={() => move(m, COLS[ci + 1].s)}>
-                                  {COLS[ci + 1].s === 'installed' ? <BookPlus size={13} /> : <ArrowRight size={13} />} {COLS[ci + 1].l}
+                                  {COLS[ci + 1].s === 'installed' ? <BookPlus size={13} /> : <ArrowRight size={13} />} {L(COLS[ci + 1].l)}
                                 </button>
                               )}
                             </div>
@@ -129,7 +134,7 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
                     )
                   })}
                 </div>
-                <p className="muted small">Build von {vehicleTitle(v)}. „Verbaut“ trägt den Umbau mit Datum und Preis in den Passport ein.</p>
+                <p className="muted small">{tx(`Build von ${vehicleTitle(v)}. „Verbaut“ trägt den Umbau mit Datum und Preis in den Passport ein.`, `Build of ${vehicleTitle(v)}. “Installed” logs the mod with date and price in the passport.`)}</p>
               </>
             )}
           </>

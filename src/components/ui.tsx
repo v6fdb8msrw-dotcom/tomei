@@ -147,7 +147,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode; resetKey?: s
           <img src={img('roads/trollstigen')} alt="" />
         </div>
         <div className="state-body">
-          <p className="eyebrow">Fehler</p>
+          <p className="eyebrow">{lang === 'en' ? 'Error' : 'Fehler'}</p>
           <h1>{tr('error.title')}</h1>
           <p>{tr('error.text')}</p>
           <code className="state-code">{this.state.error.message}</code>
@@ -166,11 +166,11 @@ export class ErrorBoundary extends Component<{ children: ReactNode; resetKey?: s
 }
 
 export function NotFound() {
-  const { t } = useT()
+  const { t, tx } = useT()
   return (
     <section className="state-page">
       <div className="state-img">
-        <img src={img('roads/furka')} alt="Kehren am Furkapass" />
+        <img src={img('roads/furka')} alt={tx('Kehren am Furkapass', 'Hairpins on the Furka Pass')} />
       </div>
       <div className="state-body">
         <p className="eyebrow">404</p>
@@ -200,7 +200,9 @@ export function StatusPill({ status }: { status: VehicleStatus }) {
 export const vehicleTitle = (v: Pick<Vehicle, 'make' | 'model' | 'variant' | 'year'>) => [v.year, v.make, v.model, v.variant].filter(Boolean).join(' ')
 
 /** Auswahl eines Fahrzeugs aus der Garage */
-export function VehicleSelect({ vehicles, value, onChange, allowNone, label = 'Fahrzeug' }: { vehicles: Vehicle[]; value?: string; onChange: (id: string) => void; allowNone?: string; label?: string }) {
+export function VehicleSelect({ vehicles, value, onChange, allowNone, label }: { vehicles: Vehicle[]; value?: string; onChange: (id: string) => void; allowNone?: string; label?: string }) {
+  const { tx } = useT()
+  label ??= tx('Fahrzeug', 'Vehicle')
   return (
     <label className="field">
       <span className="f-label">{label}</span>
@@ -232,3 +234,16 @@ export const fmtDate = (iso: string, locale = 'de-DE') => {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 export const today = () => new Date().toISOString().slice(0, 10)
+
+/** Kopfbild eines Fahrzeugs: nur lizenzierte Fotos, sonst eine typografische Karte */
+export function VehicleVisual({ v, big }: { v: Vehicle; big?: boolean }) {
+  if (v.image) return <img className="veh-photo" src={img(v.image)} alt={vehicleTitle(v)} loading={big ? undefined : 'lazy'} />
+  return (
+    <div className={'veh-type' + (big ? ' big' : '')} aria-hidden>
+      <span>{v.make}</span>
+      <b>{v.model}</b>
+      {v.chassis && <i>{v.chassis}</i>}
+    </div>
+  )
+}
+
