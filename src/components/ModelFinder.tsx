@@ -90,6 +90,8 @@ export function loadCatalogue(): Promise<CarModel[]> {
   return cache
 }
 
+/** Fotos der handverlesenen Modelle (lizenziert, siehe CREDITS.md) */
+export const CURATED_PHOTO: Record<string, string> = { 'c-r34': 'cars/r34', 'c-fd': 'cars/fd', 'c-s15': 'cars/s15', 'c-evo6': 'cars/evo', 'c-mustang': 'cars/mustang', 'c-esprit': 'cars/esprit', 'c-monaro': 'cars/monaro' }
 export type ModelPhotos = Record<string, { f: string; a: string; l: string; u?: string }>
 let photoCache: Promise<ModelPhotos> | null = null
 /** Bildnachweise je Modell; ein Eintrag heißt: public/images/models/<id>.jpg gibt es */
@@ -132,6 +134,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
     }
   }, [])
 
+  const hasPhoto = (m: CarModel) => !!(pics[m.id] || CURATED_PHOTO[m.id])
   const words = useMemo(() => norm(q).split(' ').filter(Boolean), [q])
   const eras: { id: string; de: string; en: string; test: (m: CarModel) => boolean }[] = [
     { id: 'all', de: 'Alle Jahre', en: 'All years', test: () => true },
@@ -145,14 +148,15 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
     if (!all) return []
     const e = eras.find((x) => x.id === era)!
     const filtered = all.filter((m) => (cc === 'all' || m.cc === cc) && (cls === 'all' || m.cl === cls) && e.test(m) && (!classic || (m.y0 ?? 9999) <= YEAR - 30))
-    if (!words.length) return filtered
+    // Ohne Suchtext: Modelle mit Foto zuerst, sonst Reihenfolge des Katalogs
+    if (!words.length) return [...filtered].sort((a, b) => Number(hasPhoto(b)) - Number(hasPhoto(a)))
     return filtered
       .map((m) => ({ m, s: score(m, words) }))
       .filter((x) => x.s >= 0)
       .sort((a, b) => b.s - a.s)
       .map((x) => x.m)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [all, words, cc, era, classic, cls])
+  }, [all, words, cc, era, classic, cls, pics])
   const suggestions = words.length ? list.slice(0, 8) : []
   const countries = useMemo(() => [...new Set((all ?? []).map((m) => m.cc))].filter((c) => DIR_COUNTRY[c]), [all])
 
@@ -256,9 +260,9 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
           const oldOk = (m.y0 ?? 9999) <= YEAR - 30
           return (
             <motion.article key={m.id} className="gcard mf-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: (k % PAGE) * 0.012, ease: EASE }}>
-              {pics[m.id] && (
+              {(pics[m.id] || CURATED_PHOTO[m.id]) && (
                 <a className="mf-photo" href={href('discover/models/' + m.id)} tabIndex={-1} aria-hidden>
-                  <img src={img('models/' + m.id)} alt="" loading="lazy" />
+                  <img src={img(CURATED_PHOTO[m.id] ?? 'models/' + m.id)} alt="" loading="lazy" />
                 </a>
               )}
               <header>

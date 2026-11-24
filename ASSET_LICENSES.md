@@ -42,6 +42,10 @@ Wikimedia Commons, 24.11.2026, auf 1400 px verkleinert: mustang.jpg (Coolalabrig
 
 Unsplash-Lizenz (kostenlos, auch kommerziell, Namensnennung freiwillig). Einzelnachweise: `public/images/CREDITS.md`. Einige Spot-Fotos sind Symbolbilder (dort vermerkt).
 
+## Modellfotos (`public/images/models/`)
+
+1.074 Artikelbilder der Katalogmodelle von Wikimedia Commons, 24.11.2026, auf 500 px verkleinert. Nur CC BY, CC BY-SA, CC0, gemeinfrei und „Attribution“ (freie Nutzung mit Namensnennung). Urheber, Lizenz und Datei je Bild stehen in `src/data/models_photos.json` und sichtbar auf jeder Modellseite. Bei CC-BY-SA-Fotos steht die verkleinerte Fassung unter derselben Lizenz.
+
 ## Schriften
 
 Manrope, Inter und JetBrains Mono über Fontsource, SIL Open Font License 1.1 (siehe `THIRD_PARTY_NOTICES.md`). Die Schriften liegen im Build, es gibt keine Anfrage an Google Fonts.

@@ -8,7 +8,7 @@ import { DIR_COUNTRY } from '../../data/directory.ts'
 import { IMPORT_RULES, ruleById } from '../../data/importRules.ts'
 import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
 import { ROADS, roadImg } from '../../data/roads.ts'
-import { loadCatalogue, loadPhotos, type CarModel, type ModelPhotos } from '../../components/ModelFinder.tsx'
+import { CURATED_PHOTO, loadCatalogue, loadPhotos, type CarModel, type ModelPhotos } from '../../components/ModelFinder.tsx'
 import { ProviderGrid } from '../../components/motion.tsx'
 import { Badge, EmptyState, NotFound, PageHead, SourceLink, img } from '../../components/ui.tsx'
 import { useT } from '../../i18n/i18n.ts'
@@ -20,8 +20,6 @@ import { CLASS_LABEL } from '../../components/ModelFinder.tsx'
 const YEAR = new Date().getFullYear()
 const CALC_ORIGINS = new Set(['jp', 'us', 'uk', 'ca', 'au'])
 const EU = new Set(['de', 'it', 'fr', 'se', 'at', 'nl', 'ch', 'es', 'be'])
-/** Fotos der handverlesenen Modelle (lizenziert, siehe CREDITS.md) */
-const PHOTO: Record<string, string> = { 'c-r34': 'cars/r34', 'c-fd': 'cars/fd', 'c-s15': 'cars/s15', 'c-evo6': 'cars/evo', 'c-mustang': 'cars/mustang', 'c-esprit': 'cars/esprit', 'c-monaro': 'cars/monaro' }
 
 type Texts = Record<string, { en?: string; de?: string }>
 let textCache: Promise<Texts> | null = null
@@ -61,7 +59,7 @@ export function ModelPage({ id }: { id: string }) {
   const text = (lang === 'de' && txt.de) || txt.en
   const pic = pics[m.id]
   const textLang = lang === 'de' && txt.de ? 'de' : 'en'
-  const photo = PHOTO[m.id]
+  const photo = CURATED_PHOTO[m.id]
   const cover = photo ? img(photo) : roads[0] ? roadImg(roads[0].id) : roadImg('stelvio')
   const ageOk = rule.age && age !== undefined ? age >= rule.age.years : undefined
 
@@ -96,6 +94,18 @@ export function ModelPage({ id }: { id: string }) {
       </PageHead>
 
       <section className="section narrow">
+        {pic && (
+          <figure className="mp-photo">
+            <img src={img('models/' + m.id)} alt={m.n} />
+            <figcaption className="muted small">
+              {tx('Foto', 'Photo')}: {pic.a},{' '}
+              <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(pic.f)}`} target="_blank" rel="noopener noreferrer">
+                Wikimedia Commons
+              </a>
+              , {pic.u ? <a href={pic.u} target="_blank" rel="noopener noreferrer">{pic.l}</a> : pic.l} {tx('(verkleinert)', '(resized)')}
+            </figcaption>
+          </figure>
+        )}
         <div className="mp-facts">
           <div>
             <span>{tx('Bauzeit', 'Production')}</span>
@@ -120,18 +130,6 @@ export function ModelPage({ id }: { id: string }) {
             </div>
           ) : null}
         </div>
-        {pic && (
-          <figure className="mp-photo">
-            <img src={img('models/' + m.id)} alt={m.n} />
-            <figcaption className="muted small">
-              {tx('Foto', 'Photo')}: {pic.a},{' '}
-              <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(pic.f)}`} target="_blank" rel="noopener noreferrer">
-                Wikimedia Commons
-              </a>
-              , {pic.u ? <a href={pic.u} target="_blank" rel="noopener noreferrer">{pic.l}</a> : pic.l} {tx('(verkleinert)', '(resized)')}
-            </figcaption>
-          </figure>
-        )}
         {text && (
           <div className="gcard mp-text">
             <p>{text}</p>
