@@ -2,7 +2,7 @@
 
 **Stand: 24.11.2026 · Version 2.0.0-alpha.7 · Zweig `tomei-2.0` · deployt auf Tims Ja**
 
-Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt alpha.6. Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
+Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt alpha.7. Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
 
 ## Kurzfassung
 
@@ -59,7 +59,7 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
 
-## Ausbau (alpha.7, noch nicht deployt)
+## Ausbau (alpha.7, deployt auf Tims Ja; Werkstatt-Daten noch unvollständig)
 
 - Fahrzeugsuche neu: ein Feld, Bildkacheln, Klick öffnet das Profil. Profil: Angebote je Portal mit Direktlink und allen Zusatzkosten (`PortalQuotes`, `portals.ts`, `landed.ts`).
 - Werkstätten nach Standort und Auto statt Online-Shops (`Workshops`, `workshops.ts`), auch im Profil, in der Garage und im Build Studio.
