@@ -49,7 +49,7 @@ const js = html.match(/src="\.\/(assets\/index-[^"]+\.js)"/)[1]
 const css = html.match(/href="\.\/(assets\/index-[^"]+\.css)"/)[1]
 w(
   'page.html',
-  `<title>TŌMEI</title>
+  `<title>TOMEI</title>
 <link rel="stylesheet" href="${css}">
 <style>html{color-scheme:light}body{background:#F4F2ED}#tm-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#222624;color:#fff;border-radius:999px;padding:12px 20px;font:600 14px system-ui;max-width:calc(100% - 32px)}#tm-inst{position:fixed;right:18px;bottom:18px;z-index:9998;border:0;border-radius:999px;background:#222624;color:#fff;padding:13px 20px;font:600 14px system-ui;cursor:pointer;box-shadow:0 8px 30px rgb(0 0 0/25%)}</style>
 <script type="application/json" id="claude-artifacts-manifest">{"permissions":[]}</script>
