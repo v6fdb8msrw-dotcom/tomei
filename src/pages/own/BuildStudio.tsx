@@ -1,10 +1,12 @@
 // Build Studio: Umbauten je Fahrzeug planen (Idee → geplant → bestellt → verbaut), Budget, Teile-Shops.
-import { ArrowRight, BookPlus, ExternalLink, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, BookPlus, ExternalLink, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { EmptyState, EASE, PageHead, VehicleSelect, fmtMoney, img, today, vehicleTitle } from '../../components/ui.tsx'
 import { addPassportEntry, uid, updateVehicle, useStore } from '../../store/store.ts'
 import type { Mod, ModStatus } from '../../store/schema.ts'
+import { QuickInput } from '../../components/QuickInput.tsx'
+import { guessCategory, guessModStatus, parseNote } from '../../lib/quick.ts'
 import { PartsShops } from '../Parts.tsx'
 import { useT } from '../../i18n/i18n.ts'
 
@@ -24,15 +26,21 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
   const vehicles = useStore((s) => s.vehicles)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned')?.id ?? vehicles[0]?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
-  const [f, setF] = useState({ title: '', category: CATS[0], cost: '', url: '' })
+  const [q, setQ] = useState('')
+  const n = parseNote(q)
+  const g = guessModStatus(n.title)
+  const cat = guessCategory(q)
 
   const setMods = (mods: Mod[]) => v && updateVehicle(v.id, { mods })
   const add = () => {
-    if (!v || !f.title.trim()) return
-    const cost = parseInt(f.cost.replace(/\D/g, ''), 10)
-    setMods([...v.mods, { id: uid(), title: f.title.trim().slice(0, 200), category: f.category, status: 'idea', cost: Number.isFinite(cost) ? { amount: cost, cur: 'EUR' } : undefined, url: /^https:\/\/\S+$/.test(f.url.trim()) ? f.url.trim() : undefined }])
-    setF({ ...f, title: '', cost: '', url: '' })
+    if (!v || !g.title.trim()) return
+    const cost = n.amount ? { amount: n.amount, cur: n.cur ?? 'EUR' } : undefined
+    const mod: Mod = { id: uid(), title: g.title.slice(0, 200), category: cat, status: g.status, cost, url: n.url, date: g.status === 'installed' ? (n.date ?? today()) : undefined }
+    setMods([...v.mods, mod])
+    if (g.status === 'installed') addPassportEntry({ vehicleId: v.id, date: mod.date!, kind: 'mod', title: mod.title, cost, km: n.km, notes: cat })
+    setQ('')
   }
+  const change = (id: string, p: Partial<Mod>) => v && setMods(v.mods.map((x) => (x.id === id ? { ...x, ...p } : x)))
   const move = (m: Mod, s: ModStatus) => {
     if (!v) return
     setMods(v.mods.map((x) => (x.id === m.id ? { ...x, status: s, date: s === 'installed' ? today() : x.date } : x)))
@@ -49,7 +57,7 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
             {tx('Dein Build. ', 'Your build. ')}<em>{tx('Schritt für Schritt.', 'Step by step.')}</em>
           </>
         }
-        sub={tx('Umbauten sammeln, planen, bestellen, verbauen. Was verbaut ist, landet automatisch im Passport. Preise trägst du selbst ein.', 'Collect, plan, order and install modifications. Whatever is installed goes into the passport automatically. You enter prices yourself.')}
+        sub={tx('Umbauten sammeln, planen, bestellen, verbauen. Schreib Teil und Preis in eine Zeile, Kategorie und Stand erkennt die Seite. Was verbaut ist, landet im Passport.', 'Collect, plan, order and install modifications. Write part and price in one line; the site detects category and status. Whatever is installed goes into the passport.')}
         image={img('parts-wheel')}
       />
       <section className="section">
@@ -75,30 +83,24 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
             </div>
             {v && (
               <>
-                <form
-                  className="mod-add"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    add()
-                  }}
+                <QuickInput
+                  value={q}
+                  onChange={setQ}
+                  onSubmit={add}
+                  label={tx('Umbau', 'Modification')}
+                  placeholder={tx('z. B. KW Gewindefahrwerk 1.400 € bestellt', 'e.g. KW coilovers 1,400 € ordered')}
+                  button={tx('Hinzufügen', 'Add')}
+                  examples={[tx('BBS Felgen 2.200 €', 'BBS wheels 2,200 €'), tx('Edelstahl-Auspuff verbaut 890 €', 'Stainless exhaust installed 890 €')]}
                 >
-                  <input className="input" placeholder={tx('Teil oder Umbau, z. B. Gewindefahrwerk', 'Part or mod, e.g. coilovers')} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label={tx('Teil', 'Part')} />
-                  <select className="input" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} aria-label={tx('Kategorie', 'Category')}>
-                    {CATS.map((c) => (
-                      <option key={c} value={c}>
-                        {catLabel(c)}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="input short">
-                    <input inputMode="numeric" placeholder={tx('Preis', 'Price')} value={f.cost} onChange={(e) => setF({ ...f, cost: e.target.value })} aria-label={tx('Preis in Euro', 'Price in euros')} />
-                    <span className="adorn">€</span>
-                  </span>
-                  <input className="input" placeholder={tx('Link (optional)', 'Link (optional)')} value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} aria-label="Link" />
-                  <button className="btn primary" disabled={!f.title.trim()}>
-                    <Plus size={16} /> {tx('Hinzufügen', 'Add')}
-                  </button>
-                </form>
+                  {q.trim() && g.title && (
+                    <p className="quick-read">
+                      <span>
+                        <b>{g.title}</b>
+                        <small>{[catLabel(cat), L(COLS.find((c) => c.s === g.status)!.l), n.amount ? fmtMoney(n.amount, n.cur ?? 'EUR', locale) : '', n.url ? 'Link' : ''].filter(Boolean).join(' · ')}</small>
+                      </span>
+                    </p>
+                  )}
+                </QuickInput>
                 <div className="kanban">
                   {COLS.map((c, ci) => {
                     const items = v.mods.filter((m) => m.status === c.s)
@@ -110,7 +112,13 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
                         {items.length === 0 && <p className="kan-empty">–</p>}
                         {items.map((m) => (
                           <motion.div key={m.id} layout className="kan-card" transition={{ duration: 0.35, ease: EASE }}>
-                            <span className="chip">{catLabel(m.category)}</span>
+                            <select className="chip kan-cat" value={m.category} onChange={(e) => change(m.id, { category: e.target.value })} aria-label={tx('Kategorie', 'Category')}>
+                              {[...new Set([m.category, ...CATS])].map((x) => (
+                                <option key={x} value={x}>
+                                  {catLabel(x)}
+                                </option>
+                              ))}
+                            </select>
                             <b>{m.title}</b>
                             {m.cost && <span className="mono small">{fmtMoney(m.cost.amount, m.cost.cur, locale)}</span>}
                             <div className="kan-btns">

@@ -1,8 +1,8 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.6 · Zweig `tomei-2.0` · online ist alpha.4 (Deploy 24.11.2026)**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.6 · Zweig `tomei-2.0` · deployt auf Tims Ja**
 
-Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt seit 24.11.2026 alpha.4. Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
+Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt alpha.6. Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
 
 ## Kurzfassung
 
@@ -59,7 +59,7 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
 
-## Ausbau (alpha.6, noch nicht deployt)
+## Ausbau (alpha.6, deployt)
 
 - Modellseiten als Magazin (Vollbild-Foto, große Zahlen, Galerie, Technik, Zeitstrahl der Generationen) für alle Katalogmodelle; fehlt ein Wert in der Quelle, fällt der Abschnitt weg.
 - Schwachstellen für 32 Kultmodelle mit Quellen (`src/data/weakspots.ts`).
@@ -67,7 +67,7 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Übergang Kachel → Detailseite mit einem gemeinsamen Bild (`data-vt`, `src/lib/router.ts`); Zurück springt an die alte Stelle der Liste.
 - Fotos als WebP/AVIF in zwei Größen. Autofinder `#/discover/match`. Roadtrips mit Tagesetappen, echten Straßenlängen, Kosten und GPX-Spur. Fahrzeugmappe als PDF (pdf-lib, im Browser).
 
-- Ein-Feld-Eingabe (`QuickInput`, `src/lib/quick.ts`, `autotrip.ts`): Roadtrip, Garage, Importrechner; Unterhalt und Wartung füllen sich selbst. Details sind eingeklappt.
+- Ein-Feld-Eingabe (`QuickInput`, `src/lib/quick.ts`, `autotrip.ts`): Roadtrip, Garage, Importrechner, Build Studio, Passport, Wertverlauf, Service-Anfrage; Unterhalt und Wartung füllen sich selbst. Details sind eingeklappt.
 - Fünf Straßen haben nur Gelände ohne Verlauf (Dalton, Natchez Trace, Cabot Trail, Carretera Austral, Great Alpine); Rennstrecken zeigen alle Streckenvarianten ohne Höhenprofil.
 
 ## Ausbau (alpha.5, noch nicht deployt)

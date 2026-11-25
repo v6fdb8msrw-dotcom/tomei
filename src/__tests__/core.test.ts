@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { landedCost } from '../lib/calc.ts'
 import { buildScenarios, range3 } from '../lib/scenarios.ts'
 import { legsOf, splitDays, tripCost, withVia } from '../lib/tripplan.ts'
-import { parseCar, parseTrip } from '../lib/quick.ts'
+import { guessCategory, guessKind, guessModStatus, parseCar, parseNote, parseTrip } from '../lib/quick.ts'
 import { chooseRoads } from '../lib/autotrip.ts'
 import { ROADS } from '../data/roads.ts'
 import { COUNTRIES } from '../data/countries.ts'
@@ -240,5 +240,23 @@ describe('Ein Feld: Roadtrip', () => {
     expect(r.roads.length).toBeGreaterThan(2)
     expect(r.roads.every((x) => x.country === 'it' || x.country === 'at')).toBe(true)
     expect(chooseRoads(parse('München nach Stilfser Joch')).roads.map((x) => x.id)).toEqual(['stelvio'])
+  })
+})
+
+describe('Ein Feld: Eintrag, Umbau, Wert', () => {
+  const now = new Date(2026, 10, 25)
+  it('liest Datum, Kilometer und Betrag', () => {
+    expect(parseNote('Ölwechsel gestern bei 84.000 km 180 €', now)).toEqual({ title: 'Ölwechsel', date: '2026-11-24', km: 84000, amount: 180, cur: 'EUR' })
+    expect(parseNote('Gekauft im März 2024 für 32.000 €', now)).toMatchObject({ title: 'Gekauft', date: '2024-03-01', amount: 32000 })
+    expect(parseNote('TÜV neu 12.5.2026', now)).toEqual({ title: 'TÜV neu', date: '2026-05-12' })
+    expect(parseNote('Gutachten 48.000', now, { bareAmount: true })).toMatchObject({ title: 'Gutachten', amount: 48000 })
+    expect(parseNote('Reifen 31.2.2026', now).date).not.toBe('2026-02-31')
+  })
+  it('errät Art, Kategorie und Stand', () => {
+    expect(guessKind('Ölwechsel')).toBe('service')
+    expect(guessKind('Gekauft in Köln')).toBe('purchase')
+    expect(guessKind('Irgendwas')).toBe('note')
+    expect(guessCategory('KW Gewindefahrwerk')).toBe('Fahrwerk')
+    expect(guessModStatus('Auspuff verbaut')).toEqual({ status: 'installed', title: 'Auspuff' })
   })
 })

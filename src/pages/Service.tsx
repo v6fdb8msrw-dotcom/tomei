@@ -7,6 +7,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { AGENTS, CONTACT_EMAIL, DEST, FX_FALLBACK, MARKETS, agentAverage } from '../data.ts'
 import { Reveal, SectionHead } from '../components/motion.tsx'
 import { CarStack } from '../components/depth.tsx'
+import { CarQuick } from '../components/CarQuick.tsx'
+import { Details } from '../components/QuickInput.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { DATA_EN } from '../i18n/data_en.ts'
 import { landedCost, money } from '../lib/calc.ts'
@@ -40,6 +42,7 @@ export function Service() {
       return EMPTY
     }
   })
+  const [line, setLine] = useState('')
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     try {
@@ -68,8 +71,8 @@ export function Service() {
   const text = [
     'Anfrage TŌMEI Service',
     '',
-    `Name: ${d.name}`,
-    `Kontakt: ${d.contact}`,
+    ...(d.name ? [`Name: ${d.name}`] : []),
+    ...(d.contact ? [`Kontakt: ${d.contact}`] : []),
     `Wunschauto: ${d.car}${d.year ? `, ab Baujahr ${d.year}` : ''}`,
     `Budget (bis vor die Tür): ${d.budget ? d.budget + ' €' : 'offen'}`,
     `Märkte: ${d.markets.map((id) => MARKETS.find((m) => m.id === id)?.country).filter(Boolean).join(', ')}`,
@@ -77,7 +80,7 @@ export function Service() {
     '',
     d.note,
   ].join('\n')
-  const ready = d.name.trim() && d.contact.trim() && d.car.trim()
+  const ready = d.car.trim() && (!CONTACT_EMAIL || d.contact.trim())
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(text)
@@ -169,6 +172,24 @@ export function Service() {
       <section className="section" id="anfrage">
         <SectionHead eyebrow={tx('Anfrage', 'Request')} title={<>{tx('Was ', 'What are ')}<em>{tx('suchst du?', 'you looking for?')}</em></>} text={tx('Unverbindlich. Deine Angaben bleiben auf deinem Gerät, bis du die Anfrage selbst abschickst.', 'No obligation. Your details stay on your device until you send the request yourself.')} />
         <div className="gcard sv-form">
+          <CarQuick
+            value={line}
+            onValue={setLine}
+            button={tx('Übernehmen', 'Use')}
+            examples={[tx('Nissan Skyline R34 bis 80.000 €', 'Nissan Skyline R34 up to 80,000 €'), tx('Toyota Supra 1997 60.000 €', 'Toyota Supra 1997 60,000 €')]}
+            onCar={(c) => {
+              const m = MARKETS.find((x) => x.id === c.market)
+              setD({ ...d, car: c.hit?.n ?? [c.make, c.model].filter(Boolean).join(' '), year: c.year ? String(c.year) : '', budget: c.price ? (c.price.cur === 'EUR' ? c.price.amount.toLocaleString('de-DE') : '') : '', markets: m ? [m.id] : d.markets, note: c.price && c.price.cur !== 'EUR' ? `Budget: ${c.price.amount.toLocaleString('de-DE')} ${c.price.cur}` : d.note })
+            }}
+          />
+          {d.car && (
+            <p className="sv-sum">
+              <b>{d.car}</b>
+              {d.year && ` · ${tx('ab', 'from')} ${d.year}`}
+              {d.budget && ` · ${d.budget} €`} · {d.markets.map((id) => MARKETS.find((m) => m.id === id)?.country).filter(Boolean).map((c) => (lang === 'en' ? (DATA_EN[c!] ?? c) : c)).join(', ')} · {d.services.length === SERVICES.length ? tx('Komplettpaket', 'full package') : tx(`${d.services.length} Leistungen`, `${d.services.length} services`)}
+            </p>
+          )}
+          <Details title={tx('Mehr angeben: Kontakt, Märkte, Leistungen, Nachricht', 'Add more: contact, markets, services, message')}>
           <div className="mk-fields">
             <label className="field">
               <span className="f-label">Name</span>
@@ -213,6 +234,7 @@ export function Service() {
             <span className="f-label">{tx('Nachricht', 'Message')}</span>
             <textarea className="input area" rows={4} value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} placeholder={tx('Farbe, Zustand, Umbauten, Zeitrahmen …', 'Colour, condition, mods, timeframe …')} />
           </label>
+          </Details>
           <div className="mk-cta">
             {CONTACT_EMAIL ? (
               <a className={'btn red' + (ready ? '' : ' disabled')} href={ready ? `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Anfrage TŌMEI Service: ' + d.car)}&body=${encodeURIComponent(text)}` : undefined}>

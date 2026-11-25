@@ -1024,3 +1024,9 @@ main.w-discover > section.section:nth-of-type(4n+2), main.w-drive > section.sect
 
 .sk-road { fill: none; stroke: var(--vermilion); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
 .sketch .sk-label { font-size: 15px; }
+
+.pp-quick, .sv-form .quick, .vx-card .quick, .build-head + .quick { max-width: none; margin: 0 0 22px; }
+.pp-quick .quick-box, .vx-card .quick-box, .sv-form .quick-box { box-shadow: none; background: var(--field); }
+.quick-read select { margin-left: auto; max-width: 150px; }
+.kan-cat { border: 0; font: inherit; font-size: 12px; max-width: 100%; }
+.sv-sum { margin: 14px 0; }

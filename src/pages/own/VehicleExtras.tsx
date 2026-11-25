@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
 import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
 import { SourceLink, fmtDate, fmtMoney, today, vehicleTitle } from '../../components/ui.tsx'
+import { QuickInput } from '../../components/QuickInput.tsx'
+import { parseNote } from '../../lib/quick.ts'
 import { useT } from '../../i18n/i18n.ts'
 import { toIcs } from '../../lib/maintenance.ts'
 import { addPhotos, listPhotos, removePhoto, type Photo } from '../../lib/photos.ts'
@@ -72,13 +74,13 @@ function Checklist({ v }: { v: Vehicle }) {
 function Values({ v }: { v: Vehicle }) {
   const { tx, locale } = useT()
   const list = useMemo(() => [...(v.values ?? [])].sort((a, b) => a.date.localeCompare(b.date)), [v.values])
-  const [f, setF] = useState({ date: today(), amount: '', note: '' })
+  const [q, setQ] = useState('')
+  const n = parseNote(q, undefined, { bareAmount: true })
   const cur = list[list.length - 1]?.cur ?? v.landed?.cur ?? 'EUR'
   const add = () => {
-    const amount = parseInt(f.amount.replace(/\D/g, ''), 10)
-    if (!amount) return
-    updateVehicle(v.id, { values: [...list, { date: f.date || today(), amount, cur, note: f.note.trim() || undefined }] })
-    setF({ ...f, amount: '', note: '' })
+    if (!n.amount) return
+    updateVehicle(v.id, { values: [...list, { date: n.date ?? today(), amount: n.amount, cur: n.cur ?? cur, note: n.title || undefined }] })
+    setQ('')
   }
   // Kleine Verlaufskurve (SVG, ohne Bibliothek)
   const W = 520
@@ -97,7 +99,7 @@ function Values({ v }: { v: Vehicle }) {
       <h3>
         <LineChart size={18} /> {tx('Wertverlauf', 'Value history')}
       </h3>
-      <p className="muted small">{tx('Trag Schätzungen, Gutachten oder Angebote mit Datum ein. Daraus entsteht deine eigene Wertkurve.', 'Enter estimates, appraisals or offers with a date. They form your own value curve.')}</p>
+      <p className="muted small">{tx('Schreib den Wert hin, Datum und Anlass nur wenn du willst. Daraus entsteht deine eigene Wertkurve.', 'Just write the value; add date and reason if you like. They form your own value curve.')}</p>
       {xy.length > 1 && (
         <svg className="vx-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={tx('Wertverlauf', 'Value history')}>
           <polyline points={xy.map((p) => p.join(',')).join(' ')} fill="none" stroke="var(--petrol)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
@@ -124,14 +126,13 @@ function Values({ v }: { v: Vehicle }) {
           </li>
         ))}
       </ul>
-      <div className="vx-add">
-        <input className="input" type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} aria-label={tx('Datum', 'Date')} />
-        <input className="input" inputMode="numeric" placeholder={tx(`Wert in ${cur}`, `Value in ${cur}`)} value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} aria-label={tx('Wert', 'Value')} />
-        <input className="input" placeholder={tx('Notiz, z. B. Gutachten', 'Note, e.g. appraisal')} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} aria-label={tx('Notiz', 'Note')} />
-        <button className="btn small primary" onClick={add} disabled={!f.amount}>
-          <Plus size={14} /> {tx('Eintragen', 'Add')}
-        </button>
-      </div>
+      <QuickInput value={q} onChange={setQ} onSubmit={add} label={tx('Wert', 'Value')} placeholder={tx('z. B. 48.000 € Gutachten', 'e.g. 48,000 € appraisal')} button={tx('Eintragen', 'Add')}>
+        {q.trim() && (
+          <p className="small muted">
+            {n.amount ? [fmtMoney(n.amount, n.cur ?? cur, locale), fmtDate(n.date ?? today(), locale), n.title].filter(Boolean).join(' · ') : tx('Nenn einen Betrag, z. B. 48.000 €.', 'Enter an amount, e.g. 48,000 €.')}
+          </p>
+        )}
+      </QuickInput>
     </div>
   )
 }

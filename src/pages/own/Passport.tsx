@@ -1,11 +1,13 @@
 // Automotive Passport: die Geschichte eines Autos auf einer Zeitleiste. Druckbar und als Datei exportierbar.
-import { Download, FileText, Plus, Printer, Trash2 } from 'lucide-react'
+import { Download, FileText, Printer, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
 import { countryById } from '../../data/countries.ts'
 import { EmptyState, EASE, PageHead, StatusPill, VehicleSelect, VehicleVisual, fmtDate, fmtMoney, img, today, vehicleTitle } from '../../components/ui.tsx'
 import { loadPhotos } from '../../components/ModelFinder.tsx'
+import { QuickInput } from '../../components/QuickInput.tsx'
+import { guessKind, parseNote } from '../../lib/quick.ts'
 import { modelImg } from '../../lib/modelimg.ts'
 import { addPassportEntry, downloadFile, nowIso, removePassportEntry, useStore } from '../../store/store.ts'
 import type { PassportKind } from '../../store/schema.ts'
@@ -30,7 +32,10 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
   const trips = useStore((s) => s.trips)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned')?.id ?? vehicles[0]?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
-  const [f, setF] = useState({ date: today(), kind: 'note' as PassportKind, title: '', km: '', notes: '' })
+  const [q, setQ] = useState('')
+  const [kind, setKind] = useState<PassportKind | ''>('')
+  const n = parseNote(q)
+  const k2: PassportKind = kind || guessKind(q)
   const entries = passport.filter((p) => p.vehicleId === sel).sort((a, b) => b.date.localeCompare(a.date))
   const total = entries.reduce((s, e) => s + (e.cost?.cur === 'EUR' ? e.cost.amount : 0), 0)
 
@@ -157,30 +162,38 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
                   </div>
                 </header>
 
-                <form
-                  className="pp-add no-print"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    if (!f.title.trim()) return
-                    const km = parseInt(f.km.replace(/\D/g, ''), 10)
-                    addPassportEntry({ vehicleId: v.id, date: f.date || today(), kind: f.kind, title: f.title.trim().slice(0, 200), notes: f.notes.trim().slice(0, 4000) || undefined, km: Number.isFinite(km) ? km : undefined })
-                    setF({ ...f, title: '', km: '', notes: '' })
-                  }}
-                >
-                  <input className="input" type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} aria-label={tx('Datum', 'Date')} />
-                  <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as PassportKind })} aria-label={tx('Art', 'Type')}>
-                    {(Object.keys(KIND) as PassportKind[]).map((k) => (
-                      <option key={k} value={k}>
-                        {L(KIND[k])}
-                      </option>
-                    ))}
-                  </select>
-                  <input className="input grow" placeholder={tx('Eintrag, z. B. Zulassung mit H-Kennzeichen', 'Entry, e.g. registered with historic plate')} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} aria-label={tx('Eintrag', 'Entry')} />
-                  <input className="input short" placeholder="km" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} aria-label={tx('Kilometerstand', 'Mileage')} />
-                  <button className="btn primary" disabled={!f.title.trim()}>
-                    <Plus size={16} /> {tx('Eintragen', 'Add entry')}
-                  </button>
-                </form>
+                <div className="pp-quick no-print">
+                  <QuickInput
+                    value={q}
+                    onChange={setQ}
+                    onSubmit={() => {
+                      if (!n.title.trim()) return
+                      addPassportEntry({ vehicleId: v.id, date: n.date ?? today(), kind: k2, title: n.title.slice(0, 200), notes: n.url, km: n.km, cost: n.amount ? { amount: n.amount, cur: n.cur ?? 'EUR' } : undefined })
+                      setQ('')
+                      setKind('')
+                    }}
+                    label={tx('Neuer Eintrag', 'New entry')}
+                    placeholder={tx('z. B. Ölwechsel gestern bei 84.000 km 180 €', 'e.g. oil change yesterday 84,000 km 180 €')}
+                    button={tx('Eintragen', 'Add entry')}
+                    examples={[tx('Gekauft im März 2024 für 32.000 €', 'Bought in March 2024 for 32,000 €'), tx('TÜV neu 12.5.2026', 'New inspection 12.5.2026')]}
+                  >
+                    {q.trim() && n.title && (
+                      <p className="quick-read">
+                        <span>
+                          <b>{n.title}</b>
+                          <small>{[fmtDate(n.date ?? today(), locale), n.km ? `${n.km.toLocaleString(locale)} km` : '', n.amount ? fmtMoney(n.amount, n.cur ?? 'EUR', locale) : ''].filter(Boolean).join(' · ')}</small>
+                        </span>
+                        <select className="chip" value={k2} onChange={(e) => setKind(e.target.value as PassportKind)} aria-label={tx('Art', 'Type')}>
+                          {(Object.keys(KIND) as PassportKind[]).map((k) => (
+                            <option key={k} value={k}>
+                              {L(KIND[k])}
+                            </option>
+                          ))}
+                        </select>
+                      </p>
+                    )}
+                  </QuickInput>
+                </div>
 
                 {entries.length === 0 ? (
                   <p className="muted pp-empty">{tx('Noch keine Einträge. Trag den Kauf ein, buche eine Wartung als erledigt oder schließe die Import-Journey ab.', 'No entries yet. Log the purchase, mark a service as done or complete the import journey.')}</p>

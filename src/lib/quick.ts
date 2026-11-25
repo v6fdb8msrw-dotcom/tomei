@@ -40,7 +40,7 @@ export function parseCar(text: string, all: CarModel[], year = new Date().getFul
     const c = lead ? pr[1] : pr[3]
     const amount = Math.round(n * (/mio|million/i.test(mul) ? 1e6 : mul ? 1000 : 1))
     if (amount > 0) out.price = { amount, cur: CUR.find(([re]) => re.test(c))?.[1] ?? 'EUR' }
-    t = t.replace(pr[0], ' ')
+    t = t.replace(pr[0], ' ').replace(/\b(bis|max\.?|maximal|um die|ca\.?|für|up to|for|about)\s*$/i, ' ')
   }
   const st: [RegExp, VehicleStatus][] = [
     [/\b(traum(auto)?|dream)\b/i, 'dream'],
@@ -85,6 +85,108 @@ export function parseCar(text: string, all: CarModel[], year = new Date().getFul
   }
   if (y && y <= year + 1) out.year = y
   return out.make || out.model ? out : null
+}
+
+/* ------------------------------------------------------------------ Eintrag, Umbau, Wert */
+
+const MONTHS = ['januar|january|jan', 'februar|february|feb', 'märz|maerz|march|mär|mar', 'april|apr', 'mai|may', 'juni|june|jun', 'juli|july|jul', 'august|aug', 'september|sept?', 'oktober|october|okt|oct', 'november|nov', 'dezember|december|dez|dec']
+const iso = (y: number, m: number, d: number) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+const validDay = (y: number, m: number, d: number) => {
+  const x = new Date(Date.UTC(y, m - 1, d))
+  return x.getUTCMonth() === m - 1 && x.getUTCDate() === d
+}
+
+export type QuickNote = { title: string; date?: string; km?: number; amount?: number; cur?: string; url?: string }
+
+/** Freie Zeile: Datum, Kilometer, Betrag und Link herauslesen, der Rest ist der Titel */
+export function parseNote(text: string, now = new Date(), opts: { bareAmount?: boolean } = {}): QuickNote {
+  let t = ' ' + text.trim().replace(/\s+/g, ' ') + ' '
+  const out: QuickNote = { title: '' }
+  const cut = (m: string) => (t = t.replace(m, ' '))
+  const url = t.match(/https:\/\/\S+/)
+  if (url) (out.url = url[0]), cut(url[0])
+  const local = (d: Date) => iso(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  const back = (n: number) => local(new Date(now.getFullYear(), now.getMonth(), now.getDate() - n))
+  const rel: [RegExp, number][] = [
+    [/\s(vorgestern|day before yesterday)\s/i, 2],
+    [/\s(gestern|yesterday)\s/i, 1],
+    [/\s(heute|today)\s/i, 0],
+  ]
+  for (const [re, n] of rel) {
+    const m = t.match(re)
+    if (m && !out.date) (out.date = back(n)), cut(m[0])
+  }
+  if (!out.date) {
+    let m = t.match(/\s(?:am |vom |on )?(\d{4})-(\d{2})-(\d{2})\s/i)
+    if (m && validDay(+m[1], +m[2], +m[3])) (out.date = iso(+m[1], +m[2], +m[3])), cut(m[0])
+    if (!out.date && (m = t.match(/\s(?:am |vom |on )?(\d{1,2})\.\s?(\d{1,2})\.(?:\s?(\d{4}|\d{2}))?(?=[\s,;])/i))) {
+      const y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : now.getFullYear()
+      if (validDay(y, +m[2], +m[1])) (out.date = iso(y, +m[2], +m[1])), cut(m[0])
+    }
+    if (!out.date)
+      for (let k = 0; k < 12 && !out.date; k++) {
+        m = t.match(new RegExp(`\\s(?:am |im |in |vom |on )?(?:(\\d{1,2})\\.? )?(?:${MONTHS[k]})\\.?(?: (\\d{4}))?(?=[\\s,;])`, 'i'))
+        // „Mai“ ohne Zahl davor oder danach könnte alles Mögliche sein
+        if (m && (m[1] || m[2])) {
+          const y = m[2] ? +m[2] : now.getFullYear()
+          const d = m[1] ? +m[1] : 1
+          if (validDay(y, k + 1, d)) (out.date = iso(y, k + 1, d)), cut(m[0])
+        }
+      }
+    if (!out.date && (m = t.match(/\s(?:im jahr |in |seit )?((?:19|20)\d\d)(?=[\s,;])(?!\s*(?:km|€|eur|euro|\$|£))/i)) && +m[1] <= now.getFullYear()) (out.date = iso(+m[1], 1, 1)), cut(m[0])
+  }
+  const N = '(\\d{1,3}(?:[.,]\\d{3})+|\\d+(?:[.,]\\d{1,2})?)'
+  const km = t.match(new RegExp(`(?:\\sbei)?\\s${N}\\s?(tkm|km|kilometer)(?=[\\s,;])`, 'i'))
+  if (km) (out.km = Math.round(number(km[1]) * (/^t/i.test(km[2]) ? 1000 : 1))), cut(km[0])
+  const CURS = '€|euro?|¥|yen|jpy|£|gbp|pfund|chf|franken|\\$|usd|dollar'
+  const a = t.match(new RegExp(`(?:\\s(?:für|for|kostet|kosten|auf))?\\s${N}\\s?(k|tsd\\.?|mio\\.?|millionen)?\\s?(${CURS})(?=[\\s,;.])`, 'i'))
+  if (a) {
+    out.amount = Math.round(number(a[1]) * (/^mio|^mill/i.test(a[2] ?? '') ? 1e6 : a[2] ? 1000 : 1))
+    out.cur = CUR.find(([re]) => re.test(a[3]))?.[1]
+    cut(a[0])
+  } else if (opts.bareAmount) {
+    const b = t.match(new RegExp(`\\s${N}(?=[\\s,;])`))
+    if (b) (out.amount = Math.round(number(b[1]))), cut(b[0])
+  }
+  out.title = t.replace(/\s*[,;]\s*(?=[,;]|$)/g, ' ').replace(/^[\s,;:–-]+|[\s,;:–-]+$/g, '').replace(/\s+/g, ' ').replace(/ ,/g, ',')
+  if (out.title) out.title = out.title[0].toUpperCase() + out.title.slice(1)
+  return out
+}
+
+const KINDS: [RegExp, 'purchase' | 'import' | 'registration' | 'service' | 'mod' | 'trip' | 'document'][] = [
+  [/zulassung|zugelassen|kennzeichen|angemeldet|umgemeldet|registered|registration|plates?\b/i, 'registration'],
+  [/import|verschiff|verzoll|zoll\b|hafen|container|shipped|customs/i, 'import'],
+  [/umbau|verbaut|eingebaut|tuning|fahrwerk|auspuff|felgen|chiptuning|coilover|exhaust|installed|mod\b/i, 'mod'],
+  [/(?<!\p{L})(?:öl|oel)|service|inspektion|wartung|tüv|tuev|\bhu\b|bremse|reifen|batterie|zahnriemen|reparatur|repariert|werkstatt|\boil|brake|\btyre|\btire|repair|\bbelt/iu, 'service'],
+  [/fahrt|tour|roadtrip|ausflug|gefahren|treffen|rallye|trip|drive|meet/i, 'trip'],
+  [/gutachten|rechnung|papiere|brief\b|dokument|versicherung|appraisal|invoice|document|title\b/i, 'document'],
+  [/gekauft|kauf\b|erworben|abgeholt|bought|purchase/i, 'purchase'],
+]
+export const guessKind = (t: string) => KINDS.find(([re]) => re.test(t))?.[1] ?? ('note' as const)
+
+/** Kategorie eines Umbaus (deutscher Name, wie gespeichert) */
+const CATS: [RegExp, string][] = [
+  [/felge|reifen|rad\b|räder|wheel|tyre|tire|rim/i, 'Felgen & Reifen'],
+  [/fahrwerk|feder|dämpfer|daempfer|stabi|tiefer|suspension|coilover|spring|damper/i, 'Fahrwerk'],
+  [/brems|brake/i, 'Bremsen'],
+  [/auspuff|abgas|krümmer|endtopf|downpipe|kat\b|exhaust|muffler|header/i, 'Abgas'],
+  [/turbo|motor|ladeluft|luftfilter|chip|steuergerät|kupplung|getriebe|engine|intake|intercooler|clutch|ecu/i, 'Motor'],
+  [/sitz|lenkrad|schalthebel|schaltknauf|innen|teppich|gurt|seat|steering wheel|shift|interior/i, 'Innenraum'],
+  [/\bled\b|licht|scheinwerfer|rückleuchte|blinker|lamp|light/i, 'Licht'],
+  [/radio|navi|carplay|lautsprecher|kamera|dashcam|alarm|audio|speaker|stereo/i, 'Elektronik'],
+  [/politur|wachs|keramik|versiegel|folie|aufbereit|wax|ceramic|detailing|wrap/i, 'Pflege'],
+  [/spoiler|stoßstange|stossstange|haube|\black|schweller|kotflügel|heckflügel|bodykit|bumper|hood|paint|wing|fender/i, 'Karosserie'],
+]
+export const guessCategory = (t: string) => CATS.find(([re]) => re.test(t))?.[1] ?? 'Sonstiges'
+/** Stand eines Umbaus aus der Zeile; das Wort fällt aus dem Titel heraus */
+export function guessModStatus(t: string): { status: 'idea' | 'planned' | 'ordered' | 'installed'; title: string } {
+  const R: [RegExp, 'planned' | 'ordered' | 'installed'][] = [
+    [/\b(verbaut|eingebaut|montiert|installed|fitted)\b/i, 'installed'],
+    [/\b(bestellt|ordered)\b/i, 'ordered'],
+    [/\b(geplant|planned)\b/i, 'planned'],
+  ]
+  for (const [re, status] of R) if (re.test(t)) return { status, title: t.replace(re, ' ').replace(/\s+/g, ' ').replace(/^[\s,;]+|[\s,;]+$/g, '') || t }
+  return { status: 'idea', title: t }
 }
 
 /* ------------------------------------------------------------------ Roadtrip */
