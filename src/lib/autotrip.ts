@@ -2,6 +2,7 @@
 import { COUNTRIES } from '../data/countries.ts'
 import { ROADS, type Road } from '../data/roads.ts'
 import type { Waypoint } from '../store/schema.ts'
+import { suits, type CarProfile } from './carprofile.ts'
 import { haversineKm } from './gpx.ts'
 import { DEFAULT_DETOUR } from './tripplan.ts'
 import { parseTrip, type Place, type TripWish } from './quick.ts'
@@ -22,7 +23,7 @@ const center = (r: Road) => ({ lat: r.waypoints.reduce((s, w) => s + w.lat, 0) /
 const lengthOf = (r: Road) => r.lengthKm ?? (r.waypoints.length > 1 ? r.waypoints.slice(1).reduce((s, w, i) => s + haversineKm(r.waypoints[i], w) * 1.5, 0) : 35)
 
 /** Reihenfolge und Auswahl der Straßen (ohne Netz, ohne Zufall) */
-export function chooseRoads(wish: TripWish, roads: Road[] = ROADS): { roads: Road[]; via: Waypoint[] } {
+export function chooseRoads(wish: TripWish, roads: Road[] = ROADS, car?: CarProfile | null): { roads: Road[]; via: Waypoint[] } {
   const explicit = wish.targets.filter((t) => t.kind === 'road').map((t) => roads.find((r) => r.id === t.id)!).filter(Boolean)
   const via: Waypoint[] = wish.targets.filter((t) => t.kind === 'place').map((t) => ({ name: t.name, lat: t.lat!, lon: t.lon! }))
   const pool = new Set<Road>()
@@ -35,7 +36,10 @@ export function chooseRoads(wish: TripWish, roads: Road[] = ROADS): { roads: Roa
       if (e) for (const r of roads) if (haversineKm(center(r), center(e)) <= 110) pool.add(r)
     }
   }
-  const budget = wish.days ? wish.days * KM_PER_DAY : explicit.length ? 0 : 2 * KM_PER_DAY
+  const perDay = car?.kmPerDay ?? KM_PER_DAY
+  const budget = wish.days ? wish.days * perDay : explicit.length ? 0 : 2 * perDay
+  // Straßen, die nicht zum Auto passen, schlägt der Planer nicht von sich aus vor
+  for (const r of [...pool]) if (!suits(r.id, car)) pool.delete(r)
   const tracks = [...pool].filter((r) => r.kind === 'track')
   const whole = [...pool].filter((r) => r.kind !== 'track').sort((a, b) => lengthOf(a) - lengthOf(b))
   for (const r of [...pool]) if (explicit.includes(r) || r.kind === 'track' || lengthOf(r) > Math.max(160, budget * 0.6)) pool.delete(r)
@@ -80,7 +84,7 @@ export function chooseRoads(wish: TripWish, roads: Road[] = ROADS): { roads: Roa
   return { roads: out, via }
 }
 
-export async function autoTrip(text: string, roadWaypoints: (id: string, last?: Waypoint) => Promise<Waypoint[]>, home?: Place): Promise<AutoTrip> {
+export async function autoTrip(text: string, roadWaypoints: (id: string, last?: Waypoint) => Promise<Waypoint[]>, home?: Place, car?: CarProfile | null): Promise<AutoTrip> {
   const places = await loadPlaces()
   const wish = parseTrip(text, ROADS, places, COUNTRIES)
   const base = { wish, roads: [] as Road[], waypoints: [] as Waypoint[], name: text.trim().slice(0, 80) }
@@ -92,7 +96,7 @@ export async function autoTrip(text: string, roadWaypoints: (id: string, last?: 
   if (!wish.from && home && wish.targets.every((t) => t.kind !== 'place' || t.name !== home.n)) wish.from = home
   // Ein einzelner Ort ohne Start ist Start und Ziel zugleich
   if (!wish.from && wish.targets.length === 1 && wish.targets[0].kind === 'place') wish.from = places.find((p) => p.n === wish.targets[0].name)
-  const { roads, via } = chooseRoads(wish)
+  const { roads, via } = chooseRoads(wish, ROADS, car)
   const extra = via.filter((v) => v.name !== wish.from?.n)
   if (!roads.length && !extra.length) return { ...base, from: wish.from, problem: 'noroads' }
   const wps: Waypoint[] = wish.from ? [{ name: wish.from.n, lat: wish.from.lat, lon: wish.from.lon }] : []

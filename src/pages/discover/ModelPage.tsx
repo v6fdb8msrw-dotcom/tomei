@@ -1,22 +1,23 @@
 // Modellseite: Beschreibung (Wikipedia), Import ins eigene Land, wo suchen, passende Teile, Straßen im
 // Herkunftsland und die Besichtigungs-Checkliste. Erreichbar über #/discover/models/<id>.
-import { ArrowRight, ArrowLeft, ArrowUpRight, Calculator, Check, ClipboardCheck, Plus, Search, TriangleAlert, X } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Calculator, Check, ClipboardCheck, Plus, Search, TriangleAlert, X } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { PRICE_SOURCE } from '../../classics.ts'
-import { MARKETS, sendToCalc } from '../../data.ts'
+import { sendToCalc } from '../../data.ts'
 import { DIR_COUNTRY } from '../../data/directory.ts'
 import { IMPORT_RULES, ruleById } from '../../data/importRules.ts'
 import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
 import { ROADS, roadImg, roadThumb } from '../../data/roads.ts'
 import { catalogueIfLoaded, loadCatalogue, loadPhotos, modelImg, modelThumb, photosIfLoaded, type CarModel, type ModelPhotos, type Photo } from '../../components/ModelFinder.tsx'
-import { ProviderGrid } from '../../components/motion.tsx'
 import { Badge, EmptyState, NotFound, SourceLink } from '../../components/ui.tsx'
 import { useT } from '../../i18n/i18n.ts'
 import { href, navigate } from '../../lib/router.ts'
 import { genName, loadSpecs, specsIfLoaded, rangeText, specText, type Spec } from '../../lib/specs.ts'
 import { weakSpotsFor } from '../../data/weakspots.ts'
 import { addVehicle, setSettings, useStore } from '../../store/store.ts'
-import { ALL_SHOPS, fits } from '../Parts.tsx'
+import { Details } from '../../components/QuickInput.tsx'
+import { PortalQuotes } from '../../components/PortalQuotes.tsx'
+import { Workshops } from '../../components/Workshops.tsx'
 import { CLASS_LABEL } from '../../components/ModelFinder.tsx'
 
 const YEAR = new Date().getFullYear()
@@ -60,10 +61,6 @@ export function ModelPage({ id }: { id: string }) {
   const age = m.y0 ? YEAR - m.y0 : undefined
   const c = DIR_COUNTRY[m.cc]
   const rule = ruleById(home) ?? IMPORT_RULES[0]
-  const market = MARKETS.find((x) => x.id === (EU.has(m.cc) ? 'eu' : m.cc))
-  const q = { make: m.mk, model: m.md.replace(/\s*\(.*\)$/, '') }
-  const shops = ALL_SHOPS.filter((s) => fits(s, m.mk))
-  const general = ALL_SHOPS.filter((s) => s.makes?.includes('*')).slice(0, 3)
   const roads = ROADS.filter((r) => r.country === m.cc).slice(0, 3)
   const checks = checklistFor({ age, origin: m.cc })
   const have = vehicles.find((v) => v.modelId === m.id)
@@ -113,6 +110,17 @@ export function ModelPage({ id }: { id: string }) {
 
       <BigNumbers m={m} spec={spec} />
 
+      <section className="section narrow" id="angebote">
+        <div className="sec-head">
+          <p className="eyebrow">{tx('Angebote', 'Listings')}</p>
+          <h2>
+            {tx('Wo du ihn findest. ', 'Where to find it. ')}
+            <em>{tx('Was er wirklich kostet.', 'What it really costs.')}</em>
+          </h2>
+        </div>
+        <PortalQuotes m={m} />
+      </section>
+
       <section className="section narrow mag-story">
         {m.why && <p className="mag-quote">{d(m.why)}</p>}
         {text && (
@@ -131,6 +139,7 @@ export function ModelPage({ id }: { id: string }) {
         ) : null}
       </section>
 
+      {shots.length < 2 && roads[0] && <Break src={roadImg(roads[0].id)} alt={roads[0].name} to={'drive/roads/' + roads[0].id} text={tx(`Straße im Herkunftsland: ${roads[0].name}`, `Road in its home country: ${roads[0].name}`)} />}
       {shots.length > 1 && <Gallery id={m.id} name={m.n} shots={shots} />}
 
       {spec && <SpecSheet spec={spec} byName={byName} wiki={wikiUrl} />}
@@ -164,15 +173,7 @@ export function ModelPage({ id }: { id: string }) {
       )}
 
       <section className="section narrow">
-        <div className="sec-head">
-          <p className="eyebrow">Import</p>
-          <h2>
-            {tx('Nach ', 'To ')}
-            <em>
-              {rule.flag} {L(rule.name)}.
-            </em>
-          </h2>
-        </div>
+        <Details title={tx(`Importregeln ${L(rule.name)}`, `Import rules ${L(rule.name)}`)}>
         <div className="seg wrap parts-filter">
           {IMPORT_RULES.map((r) => (
             <button key={r.id} className={r.id === rule.id ? 'on' : ''} onClick={() => setSettings({ homeCountry: r.id })}>
@@ -195,50 +196,11 @@ export function ModelPage({ id }: { id: string }) {
             {tx('Alle Schritte und offiziellen Quellen', 'All steps and official sources')} →
           </a>
         </div>
-      </section>
-
-      {market && (
-        <section className="section narrow">
-          <div className="sec-head">
-            <p className="eyebrow">{tx('Wo suchen', 'Where to search')}</p>
-            <h2>
-              {tx('Inserate ', 'Listings ')}
-              <em>{tx('im Herkunftsland.', 'in the home country.')}</em>
-            </h2>
-            <p className="sec-text">{tx('Öffnet die öffentliche Suche der Portale mit diesem Modell. Ob es gerade angeboten wird, zeigt erst das Portal.', 'Opens the public search of each marketplace for this model. Whether it is currently offered only the marketplace can show.')}</p>
-          </div>
-          <div className="portal-list">
-            {market.portals.map((p) => (
-              <a key={p.name} className="portal" href={p.url(q)} target="_blank" rel="noopener noreferrer">
-                <b>{p.name}</b>
-                <span>{d(p.kind)}</span>
-                <ArrowUpRight size={15} />
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="section">
-        <div className="sec-head">
-          <p className="eyebrow">{tx('Teile', 'Parts')}</p>
-          <h2>
-            {tx('Shops für ', 'Shops for ')}
-            <em>{m.mk}.</em>
-          </h2>
-        </div>
-        <ProviderGrid items={[...shops, ...general].map((s) => ({ name: s.name, url: s.url, text: s.text.en ? L(s.text) : d(s.text.de), tag: `${DIR_COUNTRY[s.cc].flag} ${L(DIR_COUNTRY[s.cc].name)}` }))} />
+        </Details>
       </section>
 
       <section className="section narrow">
-        <div className="sec-head">
-          <p className="eyebrow">{tx('Kaufberatung', 'Buying guide')}</p>
-          <h2>
-            {tx('Worauf du bei der ', 'What to check at the ')}
-            <em>{tx('Besichtigung achtest.', 'viewing.')}</em>
-          </h2>
-          <p className="sec-text">{tx('Zugeschnitten auf Alter und Herkunft. In der Garage kannst du die Punkte je Auto abhaken.', 'Tailored to age and origin. In the garage you can tick them off per car.')}</p>
-        </div>
+        <Details title={tx('Besichtigung: worauf du achten solltest', 'Viewing: what to check')}>
         <div className="mp-checks">
           {checks.map((g) => (
             <div key={g.id} className="gcard">
@@ -261,6 +223,18 @@ export function ModelPage({ id }: { id: string }) {
             </SourceLink>
           ))}
         </div>
+        </Details>
+      </section>
+
+      <section className="section">
+        <div className="sec-head">
+          <p className="eyebrow">{tx('Werkstätten', 'Workshops')}</p>
+          <h2>
+            {tx('Spezialisten für ', 'Specialists for ')}
+            <em>{m.mk}.</em>
+          </h2>
+        </div>
+        <Workshops make={m.mk} year={m.y0} limit={6} />
       </section>
 
       {roads.length > 0 && (
@@ -341,6 +315,15 @@ function BigNumbers({ m, spec }: { m: CarModel; spec?: Spec }) {
         </div>
       ))}
     </section>
+  )
+}
+
+function Break({ src, alt, to, text }: { src: string; alt: string; to?: string; text?: string }) {
+  return (
+    <figure className="mag-break">
+      <img src={src} alt={alt} loading="lazy" />
+      {text && <figcaption>{to ? <a href={href(to)}>{text}</a> : text}</figcaption>}
+    </figure>
   )
 }
 

@@ -1,17 +1,15 @@
 // Modell-Katalog mit Suche und Vorschlagsliste. Daten: src/data/models.json (aus Wikidata/Wikipedia, siehe
 // DATA_SOURCES.md) plus die handverlesenen Klassiker mit Preisangabe aus classics.ts.
 // Es gibt keine Live-Abfrage von Inseraten: „Inserate suchen“ öffnet die Portale der Herkunftsländer.
-import { ArrowUpRight, Calculator, Check, Plus, Search, X } from 'lucide-react'
+import { Check, Plus, Search, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
-import { CLASSICS, PRICE_SOURCE } from '../classics.ts'
-import { sendToCalc, type MarketQuery } from '../data.ts'
+import { CLASSICS } from '../classics.ts'
 import { DIR_COUNTRY } from '../data/directory.ts'
 import { useT } from '../i18n/i18n.ts'
 import { addVehicle, useStore } from '../store/store.ts'
 import { modelThumb } from '../lib/modelimg.ts'
-import { EASE } from './ui.tsx'
-import { href } from '../lib/router.ts'
+import { href, navigate } from '../lib/router.ts'
 
 export type CarModel = {
   id: string
@@ -54,8 +52,6 @@ export const CLASS_LABEL: Record<string, { de: string; en: string }> = {
 }
 
 const YEAR = new Date().getFullYear()
-/** Herkunftsländer, für die der Importrechner rechnen kann */
-const CALC_ORIGINS = new Set(['jp', 'us', 'uk', 'ca', 'au'])
 const PAGE = 24
 
 export const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
@@ -115,17 +111,24 @@ export function suggest(all: CarModel[], text: string, n = 8): CarModel[] {
     .map((x) => x.m)
 }
 
-export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: string) => void }) {
-  const { tx, L, d } = useT()
+// Suche und Filter bleiben beim Zurückkehren aus einem Profil erhalten
+const keep = { q: '', cc: 'all', era: 'all', cls: 'all', classic: false, shown: 0 }
+
+export function ModelFinder({ onText }: { onText?: (q: string) => void }) {
+  const { tx, L } = useT()
   const [all, setAll] = useState<CarModel[] | null>(catalogueIfLoaded)
-  const [q, setQ] = useState('')
+  const [q, setQ] = useState(keep.q)
   const [open, setOpen] = useState(false)
   const [hi, setHi] = useState(0)
-  const [cc, setCc] = useState('all')
-  const [era, setEra] = useState('all')
-  const [classic, setClassic] = useState(false)
-  const [cls, setCls] = useState('all')
-  const [shown, setShown] = useState(PAGE)
+  const [cc, setCc] = useState(keep.cc)
+  const [era, setEra] = useState(keep.era)
+  const [classic, setClassic] = useState(keep.classic)
+  const [cls, setCls] = useState(keep.cls)
+  const [shown, setShown] = useState(keep.shown || PAGE)
+  useEffect(() => {
+    Object.assign(keep, { q, cc, era, cls, classic, shown })
+    onText?.(q)
+  }, [q, cc, era, cls, classic, shown, onText])
   const vehicles = useStore((s) => s.vehicles)
   const [pics, setPics] = useState<ModelPhotos>(photosIfLoaded() ?? {})
   const box = useRef<HTMLDivElement>(null)
@@ -166,7 +169,11 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
   const suggestions = words.length ? list.slice(0, 8) : []
   const countries = useMemo(() => [...new Set((all ?? []).map((m) => m.cc))].filter((c) => DIR_COUNTRY[c]), [all])
 
-  useEffect(() => setShown(PAGE), [q, cc, era, classic, cls])
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) first.current = false
+    else setShown(PAGE)
+  }, [q, cc, era, classic, cls])
   useEffect(() => {
     const close = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setOpen(false)
     document.addEventListener('mousedown', close)
@@ -174,8 +181,8 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
   }, [])
 
   const pick = (m: CarModel) => {
-    setQ(m.n.replace(/\s*\(.*\)$/, ''))
     setOpen(false)
+    navigate('discover/models/' + m.id)
   }
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (!suggestions.length) return
@@ -223,94 +230,66 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
             )}
           </AnimatePresence>
         </div>
-        <div className="mk-ideas">
-          <button className={'chip' + (cc === 'all' ? ' on' : '')} onClick={() => setCc('all')}>
-            {tx('Alle Länder', 'All countries')}
-          </button>
-          {countries.map((c) => (
-            <button key={c} className={'chip' + (cc === c ? ' on' : '')} onClick={() => setCc(c)}>
-              {DIR_COUNTRY[c].flag} {L(DIR_COUNTRY[c].name)}
-            </button>
-          ))}
-        </div>
-        <div className="mk-ideas">
-          <button className={'chip' + (cls === 'all' ? ' on' : '')} onClick={() => setCls('all')}>
-            {tx('Alle Klassen', 'All classes')}
-          </button>
-          {Object.entries(CLASS_LABEL).map(([k, v]) => (
-            <button key={k} className={'chip' + (cls === k ? ' on' : '')} onClick={() => setCls(cls === k ? 'all' : k)}>
-              {L(v)}
-            </button>
-          ))}
-        </div>
-        <div className="mk-ideas">
-          {eras.map((e) => (
-            <button key={e.id} className={'chip' + (era === e.id ? ' on' : '')} onClick={() => setEra(e.id)}>
-              {L(e)}
-            </button>
-          ))}
+        <div className="mf-row">
+          <select className="input" value={cc} onChange={(e) => setCc(e.target.value)} aria-label={tx('Land', 'Country')}>
+            <option value="all">{tx('Alle Länder', 'All countries')}</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {DIR_COUNTRY[c].flag} {L(DIR_COUNTRY[c].name)}
+              </option>
+            ))}
+          </select>
+          <select className="input" value={cls} onChange={(e) => setCls(e.target.value)} aria-label={tx('Klasse', 'Class')}>
+            <option value="all">{tx('Alle Klassen', 'All classes')}</option>
+            {Object.entries(CLASS_LABEL).map(([k, v]) => (
+              <option key={k} value={k}>
+                {L(v)}
+              </option>
+            ))}
+          </select>
+          <select className="input" value={era} onChange={(e) => setEra(e.target.value)} aria-label={tx('Jahrzehnt', 'Decade')}>
+            {eras.map((e) => (
+              <option key={e.id} value={e.id}>
+                {L(e)}
+              </option>
+            ))}
+          </select>
           <label className="cf-toggle">
             <span className="switch">
               <input type="checkbox" checked={classic} onChange={(e) => setClassic(e.target.checked)} />
               <span />
             </span>
-            {tx('Nur Oldtimer (30+ Jahre)', 'Classics only (30+ years)')}
+            {tx('Nur Oldtimer', 'Classics only')}
           </label>
           <span className="muted small">{all ? tx(`${list.length} Modelle`, `${list.length} models`) : ''}</span>
         </div>
       </div>
 
-      <div className="mf-grid">
-        {list.slice(0, shown).map((m, k) => {
+      <div className="mt-grid">
+        {list.slice(0, shown).map((m) => {
           const have = inGarage(m)
-          const oldOk = (m.y0 ?? 9999) <= YEAR - 30
           return (
-            <motion.article key={m.id} className="gcard mf-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: (k % PAGE) * 0.012, ease: EASE }}>
-              {hasPhoto(m) && (
-                <a className="mf-photo" data-vt={'model-' + m.id} href={href('discover/models/' + m.id)} tabIndex={-1} aria-hidden>
-                  <img src={modelThumb(m.id)} alt="" loading="lazy" />
-                </a>
-              )}
-              <header>
-                <span className="mf-flag">{DIR_COUNTRY[m.cc]?.flag ?? '🌍'}</span>
-                <span className="cf-kind">{m.cl && CLASS_LABEL[m.cl] ? L(CLASS_LABEL[m.cl]) : m.cl ? d(m.cl) : m.mk}</span>
-                {m.y0 && <span className={'cf-badge' + (oldOk ? ' ok' : '')}>{oldOk ? tx('Oldtimer-fähig', 'Classic-eligible') : tx(`Oldtimer ab ${m.y0 + 30}`, `Classic from ${m.y0 + 30}`)}</span>}
-              </header>
-              <h3>
-                <a href={href('discover/models/' + m.id)}>{m.n}</a>
-              </h3>
-              <p className="muted small mono">{years(m) || tx('Bauzeit siehe Quelle', 'Years: see source')}</p>
-              {m.why && <p className="cf-why">{d(m.why)}</p>}
-              {m.usd ? (
-                <p className="mf-price">
-                  <b className="mono">$ {m.usd.toLocaleString('de-DE')}</b> <small>{tx(`Median Angebotspreis Japan (${PRICE_SOURCE.name})`, `Median asking price Japan (${PRICE_SOURCE.name})`)}</small>
-                </p>
-              ) : null}
-              <div className="cf-actions">
-                <button className="btn small" onClick={() => onSearch({ make: m.mk, model: m.md.replace(/\s*\(.*\)$/, '') }, m.cc)}>
-                  <Search size={14} /> {tx('Inserate suchen', 'Search listings')}
-                </button>
-                {CALC_ORIGINS.has(m.cc) && (
-                  <button className="btn small" onClick={() => sendToCalc({ id: 'mf-' + m.id, title: m.n, url: '', price: m.usd ?? 0, cur: 'USD', market: m.usd ? 'jp' : m.cc, added: new Date().toISOString() })}>
-                    <Calculator size={14} /> {tx('Durchrechnen', 'Calculate')}
-                  </button>
-                )}
-                {have ? (
-                  <span className="btn small ghost">
-                    <Check size={14} /> {tx('In der Garage', 'In garage')}
-                  </span>
-                ) : (
-                  <button className="btn small" onClick={() => addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, modelId: m.id, source: 'finder' })}>
-                    <Plus size={14} /> {tx('Merken', 'Save')}
-                  </button>
-                )}
-                {m.wp && (
-                  <a className="icon-btn" href={`https://en.wikipedia.org/wiki/${m.wp}`} target="_blank" rel="noopener noreferrer" aria-label={tx('Quelle: Wikipedia', 'Source: Wikipedia')} title={tx('Quelle: Wikipedia', 'Source: Wikipedia')}>
-                    <ArrowUpRight size={15} />
-                  </a>
-                )}
-              </div>
-            </motion.article>
+            <article key={m.id} className="mt">
+              <a href={href('discover/models/' + m.id)}>
+                <div className="mt-img" data-vt={'model-' + m.id}>
+                  {hasPhoto(m) ? <img src={modelThumb(m.id)} alt="" loading="lazy" /> : <span>{m.mk}</span>}
+                </div>
+                <div className="mt-body">
+                  <small>
+                    {DIR_COUNTRY[m.cc]?.flag ?? '🌍'} {m.mk} · {years(m)}
+                  </small>
+                  <b>{m.n.startsWith(m.mk + ' ') ? m.n.slice(m.mk.length + 1) : m.md}</b>
+                </div>
+              </a>
+              <button
+                className={'icon-btn mt-save' + (have ? ' on' : '')}
+                aria-label={have ? tx('In der Garage', 'In garage') : tx('Merken', 'Save')}
+                title={have ? tx('In der Garage', 'In garage') : tx('Merken', 'Save')}
+                onClick={() => !have && addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, modelId: m.id, source: 'finder' })}
+              >
+                {have ? <Check size={16} /> : <Plus size={16} />}
+              </button>
+            </article>
           )
         })}
       </div>
@@ -321,12 +300,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
           </button>
         </div>
       )}
-      <p className="disclaimer">
-        {tx(
-          'Modelle, Bauzeiten und Klassen aus Wikidata (CC0) und der englischen Wikipedia; Preise nur bei handverlesenen Modellen mit freier Quelle. „Inserate suchen“ öffnet die öffentlichen Suchseiten im Herkunftsland – ob das Modell gerade angeboten wird, zeigt erst das Portal.',
-          'Models, production years and classes from Wikidata (CC0) and English Wikipedia; prices only for hand-picked models with a free source. “Search listings” opens the public search pages in the country of origin – whether the model is currently offered only the marketplace can show.',
-        )}
-      </p>
+      <p className="muted small">{tx('Modelle und Bauzeiten aus Wikidata (CC0) und der englischen Wikipedia.', 'Models and years from Wikidata (CC0) and English Wikipedia.')}</p>
     </div>
   )
 }

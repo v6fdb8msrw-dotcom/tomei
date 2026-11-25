@@ -1,104 +1,32 @@
-// Teile-Shops weltweit. Oben Vorschläge passend zu den Marken in der Garage, darunter alle Shops nach Land.
-import { useMemo, useState } from 'react'
-import { PARTS } from '../data.ts'
-import { DIR_COUNTRY, PARTS_MORE, type DirEntry } from '../data/directory.ts'
+// Own · Werkstätten: Betriebe in der Nähe, passend zum Auto in der Garage. Keine Online-Shops.
+import { useState } from 'react'
+import { Workshops } from '../components/Workshops.tsx'
+import { PageHead, VehicleSelect, img } from '../components/ui.tsx'
 import { useT } from '../i18n/i18n.ts'
-import { ProviderGrid, SectionHead } from '../components/motion.tsx'
 import { useStore } from '../store/store.ts'
-import { PageHead, img } from '../components/ui.tsx'
 
-/** Japanische Marken: dafür passen die JDM-Shops aus Japan */
-const JDM_MAKES = ['Toyota', 'Nissan', 'Honda', 'Mazda', 'Mitsubishi', 'Subaru', 'Suzuki', 'Lexus', 'Daihatsu', 'Isuzu', 'Infiniti', 'Acura', 'Datsun']
-
-export const ALL_SHOPS: DirEntry[] = [
-  ...PARTS.map((p) => ({ name: p.name, url: p.url, cc: 'jp', makes: JDM_MAKES, text: { de: p.text, en: '' } })),
-  ...PARTS_MORE,
-]
-
-/** Passt ein Shop zu einer Marke? Ignoriert Groß-/Kleinschreibung und Zusätze wie „Mercedes“ vs. „Mercedes-Benz“. */
-export function fits(shop: DirEntry, make: string): boolean {
-  const m = make.trim().toLowerCase()
-  if (!m) return false
-  return (shop.makes ?? []).some((x) => x !== '*' && (x.toLowerCase() === m || x.toLowerCase().startsWith(m) || m.startsWith(x.toLowerCase())))
-}
-
-export function PartsShops() {
-  const { tx, L, d } = useT()
-  const makes = useStore((s) => [...new Set(s.vehicles.map((v) => v.make).filter(Boolean))])
-  const [cc, setCc] = useState<string>('all')
-  const toItem = (s: DirEntry) => ({ name: s.name, url: s.url, text: s.text.en ? L(s.text) : d(s.text.de), tag: `${DIR_COUNTRY[s.cc].flag} ${L(DIR_COUNTRY[s.cc].name)}` })
-
-  const key = makes.join('|')
-  const suggested = useMemo(() => {
-    const hits = ALL_SHOPS.filter((s) => makes.some((m) => fits(s, m)))
-    const general = ALL_SHOPS.filter((s) => s.makes?.includes('*'))
-    return hits.length ? [...hits, ...general] : []
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
-  const countries = [...new Set(ALL_SHOPS.map((s) => s.cc))]
-  const list = ALL_SHOPS.filter((s) => cc === 'all' || s.cc === cc)
-
-  return (
-    <>
-      {suggested.length > 0 && (
-        <section className="section">
-          <SectionHead
-            eyebrow={tx('Passend zu deiner Garage', 'Matching your garage')}
-            title={
-              <>
-                {tx('Teile für ', 'Parts for ')}
-                <em>{makes.join(', ')}.</em>
-              </>
-            }
-            text={tx('Shops, die auf deine Marken spezialisiert sind, dazu Händler für fast alle Marken.', 'Shops specialised in your makes, plus retailers for almost every make.')}
-          />
-          <ProviderGrid items={suggested.map(toItem)} />
-        </section>
-      )}
-      <section className="section">
-        <SectionHead
-          eyebrow="Shops"
-          title={
-            <>
-              {tx('Teile und Tuning ', 'Parts and tuning ')}
-              <em>{tx('aus aller Welt.', 'from around the world.')}</em>
-            </>
-          }
-          text={tx(`${ALL_SHOPS.length} Shops in ${countries.length} Ländern. Leg ein Auto in der Garage an, dann stehen passende Shops oben.`, `${ALL_SHOPS.length} shops in ${countries.length} countries. Add a car to your garage and matching shops appear at the top.`)}
-        />
-        <div className="seg wrap parts-filter">
-          <button className={cc === 'all' ? 'on' : ''} onClick={() => setCc('all')}>
-            {tx('Alle Länder', 'All countries')}
-          </button>
-          {countries.map((c) => (
-            <button key={c} className={cc === c ? 'on' : ''} onClick={() => setCc(c)}>
-              {DIR_COUNTRY[c].flag} {L(DIR_COUNTRY[c].name)}
-            </button>
-          ))}
-        </div>
-        <ProviderGrid items={list.map(toItem)} />
-      </section>
-    </>
-  )
-}
-
-/** Eigene Seite: Own · Teile */
 export function PartsPage() {
   const { tx } = useT()
+  const vehicles = useStore((s) => s.vehicles)
+  const [sel, setSel] = useState(vehicles.find((v) => v.status === 'owned')?.id ?? vehicles[0]?.id ?? '')
+  const v = vehicles.find((x) => x.id === sel)
   return (
     <>
       <PageHead
-        eyebrow={tx('Own · Teile', 'Own · Parts')}
+        eyebrow={tx('Own · Werkstätten', 'Own · Workshops')}
         title={
           <>
-            {tx('Die richtigen Teile. ', 'The right parts. ')}
-            <em>{tx('Für dein Auto.', 'For your car.')}</em>
+            {tx('Wer dein Auto ', 'Who really ')}
+            <em>{tx('wirklich kennt.', 'knows your car.')}</em>
           </>
         }
-        sub={tx('Spezialisten für Japaner, Amerikaner, Briten, Deutsche, Italiener und Schweden. Was in deiner Garage steht, bestimmt die Vorschläge.', 'Specialists for Japanese, American, British, German, Italian and Swedish cars. What is in your garage drives the suggestions.')}
-        images={[img('parts-wheel'), img('parts-engine'), img('parts-show')]}
+        sub={tx('Service, Reparatur und Umbau vor Ort: Betriebe in deiner Nähe, die zu deiner Marke und zum Alter deines Autos passen.', 'Service, repair and modifications on site: workshops near you that match your make and the age of your car.')}
+        images={[img('parts-engine'), img('parts-wheel')]}
       />
-      <PartsShops />
+      <section className="section">
+        {vehicles.length > 1 && <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} />}
+        <Workshops make={v?.make} year={v?.year} limit={24} />
+      </section>
     </>
   )
 }

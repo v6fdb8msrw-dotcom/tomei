@@ -1,6 +1,6 @@
 # Projektstatus TŌMEI
 
-**Stand: 24.11.2026 · Version 2.0.0-alpha.6 · Zweig `tomei-2.0` · deployt auf Tims Ja**
+**Stand: 24.11.2026 · Version 2.0.0-alpha.7 · Zweig `tomei-2.0` · deployt auf Tims Ja**
 
 Die Webseite unter https://v6fdb8msrw-dotcom.github.io/tomei/ zeigt alpha.6. Impressum und Datenschutz sind noch Entwürfe mit Platzhalter für die Betreiberangaben. Der Zweig `tomei-2.0` ist gepusht, aber noch nicht in `main` zusammengeführt.
 
@@ -58,6 +58,12 @@ Nicht geprüft: Safari/Firefox (nur Chromium im Preview), echte GPX-Dateien aus 
 - Speicher: `localStorage`-Schlüssel `tomei.store`, Format-Version 1, alte Merkliste `tomei.finds` wird beim ersten Start übernommen (bleibt liegen).
 - Externe Anfragen zur Laufzeit: nur der EZB-Kurs über `api.frankfurter.dev` (ohne Schlüssel, ohne Cookies). Alle Fotos liegen im Repo.
 - Branding: `src/config/brand.ts` (Name, Claim, Speicher-Präfix, Titel der `index.html`).
+
+## Ausbau (alpha.7, noch nicht deployt)
+
+- Fahrzeugsuche neu: ein Feld, Bildkacheln, Klick öffnet das Profil. Profil: Angebote je Portal mit Direktlink und allen Zusatzkosten (`PortalQuotes`, `portals.ts`, `landed.ts`).
+- Werkstätten nach Standort und Auto statt Online-Shops (`Workshops`, `workshops.ts`), auch im Profil, in der Garage und im Build Studio.
+- Roadtrips nach Auto (`carprofile.ts`), Wohnort einmal merken (`home.ts`), Wartungsplan entsteht beim Anlegen automatisch.
 
 ## Ausbau (alpha.6, deployt)
 

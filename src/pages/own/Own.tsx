@@ -8,6 +8,8 @@ import { WorldHub } from '../../components/WorldHub.tsx'
 import { VehicleExtras } from './VehicleExtras.tsx'
 import { removeVehiclePhotos } from '../../lib/photos.ts'
 import { EmptyState, EASE, NotFound, PageHead, StatusPill, VehicleVisual, fmtMoney, img, vehicleTitle } from '../../components/ui.tsx'
+import { addBasicPlan } from '../../lib/basicplan.ts'
+import { Workshops } from '../../components/Workshops.tsx'
 import { CarQuick } from '../../components/CarQuick.tsx'
 import { Details } from '../../components/QuickInput.tsx'
 import { useT, type TKey } from '../../i18n/i18n.ts'
@@ -32,8 +34,8 @@ export function OwnHub() {
       tools={[
         { to: 'own/garage', title: 'Garage', text: tx('Alle Autos an einem Ort, mit Status vom Traum über Import bis Verkauf.', 'All cars in one place, with status from dream through import to sale.'), img: img('cars/r34'), meta: n ? tx(`${n} Fahrzeuge`, `${n} vehicles`) : tx('Noch leer', 'Still empty') },
         { to: 'own/simulator', title: tx('Ownership-Simulator', 'Ownership simulator'), text: tx('Was ein Auto über die Jahre wirklich kostet: Sprit, Versicherung, Steuer, Wartung und Wertänderung.', 'What a car really costs over the years: fuel, insurance, tax, maintenance and change in value.'), img: img('cars/fd'), meta: tx('Nur deine Zahlen', 'Only your numbers') },
-        { to: 'own/build', title: 'Build Studio', text: tx('Umbauten planen, Budget im Blick, Teile-Shops.', 'Plan modifications, keep the budget in view, parts shops.'), img: img('parts-wheel'), meta: tx('Plan → Einbau', 'Plan → installed') },
-        { to: 'own/parts', title: tx('Teile-Shops', 'Parts shops'), text: tx('Spezialisten aus aller Welt, passend zu den Marken in deiner Garage.', 'Specialists from around the world, matching the makes in your garage.'), img: img('parts-show'), meta: tx('Vorschläge je Auto', 'Suggestions per car') },
+        { to: 'own/build', title: 'Build Studio', text: tx('Umbauten planen, Budget im Blick, Werkstätten zum Einbau.', 'Plan modifications, keep the budget in view, workshops to fit them.'), img: img('parts-wheel'), meta: tx('Plan → Einbau', 'Plan → installed') },
+        { to: 'own/parts', title: tx('Werkstätten', 'Workshops'), text: tx('Betriebe in deiner Nähe, passend zu Marke und Alter deines Autos.', 'Workshops near you, matching your car’s make and age.'), img: img('parts-show'), meta: tx('Nach Standort', 'By location') },
         { to: 'own/maintenance', title: tx('Wartungsplaner', 'Maintenance planner'), text: tx('Intervalle nach Zeit und Kilometern, Fälligkeiten, Kalender-Export.', 'Intervals by time and distance, due dates, calendar export.'), img: img('parts-engine'), meta: due ? tx(`${due} Einträge`, `${due} entries`) : tx('Mit .ics-Export', 'With .ics export') },
         { to: 'own/passport', title: 'Automotive Passport', text: tx('Die Geschichte deines Autos auf einer Zeitleiste. Druckbar und exportierbar.', 'Your car’s story on one timeline. Printable and exportable.'), img: roadImg('hakone'), meta: tx('Kauf · Import · Wartung · Fahrten', 'Purchase · import · service · drives') },
       ]}
@@ -53,7 +55,7 @@ const STATUS_HINT: Record<VehicleStatus, { de: string; en: string }> = {
 }
 
 function AddVehicle({ onDone }: { onDone?: (v: Vehicle) => void }) {
-  const { tx } = useT()
+  const { tx, L } = useT()
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<VehicleStatus>('owned')
   return (
@@ -73,6 +75,8 @@ function AddVehicle({ onDone }: { onDone?: (v: Vehicle) => void }) {
         examples={[tx('Porsche 911 (964) 1990 140.000 km', 'Porsche 911 (964) 1990 140,000 km'), 'BMW M3 2003', 'Mazda MX-5 1994']}
         onCar={(c) => {
           const v = addVehicle({ make: c.make, model: c.model, year: c.year, market: c.market, modelId: c.modelId, mileageKm: c.mileageKm, price: c.price, status: c.status ?? status, source: 'manual' })
+          // Eigenes Auto: Wartungsplan entsteht gleich mit
+          if (v.status === 'owned') addBasicPlan(v, L)
           setQ('')
           onDone?.(v)
         }}
@@ -305,6 +309,10 @@ function VehiclePage({ id }: { id: string }) {
             <textarea className="input" rows={4} value={v.notes ?? ''} onChange={(e) => set({ notes: e.target.value.slice(0, 4000) || undefined })} />
           </label>
           <p className="muted small">{tx('Nur https-Links werden gespeichert. Änderungen speichern sich sofort auf diesem Gerät.', 'Only https links are saved. Changes are saved instantly on this device.')}</p>
+        </Details>
+
+        <Details title={tx(`Werkstätten für ${v.make} in deiner Nähe`, `Workshops for ${v.make} near you`)}>
+          <Workshops make={v.make} year={v.year} limit={6} />
         </Details>
 
         <VehicleExtras v={v} />

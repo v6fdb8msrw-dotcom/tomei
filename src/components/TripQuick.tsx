@@ -7,18 +7,12 @@ import { autoTrip, loadPlaces } from '../lib/autotrip.ts'
 import { AREAS, plain, type Place } from '../lib/quick.ts'
 import { navigate } from '../lib/router.ts'
 import { nowIso, uid, upsertTrip, useStore } from '../store/store.ts'
+import { setHome, useHome } from '../lib/home.ts'
+import { useCarProfile } from '../lib/useCar.ts'
+import { vehicleTitle } from './ui.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { QuickInput, type Suggestion } from './QuickInput.tsx'
 import { roadWaypoints } from './TripPlan.tsx'
-
-const HOME_KEY = 'tomei.startplace'
-const loadHome = () => {
-  try {
-    return localStorage.getItem(HOME_KEY) ?? ''
-  } catch {
-    return ''
-  }
-}
 
 /** Vorschläge zum letzten Wort bzw. den letzten Wörtern der Eingabe */
 export function placeSuggestions(text: string, places: Place[], L: (x: { de: string; en: string }) => string, only?: 'place'): Suggestion[] {
@@ -51,8 +45,11 @@ export function TripQuick() {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [places, setPlaces] = useState<Place[]>([])
-  const [home, setHome] = useState(loadHome)
-  const owned = useStore((s) => s.vehicles.find((v) => v.status === 'owned'))
+  const home = useHome()
+  const cars = useStore((s) => s.vehicles)
+  const [carId, setCarId] = useState<string | undefined>()
+  const owned = cars.find((v) => v.id === carId) ?? cars.find((v) => v.status === 'owned') ?? undefined
+  const profile = useCarProfile(owned)
   useEffect(() => {
     let alive = true
     loadPlaces().then((p) => alive && setPlaces(p))
@@ -65,7 +62,7 @@ export function TripQuick() {
     setBusy(true)
     setMsg('')
     try {
-      const r = await autoTrip(q, roadWaypoints, places.find((p) => p.n === home))
+      const r = await autoTrip(q, roadWaypoints, home ? { n: home.n, lat: home.lat, lon: home.lon, cc: home.cc ?? '', pop: 1 } : undefined, profile)
       if (r.problem) {
         setMsg(
           r.problem === 'nothing'
@@ -74,14 +71,7 @@ export function TripQuick() {
         )
         return
       }
-      if (r.from) {
-        setHome(r.from.n)
-        try {
-          localStorage.setItem(HOME_KEY, r.from.n)
-        } catch {
-          /* Startort wird dann nicht gemerkt */
-        }
-      }
+      if (r.from && !home) setHome({ n: r.from.n, lat: r.from.lat, lon: r.from.lon, cc: r.from.cc })
       const t = nowIso()
       const id = uid()
       upsertTrip({ id, name: r.name, roadId: r.roads[0]?.id, vehicleId: owned?.id, waypoints: r.waypoints, plan: r.wish.days ? { days: r.wish.days } : undefined, createdAt: t, updatedAt: t })
@@ -103,23 +93,33 @@ export function TripQuick() {
       button={tx('Planen', 'Plan')}
       examples={[tx('München nach Stilfser Joch, 2 Tage', 'Munich to Stelvio, 2 days'), tx('Dolomiten, Wochenende', 'Dolomites, weekend'), tx('Schottland, 5 Tage', 'Scotland, 5 days'), tx('Zürich, Schweizer Alpen, 3 Tage', 'Zürich, Swiss Alps, 3 days')]}
     >
-      {home && (
+      {(home || owned) && (
         <p className="quick-home small">
-          {tx('Start', 'Start')}: <b>{home}</b>{' '}
-          <button
-            type="button"
-            className="linkish"
-            onClick={() => {
-              setHome('')
-              try {
-                localStorage.removeItem(HOME_KEY)
-              } catch {
-                /* nichts zu tun */
-              }
-            }}
-          >
-            {tx('vergessen', 'forget')}
-          </button>
+          {home && (
+            <>
+              {tx('Start', 'Start')}: <b>{home.n}</b>{' '}
+              <button type="button" className="linkish" onClick={() => setHome(null)}>
+                {tx('vergessen', 'forget')}
+              </button>
+            </>
+          )}
+          {home && owned && ' · '}
+          {owned && (
+            <>
+              {tx('Mit', 'With')}{' '}
+              {cars.length > 1 ? (
+                <select className="chip" value={owned.id} onChange={(e) => setCarId(e.target.value)} aria-label={tx('Auto', 'Car')}>
+                  {cars.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {vehicleTitle(c)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <b>{vehicleTitle(owned)}</b>
+              )}
+            </>
+          )}
         </p>
       )}
       {msg && (

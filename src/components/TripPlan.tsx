@@ -6,8 +6,10 @@ import { loadTerrain } from '../lib/terrain.ts'
 import { haversineKm } from '../lib/gpx.ts'
 import { DEFAULT_DETOUR, legsOf, splitDays, tripCost } from '../lib/tripplan.ts'
 import type { Trip, Vehicle, Waypoint } from '../store/schema.ts'
-import { SourceLink, fmtDate } from './ui.tsx'
+import { SourceLink, fmtDate, vehicleTitle } from './ui.tsx'
 import { Details } from './QuickInput.tsx'
+import { useCarProfile } from '../lib/useCar.ts'
+import { suits } from '../lib/carprofile.ts'
 import { useT } from '../i18n/i18n.ts'
 
 /** EU-Durchschnitt Super 95 mit Steuern */
@@ -56,24 +58,27 @@ export function useRoadGeo(wps: Waypoint[]) {
 }
 
 export function TripPlan({ trip, vehicle, save }: { trip: Trip; vehicle?: Vehicle; save: (p: Partial<Trip>) => void }) {
-  const { tx, locale } = useT()
+  const { tx, L, locale } = useT()
   const geo = useRoadGeo(trip.waypoints)
+  const car = useCarProfile(vehicle)
   const plan = trip.plan ?? {}
   const o = vehicle?.ownership
   const detour = plan.detour ?? DEFAULT_DETOUR
   
-  const consumption = plan.consumption ?? (o?.consumption || ASSUME.consumption)
+  const consumption = plan.consumption ?? (o?.consumption || car?.consumption || ASSUME.consumption)
   const fuelPrice = plan.fuelPrice ?? (o?.fuelPrice || FUEL.eur)
   const legs = useMemo(() => legsOf(trip.waypoints, geo.km, detour), [trip.waypoints, geo, detour])
   const hotel = plan.hotel ?? ASSUME.hotel
   const total0 = legs.reduce((s2, l) => s2 + l.km, 0)
   // Wunsch „3 Tage“ verteilt die Strecke gleichmäßig, sonst höchstens 320 km am Tag
-  const maxKm = plan.maxKm ?? (plan.days ? Math.max(120, Math.ceil(((total0 / plan.days) * 1.15) / 10) * 10) : 320)
+  const maxKm = plan.maxKm ?? (plan.days ? Math.max(120, Math.ceil(((total0 / plan.days) * 1.15) / 10) * 10) : (car?.kmPerDay ?? 320))
   const days = useMemo(() => splitDays(legs, maxKm), [legs, maxKm])
   const km = legs.reduce((s, l) => s + l.km, 0)
   const exactKm = legs.filter((l) => l.exact).reduce((s, l) => s + l.km, 0)
   const nights = Math.max(0, days.length - 1)
   const cost = tripCost(km, { consumption, fuelPrice, nights, hotel, tolls: plan.tolls ?? 0 })
+  const stops = car ? Math.floor(km / car.rangeKm) : 0
+  const bad = car ? [...new Set([...trip.waypoints.map((w) => w.via).filter((x): x is string => !!x), ...(trip.roadId ? [trip.roadId] : [])])].filter((id) => !suits(id, car)) : []
   const nf = (n: number, d = 0) => n.toLocaleString(locale, { maximumFractionDigits: d })
   const eur = (n: number) => n.toLocaleString(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
   const set = (k: keyof NonNullable<Trip['plan']>, v: string) => {
@@ -98,12 +103,13 @@ export function TripPlan({ trip, vehicle, save }: { trip: Trip; vehicle?: Vehicl
     if (!trip.waypoints.length) return []
     const used = new Set(trip.waypoints.map((w) => w.via))
     const names = new Set(trip.waypoints.map((w) => w.name))
-    return ROADS.filter((r) => !used.has(r.id) && r.id !== trip.roadId && !r.waypoints.every((w) => names.has(w.name)))
+    return ROADS.filter((r) => suits(r.id, car) && !used.has(r.id) && r.id !== trip.roadId && !r.waypoints.every((w) => names.has(w.name)))
       .map((r) => ({ r, km: Math.min(...r.waypoints.flatMap((w) => trip.waypoints.map((p) => haversineKm(w, p)))) }))
       .filter((x) => x.km < 220)
       .sort((a, b) => a.km - b.km)
       .slice(0, 5)
-  }, [trip.waypoints, trip.roadId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip.waypoints, trip.roadId, car?.low, car?.wide])
 
   if (!trip.waypoints.length) return null
   return (
@@ -122,6 +128,12 @@ export function TripPlan({ trip, vehicle, save }: { trip: Trip; vehicle?: Vehicl
             <b className="mono">{new Set(legs.map((l) => l.roadId).filter(Boolean)).size}</b>
             <span>{tx('Traumstraßen', 'dream roads')}</span>
           </div>
+          {stops > 0 && (
+            <div>
+              <b className="mono">{stops}</b>
+              <span>{tx('Tankstopps', 'fuel stops')}</span>
+            </div>
+          )}
           <div>
             <b className="mono">≈ {eur(cost.total)}</b>
             <span>
@@ -129,6 +141,22 @@ export function TripPlan({ trip, vehicle, save }: { trip: Trip; vehicle?: Vehicl
               {nights > 0 && ` + ${nights} ${nights === 1 ? tx('Nacht', 'night') : tx('Nächte', 'nights')}`}
             </span>
           </div>
+        </div>
+      )}
+      {car && legs.length > 0 && (car.why.length > 0 || bad.length > 0) && (
+        <div className="gcard trip-car">
+          <h3>{vehicle ? vehicleTitle(vehicle) : ''}</h3>
+          <ul>
+            {car.why.map((w) => (
+              <li key={w.de}>{L(w)}</li>
+            ))}
+            <li>{tx(`Reichweite etwa ${nf(car.rangeKm)} km (Annahme bei ${nf(car.consumption, 1)} l/100 km)`, `Range around ${nf(car.rangeKm)} km (assumed at ${nf(car.consumption, 1)} l/100 km)`)}</li>
+          </ul>
+          {bad.length > 0 && (
+            <p className="small">
+              <b>{tx('Passt nicht gut zu deinem Auto:', 'Not a good match for your car:')}</b> {bad.map((id) => ROADS.find((r) => r.id === id)?.name).join(', ')}
+            </p>
+          )}
         </div>
       )}
       {legs.length > 0 && (

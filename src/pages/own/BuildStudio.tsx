@@ -7,7 +7,7 @@ import { addPassportEntry, uid, updateVehicle, useStore } from '../../store/stor
 import type { Mod, ModStatus } from '../../store/schema.ts'
 import { QuickInput } from '../../components/QuickInput.tsx'
 import { guessCategory, guessModStatus, parseNote } from '../../lib/quick.ts'
-import { PartsShops } from '../Parts.tsx'
+import { Workshops } from '../../components/Workshops.tsx'
 import { useT } from '../../i18n/i18n.ts'
 
 const COLS: { s: ModStatus; l: { de: string; en: string } }[] = [
@@ -148,7 +148,18 @@ export default function BuildStudio({ vehicleId }: { vehicleId?: string }) {
           </>
         )}
       </section>
-      <PartsShops />
+      {v && (
+        <section className="section">
+          <div className="sec-head">
+            <p className="eyebrow">{tx('Einbauen lassen', 'Have it fitted')}</p>
+            <h2>
+              {tx('Werkstätten für ', 'Workshops for ')}
+              <em>{v.make}.</em>
+            </h2>
+          </div>
+          <Workshops make={v.make} year={v.year} limit={9} />
+        </section>
+      )}
     </>
   )
 }

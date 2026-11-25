@@ -6,6 +6,7 @@ import { EmptyState, PageHead, VehicleSelect, fmtDate, fmtMoney, img, today, veh
 import { dueState, nextDue, toIcs } from '../../lib/maintenance.ts'
 import { addPassportEntry, downloadFile, removeMaintenance, uid, updateVehicle, upsertMaintenance, useStore } from '../../store/store.ts'
 import type { MaintenanceItem, MaintenanceKind } from '../../store/schema.ts'
+import { addBasicPlan } from '../../lib/basicplan.ts'
 import { Details } from '../../components/QuickInput.tsx'
 import { useT } from '../../i18n/i18n.ts'
 
@@ -17,15 +18,6 @@ const KINDS: { k: MaintenanceKind; l: { de: string; en: string } }[] = [
   { k: 'repair', l: { de: 'Reparatur', en: 'Repair' } },
   { k: 'other', l: { de: 'Sonstiges', en: 'Other' } },
 ]
-/** Üblicher Grundplan als Startpunkt. Maßgeblich ist das Serviceheft; HU-Frist: § 29 StVZO (Pkw alle 24 Monate). */
-const BASIC: { de: string; en: string; kind: MaintenanceKind; months: number; km?: number }[] = [
-  { de: 'Ölwechsel mit Filter', en: 'Oil and filter change', kind: 'service', months: 12, km: 10000 },
-  { de: 'Hauptuntersuchung (HU)', en: 'Roadworthiness test (HU)', kind: 'inspection', months: 24 },
-  { de: 'Bremsflüssigkeit', en: 'Brake fluid', kind: 'service', months: 24 },
-  { de: 'Reifen prüfen und wechseln', en: 'Check and change tyres', kind: 'tyres', months: 6 },
-  { de: 'Batterie und Frostschutz vor dem Winter', en: 'Battery and antifreeze before winter', kind: 'season', months: 12 },
-]
-
 const STATE_L = {
   overdue: { de: 'Überfällig', en: 'Overdue' },
   soon: { de: 'Bald fällig', en: 'Due soon' },
@@ -54,16 +46,7 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
     upsertMaintenance(item)
     setF({ ...f, title: '' })
   }
-  const addBasic = () => {
-    if (!v) return
-    for (const b of BASIC) {
-      const title = L(b)
-      if (items.some((x) => x.title === title)) continue
-      const base = { intervalMonths: b.months, intervalKm: b.km, lastDate: today(), lastKm: b.km ? v.mileageKm : undefined }
-      const hu = b.kind === 'inspection' && v.huDue ? { dueDate: v.huDue + '-28' } : {}
-      upsertMaintenance({ id: uid(), vehicleId: v.id, title, kind: b.kind, ...base, ...nextDue(base), ...hu, history: [] })
-    }
-  }
+  const addBasic = () => v && addBasicPlan(v, L)
   const book = () => {
     if (!done || !v) return
     const m = items.find((x) => x.id === done.id)

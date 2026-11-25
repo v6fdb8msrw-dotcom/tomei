@@ -6,6 +6,9 @@ import { guessCategory, guessKind, guessModStatus, parseCar, parseNote, parseTri
 import { chooseRoads } from '../lib/autotrip.ts'
 import { ROADS } from '../data/roads.ts'
 import { COUNTRIES } from '../data/countries.ts'
+import { quote } from '../lib/landed.ts'
+import { findShops } from '../lib/workshops.ts'
+import { carProfile, suits } from '../lib/carprofile.ts'
 import { winAnsi } from '../lib/dossier.ts'
 import { parseGpx, toGpx, pathKm, mapsDirections } from '../lib/gpx.ts'
 import { simulateOwnership, EMPTY_OWNERSHIP } from '../lib/ownership.ts'
@@ -258,5 +261,40 @@ describe('Ein Feld: Eintrag, Umbau, Wert', () => {
     expect(guessKind('Irgendwas')).toBe('note')
     expect(guessCategory('KW Gewindefahrwerk')).toBe('Fahrwerk')
     expect(guessModStatus('Auspuff verbaut')).toEqual({ status: 'installed', title: 'Auspuff' })
+  })
+})
+
+describe('Kosten je Portal, Werkstätten, Auto-Profil', () => {
+  const rates = { EUR: 0.0057, USD: 0.0063, GBP: 0.0047, AUD: 0.0093, CAD: 0.009, NZD: 0.0114 }
+  const o = { rates, home: 'de', classic: false }
+  it('EU ohne Zusatzkosten, Übersee mit Zoll, Steuer und Gebühr', () => {
+    expect(quote({ market: 'eu' }, 20000, o).extra).toBe(0)
+    const us = quote({ market: 'us', house: 'bat' }, 20000, o)
+    expect(us.rows.find((r) => r.de.startsWith('Käufergebühr'))?.eur).toBe(1000)
+    expect(us.total).toBe(20000 + us.extra)
+    expect(us.rows.reduce((a, r) => a + r.eur, 0)).toBeGreaterThan(us.extra - 8)
+    expect(us.rows.reduce((a, r) => a + r.eur, 0)).toBeLessThan(us.extra + 8)
+    const jp = quote({ market: 'jp' }, 20000, { ...o, classic: true })
+    expect(jp.rows.some((r) => r.de === 'EUSt 7 %')).toBe(true)
+    expect(jp.total).toBeLessThan(quote({ market: 'jp' }, 20000, o).total)
+    expect(quote({ market: 'au' }, 20000, o).missing.length).toBeGreaterThan(0)
+  })
+  it('Werkstätten: Marke vor Klassik, Vertragspartner bei alten Autos hinten', () => {
+    const shops = [
+      { n: 'PZ', la: 48.14, lo: 11.58, m: ['porsche'], d: 1 as const },
+      { n: 'Elfer Klassik', la: 48.2, lo: 11.7, m: ['porsche'], o: 1 as const },
+      { n: 'Oldie', la: 48.15, lo: 11.6, o: 1 as const },
+      { n: 'Fern', la: 52.5, lo: 13.4, m: ['porsche'] },
+    ]
+    const h = findShops(shops, { make: 'Porsche', year: 1985, lat: 48.14, lon: 11.58, now: 2026 })
+    expect(h.map((x) => x.s.n)[0]).toBe('Elfer Klassik')
+    expect(h.some((x) => x.s.n === 'Fern')).toBe(false)
+    expect(findShops(shops, { make: 'Porsche', year: 2022, lat: 48.14, lon: 11.58, now: 2026 }).some((x) => x.s.n === 'Oldie')).toBe(false)
+  })
+  it('flaches Auto meidet Schotter', () => {
+    const p = carProfile({ year: 1990 }, { id: 'x', n: 'X', mk: 'X', md: 'X', cc: 'it', cl: 'sports' })!
+    expect(suits('w-dalton-highway', p)).toBe(false)
+    expect(suits('stelvio', p)).toBe(true)
+    expect(p.kmPerDay).toBe(270)
   })
 })

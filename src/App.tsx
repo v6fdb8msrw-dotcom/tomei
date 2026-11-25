@@ -79,7 +79,7 @@ function useSub(world: World): SubItem[] {
     { to: 'own/garage', label: 'Garage' },
     { to: 'own/simulator', label: en ? 'Ownership' : 'Unterhalt' },
     { to: 'own/build', label: 'Build Studio' },
-    { to: 'own/parts', label: en ? 'Parts' : 'Teile' },
+    { to: 'own/parts', label: en ? 'Workshops' : 'Werkstätten' },
     { to: 'own/maintenance', label: en ? 'Maintenance' : 'Wartung' },
     { to: 'own/passport', label: 'Passport' },
   ]
@@ -221,7 +221,7 @@ export default function App() {
             <b>Own</b>
             <a href="#/own/garage">Garage</a>
             <a href="#/own/simulator">{lang === 'en' ? 'Ownership simulator' : 'Unterhalt'}</a>
-            <a href="#/own/parts">{lang === 'en' ? 'Parts shops' : 'Teile-Shops'}</a>
+            <a href="#/own/parts">{lang === 'en' ? 'Workshops' : 'Werkstätten'}</a>
             <a href="#/own/maintenance">{lang === 'en' ? 'Maintenance' : 'Wartung'}</a>
             <a href="#/own/passport">Passport</a>
           </nav>

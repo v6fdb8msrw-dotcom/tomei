@@ -105,7 +105,7 @@ export function DataPage() {
             onClick={() => {
               if (confirm(tx('Wirklich alle Daten löschen? Exportiere vorher eine Sicherung, wenn du sie behalten willst.', 'Really delete all data? Export a backup first if you want to keep it.'))) {
                 wipeAll()
-                void wipePhotos()
+                void (setHome(null), wipePhotos())
                 setMsg({ t: 'ok', m: tx('Alle Daten wurden gelöscht.', 'All data has been deleted.') })
               }
             }}

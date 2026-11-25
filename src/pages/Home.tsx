@@ -51,13 +51,8 @@ function Hero() {
   }, [])
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    const [make, ...rest] = q.trim().split(/\s+/)
-    try {
-      if (make) localStorage.setItem(`${BRAND.storagePrefix}.markets.q`, JSON.stringify({ make, model: rest.join(' ') }))
-    } catch {
-      /* ohne Speicher öffnet die Suche mit dem Standard */
-    }
-    navigate('discover/search/suche')
+    if (sugg[0]) return navigate('discover/models/' + sugg[0].id)
+    navigate('discover/search')
   }
   const move = (e: MouseEvent) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -92,7 +87,7 @@ function Hero() {
           {openSug && sugg.length > 0 && (
             <ul className="mf-suggest" role="listbox">
               {sugg.map((m) => (
-                <li key={m.id} role="option" aria-selected={false} onMouseDown={(e) => (e.preventDefault(), setQ(m.n.replace(/\s*\(.*\)$/, '')), setOpenSug(false))}>
+                <li key={m.id} role="option" aria-selected={false} onMouseDown={(e) => (e.preventDefault(), setOpenSug(false), navigate('discover/models/' + m.id))}>
                   <span className="mf-flag">{DIR_COUNTRY[m.cc]?.flag ?? '🌍'}</span>
                   <b>{m.n}</b>
                   <small>{m.y0 ?? ''}</small>
