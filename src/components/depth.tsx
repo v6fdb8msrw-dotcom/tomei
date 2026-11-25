@@ -4,7 +4,7 @@ import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } fro
 import { useEffect, type ReactNode } from 'react'
 import type { Market } from '../data.ts'
 
-const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
+const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.webp`
 
 /** Maus-Position im Fenster als −1 … 1 (weich gefedert) */
 function usePointer() {

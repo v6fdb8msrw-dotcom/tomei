@@ -17,6 +17,8 @@ TŌMEI nutzt ausschließlich kostenlose Open-Source-Bibliotheken und frei lizenz
 | @fontsource-variable/inter | 5.3.0 | OFL-1.1 (Schrift), MIT (Paket) | Fließtext |
 | @fontsource/jetbrains-mono | 5.3.0 | OFL-1.1 (Schrift), MIT (Paket) | Zahlen |
 
+- pdf-lib 1.17.1 (MIT), nur geladen, wenn eine Fahrzeugmappe erstellt wird
+
 ## Entwicklung (nicht im Build)
 
 vite 8.3.5 (MIT), @vitejs/plugin-react 6.1.2 (MIT), typescript 7.0.2 (Apache-2.0), vitest 5.1.1 (MIT), oxlint 1.90.0 (MIT), @types/* (MIT).

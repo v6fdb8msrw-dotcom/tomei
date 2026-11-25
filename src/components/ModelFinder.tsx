@@ -9,7 +9,8 @@ import { sendToCalc, type MarketQuery } from '../data.ts'
 import { DIR_COUNTRY } from '../data/directory.ts'
 import { useT } from '../i18n/i18n.ts'
 import { addVehicle, useStore } from '../store/store.ts'
-import { EASE, img } from './ui.tsx'
+import { modelThumb } from '../lib/modelimg.ts'
+import { EASE } from './ui.tsx'
 import { href } from '../lib/router.ts'
 
 export type CarModel = {
@@ -80,22 +81,27 @@ export function score(m: CarModel, words: string[]): number {
 }
 
 let cache: Promise<CarModel[]> | null = null
+let now: CarModel[] | null = null
+export const catalogueIfLoaded = () => now
 /** Katalog laden (einmal je Sitzung): handverlesene Klassiker plus Wikidata/Wikipedia-Modelle */
 export function loadCatalogue(): Promise<CarModel[]> {
   cache ??= import('../data/models.json').then((m) => {
     const cur = curated()
     const names = new Set(cur.map((c) => norm(c.n)))
-    return [...cur, ...(m.default as CarModel[]).filter((b) => !names.has(norm(b.n)))]
+    return (now = [...cur, ...(m.default as CarModel[]).filter((b) => !names.has(norm(b.n)))])
   })
   return cache
 }
 
-/** Fotos der handverlesenen Modelle (lizenziert, siehe CREDITS.md) */
-export const CURATED_PHOTO: Record<string, string> = { 'c-r34': 'cars/r34', 'c-fd': 'cars/fd', 'c-s15': 'cars/s15', 'c-evo6': 'cars/evo', 'c-mustang': 'cars/mustang', 'c-esprit': 'cars/esprit', 'c-monaro': 'cars/monaro' }
-export type ModelPhotos = Record<string, { f: string; a: string; l: string; u?: string }>
+/** Lizenznachweis je Foto: f Datei auf Wikimedia Commons, a Urheber, l Lizenz, u Lizenztext */
+export type Photo = { f: string; a: string; l: string; u?: string }
+/** Fotos je Modell; Nummer k liegt als public/images/m/<id>-<k>.avif, das erste zusätzlich klein als <id>-0.webp */
+export type ModelPhotos = Record<string, Photo[]>
 let photoCache: Promise<ModelPhotos> | null = null
-/** Bildnachweise je Modell; ein Eintrag heißt: public/images/models/<id>.jpg gibt es */
-export const loadPhotos = () => (photoCache ??= import('../data/models_photos.json').then((m) => m.default as ModelPhotos))
+let photosNow: ModelPhotos | null = null
+export const loadPhotos = () => (photoCache ??= import('../data/models_photos.json').then((m) => (photosNow = m.default as unknown as ModelPhotos)))
+export const photosIfLoaded = () => photosNow
+export { modelImg, modelThumb } from '../lib/modelimg.ts'
 
 /** Beste Treffer für eine Eingabe */
 export function suggest(all: CarModel[], text: string, n = 8): CarModel[] {
@@ -111,7 +117,7 @@ export function suggest(all: CarModel[], text: string, n = 8): CarModel[] {
 
 export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: string) => void }) {
   const { tx, L, d } = useT()
-  const [all, setAll] = useState<CarModel[] | null>(null)
+  const [all, setAll] = useState<CarModel[] | null>(catalogueIfLoaded)
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [hi, setHi] = useState(0)
@@ -121,7 +127,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
   const [cls, setCls] = useState('all')
   const [shown, setShown] = useState(PAGE)
   const vehicles = useStore((s) => s.vehicles)
-  const [pics, setPics] = useState<ModelPhotos>({})
+  const [pics, setPics] = useState<ModelPhotos>(photosIfLoaded() ?? {})
   const box = useRef<HTMLDivElement>(null)
 
   // Katalog erst laden, wenn der Finder sichtbar wird (eigene Datei, ~100 KB)
@@ -134,7 +140,7 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
     }
   }, [])
 
-  const hasPhoto = (m: CarModel) => !!(pics[m.id] || CURATED_PHOTO[m.id])
+  const hasPhoto = (m: CarModel) => !!pics[m.id]?.length
   const words = useMemo(() => norm(q).split(' ').filter(Boolean), [q])
   const eras: { id: string; de: string; en: string; test: (m: CarModel) => boolean }[] = [
     { id: 'all', de: 'Alle Jahre', en: 'All years', test: () => true },
@@ -260,9 +266,9 @@ export function ModelFinder({ onSearch }: { onSearch: (q: MarketQuery, origin: s
           const oldOk = (m.y0 ?? 9999) <= YEAR - 30
           return (
             <motion.article key={m.id} className="gcard mf-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: (k % PAGE) * 0.012, ease: EASE }}>
-              {(pics[m.id] || CURATED_PHOTO[m.id]) && (
-                <a className="mf-photo" href={href('discover/models/' + m.id)} tabIndex={-1} aria-hidden>
-                  <img src={img(CURATED_PHOTO[m.id] ?? 'models/' + m.id)} alt="" loading="lazy" />
+              {hasPhoto(m) && (
+                <a className="mf-photo" data-vt={'model-' + m.id} href={href('discover/models/' + m.id)} tabIndex={-1} aria-hidden>
+                  <img src={modelThumb(m.id)} alt="" loading="lazy" />
                 </a>
               )}
               <header>

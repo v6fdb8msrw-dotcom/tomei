@@ -46,7 +46,7 @@ export function parseGpx(text: string): GpxData {
   return { name: nameM ? decode(nameM[1]).slice(0, 160) : undefined, waypoints, track }
 }
 
-export function toGpx(name: string, waypoints: Waypoint[], track: [number, number][] = [], creator = 'TOMEI'): string {
+export function toGpx(name: string, waypoints: Waypoint[], track: [number, number][] = [], creator = 'TOMEI', segments: [number, number][][] = []): string {
   const f = (v: number) => v.toFixed(6)
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -63,6 +63,11 @@ export function toGpx(name: string, waypoints: Waypoint[], track: [number, numbe
     lines.push(`  <trk><name>${esc(name)}</name><trkseg>`)
     lines.push(...track.map(([la, lo]) => `    <trkpt lat="${f(la)}" lon="${f(lo)}"/>`))
     lines.push('  </trkseg></trk>')
+  }
+  if (segments.length) {
+    lines.push(`  <trk><name>${esc(name)}</name>`)
+    for (const g of segments) lines.push('    <trkseg>', ...g.map(([la, lo]) => `    <trkpt lat="${f(la)}" lon="${f(lo)}"/>`), '    </trkseg>')
+    lines.push('  </trk>')
   }
   lines.push('</gpx>')
   return lines.join('\n')

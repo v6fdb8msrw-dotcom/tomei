@@ -2,7 +2,7 @@ import { getState } from './store/store.ts'
 // Alle Inhalte an einer Stelle: Texte, Links und Bilder lassen sich hier tauschen.
 // [REPLACE] markiert Stellen, an denen eigene Fotos oder Videos hingehören.
 
-const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
+const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.webp`
 
 export type Tab = 'home' | 'spots' | 'markets' | 'import' | 'service' | 'rent' | 'parts'
 
@@ -290,7 +290,7 @@ export const AED_PER_USD = 3.6725
 
 export type Car = { id: string; model: string; chassis: string; year: number; grade: string; km: number; jpy: number; img: string; tag: string }
 
-const car = (name: string) => `${import.meta.env.BASE_URL}images/cars/${name}.jpg`
+const car = (name: string) => `${import.meta.env.BASE_URL}images/cars/${name}.webp`
 
 // Beispiel-Listings mit realistischen Marktpreisen, keine Live-Auktionsdaten. Echte Fotos (CREDITS.md)
 export const CARS: Car[] = [

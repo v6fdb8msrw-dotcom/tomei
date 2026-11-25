@@ -123,9 +123,11 @@ Wikimedia Commons, 24.11.2026, auf 1400 px verkleinert: mustang.jpg (Coolalabrig
 
 Unsplash-Lizenz (kostenlos, auch kommerziell, Namensnennung freiwillig). Einzelnachweise: `public/images/CREDITS.md`. Einige Spot-Fotos sind Symbolbilder (dort vermerkt).
 
-## Modellfotos (`public/images/models/`)
+## Modellfotos (`public/images/m/`)
 
-1.074 Artikelbilder der Katalogmodelle von Wikimedia Commons, 24.11.2026, auf 500 px verkleinert. Nur CC BY, CC BY-SA, CC0, gemeinfrei und „Attribution“ (freie Nutzung mit Namensnennung). Urheber, Lizenz und Datei je Bild stehen in `src/data/models_photos.json` und sichtbar auf jeder Modellseite. Bei CC-BY-SA-Fotos steht die verkleinerte Fassung unter derselben Lizenz.
+Fotos der Katalogmodelle von Wikimedia Commons (24./25.11.2026), je Modell bis zu drei, verkleinert (AVIF bis 1120 px, Kachel WebP 440 px). Nur CC BY, CC BY-SA, CC0, gemeinfrei, FAL und „Attribution“. Urheber, Lizenz und Datei je Bild stehen in `src/data/models_photos.json` und sichtbar auf jeder Modellseite. Bei CC-BY-SA-Fotos steht die verkleinerte Fassung unter derselben Lizenz. Titelfotos am 25.11.2026 in Vorschauen durchgesehen.
+
+Alle übrigen Fotos liegen seit alpha.6 als WebP vor (`name.webp` bis 1680 px, `name-s.webp` 640 px); die Dateinamen in den Tabellen oben tragen noch die alte Endung .jpg.
 
 ## Schriften
 

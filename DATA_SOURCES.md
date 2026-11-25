@@ -35,6 +35,13 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 | Importregeln | `src/data/importRules.ts` | Behördenseiten (Links je Land) | 24.11.2026 |
 | Landflächen des Globus | `world-atlas/land-110m.json` | Natural Earth (gemeinfrei) über das Paket world-atlas (ISC) | Paket 2.0.2 |
 
+- **Technische Daten je Modell** (`src/data/models_specs.json`): Infoboxen der englischen Wikipedia, CC BY-SA 4.0, abgerufen 25.11.2026, automatisch ausgelesen (Maße, Gewicht, Hubraum, Motoren, Generationen).
+- **Schwachstellen** (`src/data/weakspots.ts`): Kaufberatungen, über die Websuche am 25.11.2026 gelesen, in eigenen Worten; Links je Modell.
+- **Gelände** (`public/data/terrain/`): Terrain Tiles (Mapzen/Tilezen, AWS Open Data; u. a. SRTM, EU-DEM, NED, GMTED), einmalig am 25.11.2026 geladen.
+- **Straßenverläufe**: © OpenStreetMap-Mitwirkende (ODbL), geladen am 25.11.2026 über Overpass und OpenFreeMap-Kacheln (© OpenMapTiles). Einmalig beim Erstellen; die Webseite fragt keinen Kartendienst. Die daraus abgeleiteten Verläufe stehen unter der ODbL.
+- **Orte** (`src/data/places.json`): 3.325 Städte, OpenStreetMap (ODbL) über OpenFreeMap-Kacheln, 25.11.2026.
+- **Spritpreis**: EU-Durchschnitt Super 95, 1,83 €/l, EU Weekly Oil Bulletin vom 16.11.2026 (abgelesen über fuel-prices.eu). Von Hand aktualisieren (`FUEL` in `TripPlan.tsx`).
+
 ## Annahmen (in der Oberfläche als „Annahme“ markiert, änderbar)
 
 | Annahme | Standard | Wo |
@@ -42,6 +49,8 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 | Kursschwankung bis zur Zahlung | ±5 % | Importrechner 2.0, Startseite „Real Cost“ |
 | Reserve im Worst Case | 10 % vom Fahrzeugwert | Importrechner 2.0, Startseite |
 | Transportversicherung | 1,5 % | Rechner (schon in 1.x) |
+
+- Roadtrip: 9 l/100 km, 100 €/Nacht, Umwegfaktor 1,35, 320 km/Tag. Unterhalt: Startwerte `DEMO` in `Simulator.tsx`. Wartung: üblicher Grundplan.
 
 ## Demo-Daten (gekennzeichnet)
 

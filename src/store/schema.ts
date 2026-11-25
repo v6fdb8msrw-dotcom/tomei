@@ -98,7 +98,10 @@ export type MaintenanceItem = {
 export type PassportKind = 'purchase' | 'import' | 'registration' | 'service' | 'mod' | 'trip' | 'document' | 'note'
 export type PassportEntry = { id: string; vehicleId: string; date: string; kind: PassportKind; title: string; notes?: string; km?: number; cost?: Money }
 
-export type Waypoint = { name: string; lat: number; lon: number }
+/** via: der Abschnitt vom vorigen Punkt hierher folgt dieser Straße aus dem Explorer */
+export type Waypoint = { name: string; lat: number; lon: number; via?: string; /** Startpunkt dieser Explorer-Straße */ road?: string }
+/** Planung eines Roadtrips; leere Felder heißen „nicht eingetragen“ */
+export type TripPlanData = { days?: number; maxKm?: number; detour?: number; consumption?: number; fuelPrice?: number; hotel?: number; tolls?: number }
 export type Trip = {
   id: string
   name: string
@@ -107,6 +110,7 @@ export type Trip = {
   waypoints: Waypoint[]
   /** Spurpunkte aus einer importierten GPX-Datei [lat, lon] */
   track?: [number, number][]
+  plan?: TripPlanData
   notes?: string
   date?: string
   createdAt: string

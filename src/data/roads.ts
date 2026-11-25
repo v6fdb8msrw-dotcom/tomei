@@ -36,7 +36,8 @@ const BYSA3 = { licence: 'CC BY-SA 3.0', licenceUrl: 'https://creativecommons.or
 const BYSA2 = { licence: 'CC BY-SA 2.0', licenceUrl: 'https://creativecommons.org/licenses/by-sa/2.0/' }
 const BY2 = { licence: 'CC BY 2.0', licenceUrl: 'https://creativecommons.org/licenses/by/2.0/' }
 
-export const roadImg = (id: string) => `${import.meta.env.BASE_URL}images/roads/${id}.jpg`
+export const roadImg = (id: string) => `${import.meta.env.BASE_URL}images/roads/${id}.webp`
+export const roadThumb = (id: string) => `${import.meta.env.BASE_URL}images/roads/${id}-s.webp`
 
 const BASE_ROADS: Road[] = [
   {

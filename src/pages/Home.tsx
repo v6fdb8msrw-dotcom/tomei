@@ -7,7 +7,7 @@ import { CLASSICS, PRICE_SOURCE } from '../classics.ts'
 import { BRAND } from '../config/brand.ts'
 import { AGENTS, DEST, agentTotal } from '../data.ts'
 import { COUNTRIES, countryById } from '../data/countries.ts'
-import { ROADS, ROAD_KINDS, roadImg } from '../data/roads.ts'
+import { ROADS, ROAD_KINDS, roadImg, roadThumb } from '../data/roads.ts'
 import { GlobeView } from '../components/Globe.tsx'
 import { Badge, EASE, Reveal, StatusPill, VehicleVisual, fmtDate, fmtMoney, img, vehicleTitle } from '../components/ui.tsx'
 import { useT } from '../i18n/i18n.ts'
@@ -373,8 +373,8 @@ function Roads() {
             const c = countryById(r.country)
             return (
               <a key={r.id} className="hroad" href={href('drive/roads/' + r.id)}>
-                <div className="hroad-img" style={{ viewTransitionName: 'road-' + r.id }}>
-                  <img src={roadImg(r.id)} alt={r.name} loading="lazy" />
+                <div className="hroad-img" data-vt={'road-' + r.id}>
+                  <img src={roadThumb(r.id)} alt={r.name} loading="lazy" />
                 </div>
                 <div className="hroad-body">
                   <span>
@@ -422,7 +422,7 @@ function GarageSection() {
           <div className="garage">
             {vehicles.slice(0, 3).map((v) => (
               <a key={v.id} href={href('own/garage/' + v.id)} className="veh">
-                <div className="veh-img" style={{ viewTransitionName: 'veh-' + v.id }}>
+                <div className="veh-img" data-vt={'veh-' + v.id}>
                   <VehicleVisual v={v} />
                 </div>
                 <div className="veh-body">

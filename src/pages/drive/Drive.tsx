@@ -1,10 +1,10 @@
 // DRIVE: Übersicht, Roadtrip-Explorer, Straßen-Detailseiten und Automotive Atlas.
 import { ArrowRight, ArrowUpRight, Download, Map as MapIcon, MapPin, Mountain, Plus, Route } from 'lucide-react'
 import { motion } from 'motion/react'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { DEST, MARKETS, ORIGIN, RENT } from '../../data.ts'
 import { COUNTRIES, REGIONS, countryById, type Region } from '../../data/countries.ts'
-import { ROADS, ROAD_KINDS, ROADS_RETRIEVED, roadImg, type Road } from '../../data/roads.ts'
+import { ROADS, ROAD_KINDS, ROADS_RETRIEVED, roadImg, roadThumb, type Road } from '../../data/roads.ts'
 import { GlobeView } from '../../components/Globe.tsx'
 import { ProviderGrid } from '../../components/motion.tsx'
 import { WorldHub } from '../../components/WorldHub.tsx'
@@ -15,6 +15,10 @@ import { href, navigate } from '../../lib/router.ts'
 import { downloadFile, nowIso, uid, upsertTrip, useStore } from '../../store/store.ts'
 import { SpotsGrid } from '../Spots.tsx'
 import { BRAND } from '../../config/brand.ts'
+import { roadWaypoints } from '../../components/TripPlan.tsx'
+import { loadTerrain } from '../../lib/terrain.ts'
+
+const RoadMap3D = lazy(() => import('../../components/RoadMap3D.tsx'))
 
 export function DriveHub() {
   const { t, tx } = useT()
@@ -47,8 +51,8 @@ function RoadCard({ r, k }: { r: Road; k: number }) {
   const c = countryById(r.country)
   return (
     <motion.a href={href('drive/roads/' + r.id)} className="road" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-30px' }} transition={{ duration: 0.6, delay: (k % 3) * 0.06, ease: EASE }}>
-      <div className="road-img" style={{ viewTransitionName: 'road-' + r.id }}>
-        <img src={roadImg(r.id)} alt={r.name} loading="lazy" />
+      <div className="road-img" data-vt={'road-' + r.id}>
+        <img src={roadThumb(r.id)} alt={r.name} loading="lazy" />
       </div>
       <div className="road-body">
         <span className="road-meta">
@@ -121,10 +125,10 @@ export function RoadsExplorer() {
 
 /* ------------------------------------------------------------------ Detail */
 
-export function startTripFromRoad(r: Road, vehicleId?: string) {
+export async function startTripFromRoad(r: Road, vehicleId?: string) {
   const t = nowIso()
   const id = uid()
-  upsertTrip({ id, name: r.name, roadId: r.id, vehicleId, waypoints: r.waypoints.map((w) => ({ ...w })), createdAt: t, updatedAt: t })
+  upsertTrip({ id, name: r.name, roadId: r.id, vehicleId, waypoints: await roadWaypoints(r.id), createdAt: t, updatedAt: t })
   navigate('drive/builder/' + id)
 }
 
@@ -139,7 +143,7 @@ export function RoadDetail({ id }: { id: string }) {
   return (
     <>
       <section className="road-hero">
-        <div className="road-hero-img" style={{ viewTransitionName: 'road-' + r.id }}>
+        <div className="road-hero-img" data-vt={'road-' + r.id}>
           <img src={roadImg(r.id)} alt={r.name} />
         </div>
         <div className="road-hero-text">
@@ -181,6 +185,10 @@ export function RoadDetail({ id }: { id: string }) {
             <span>{c.leftHand ? tx('Linksverkehr', 'Drives on the left') : tx('Rechtsverkehr', 'Drives on the right')}</span>
           </div>
         </div>
+
+        <Suspense fallback={<div className="rm3-canvas" aria-hidden />}>
+          <RoadMap3D id={r.id} waypoints={r.waypoints} closed={r.loop || r.kind === 'track'} />
+        </Suspense>
 
         <p className="road-lead">{L(r.text)}</p>
         {r.wiki && (
@@ -230,7 +238,7 @@ export function RoadDetail({ id }: { id: string }) {
               <a className="btn small" href={osmDirections(r.waypoints)} target="_blank" rel="noopener noreferrer">
                 OpenStreetMap <ArrowUpRight size={13} />
               </a>
-              <button className="btn small" onClick={() => downloadFile(`${BRAND.ascii.toLowerCase()}-${r.id}.gpx`, toGpx(r.name, r.waypoints, [], BRAND.ascii), 'application/gpx+xml')}>
+              <button className="btn small" onClick={async () => downloadFile(`${BRAND.ascii.toLowerCase()}-${r.id}.gpx`, toGpx(r.name, r.waypoints, (await loadTerrain(r.id))?.r ?? [], BRAND.ascii), 'application/gpx+xml')}>
                 <Download size={13} /> GPX
               </button>
             </div>

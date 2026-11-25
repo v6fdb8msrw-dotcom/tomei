@@ -1,14 +1,20 @@
 // Roadtrip-Builder: eigene Routen aus Wegpunkten, GPX-Import und -Export, verknüpft mit Garage und Passport.
 import { ArrowDown, ArrowUp, ArrowUpRight, BookPlus, Download, FileUp, Plus, Trash2 } from 'lucide-react'
-import { lazy, Suspense, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
-import { ROADS, roadImg } from '../../data/roads.ts'
-import { EmptyState, Note, NotFound, PageHead, VehicleSelect, fmtDate, img, today, vehicleTitle } from '../../components/ui.tsx'
-import { mapsDirections, osmDirections, parseGpx, pathKm, toGpx } from '../../lib/gpx.ts'
+import { ROADS, roadImg, roadThumb } from '../../data/roads.ts'
+import { EmptyState, Note, NotFound, PageHead, VehicleSelect, fmtDate, img, small, today, vehicleTitle } from '../../components/ui.tsx'
+import { haversineKm, mapsDirections, osmDirections, parseGpx, pathKm, toGpx } from '../../lib/gpx.ts'
 import { href, navigate } from '../../lib/router.ts'
 import { addPassportEntry, downloadFile, nowIso, removeTrip, uid, upsertTrip, useStore } from '../../store/store.ts'
 import type { Trip, Waypoint } from '../../store/schema.ts'
 import { useT } from '../../i18n/i18n.ts'
+import { TripPlan, roadWaypoints, useRoadGeo } from '../../components/TripPlan.tsx'
+import { TripQuick, placeSuggestions } from '../../components/TripQuick.tsx'
+import { Details, QuickInput } from '../../components/QuickInput.tsx'
+import { autoTrip, loadPlaces } from '../../lib/autotrip.ts'
+import type { Place } from '../../lib/quick.ts'
+import { withVia } from '../../lib/tripplan.ts'
 
 // Route auf dem 3D-Globus: von Ort zu Ort, keine Straßenführung
 const Globe3D = lazy(() => import('../../components/Globe3D.tsx'))
@@ -25,9 +31,11 @@ async function readGpx(file: File): Promise<Trip> {
 }
 
 /** Skizze der Route: Datenpunkte auf einem einfachen Gitter, kein Kartenbild */
-function RouteSketch({ trip }: { trip: Trip }) {
+function RouteSketch({ trip, lines = {} }: { trip: Trip; lines?: Record<string, [number, number][]> }) {
+  const { tx } = useT()
   const pts = useMemo(() => {
-    const all: [number, number][] = [...(trip.track ?? []), ...trip.waypoints.map((w) => [w.lat, w.lon] as [number, number])]
+    const roads = trip.waypoints.map((w) => (w.via ? lines[w.via] : undefined)).filter((x): x is [number, number][] => !!x)
+    const all: [number, number][] = [...(trip.track ?? []), ...roads.flat(), ...trip.waypoints.map((w) => [w.lat, w.lon] as [number, number])]
     if (!all.length) return null
     const lats = all.map((p) => p[0])
     const lons = all.map((p) => p[1])
@@ -38,9 +46,9 @@ function RouteSketch({ trip }: { trip: Trip }) {
     const k = Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180)
     const w = Math.max(1e-4, (maxLon - minLon) * k)
     const h = Math.max(1e-4, maxLat - minLat)
-    const W = 600
-    const H = 300
-    const pad = 28
+    const W = 900
+    const H = 460
+    const pad = 54
     const s = Math.min((W - 2 * pad) / w, (H - 2 * pad) / h)
     const ox = (W - w * s) / 2
     const oy = (H - h * s) / 2
@@ -50,11 +58,16 @@ function RouteSketch({ trip }: { trip: Trip }) {
       W,
       H,
       track: trip.track?.filter((_, i) => i % step === 0).map((p) => xy(p[0], p[1]).join(',')).join(' '),
-      line: trip.waypoints.map((p) => xy(p.lat, p.lon).join(',')).join(' '),
-      wps: trip.waypoints.map((p) => ({ n: p.name, xy: xy(p.lat, p.lon) })),
+      roads: roads.map((g) => g.map((p) => xy(p[0], p[1]).join(',')).join(' ')),
+      links: trip.waypoints.slice(1).flatMap((p, i) => (p.via && lines[p.via] ? [] : [[xy(trip.waypoints[i].lat, trip.waypoints[i].lon), xy(p.lat, p.lon)]])),
+      wps: trip.waypoints.map((p, i) => {
+        const q = xy(p.lat, p.lon)
+        const seen = trip.waypoints.slice(0, i).some((o) => o.name === p.name)
+        return { n: p.via || seen ? '' : p.name.replace(/ · A$/, ''), xy: q, left: q[0] > W * 0.72 }
+      }),
     }
-  }, [trip])
-  if (!pts) return <div className="sketch empty-sketch">Noch keine Punkte</div>
+  }, [trip, lines])
+  if (!pts) return <div className="sketch empty-sketch">{tx('Noch keine Punkte', 'No points yet')}</div>
   return (
     <svg className="sketch" viewBox={`0 0 ${pts.W} ${pts.H}`} role="img" aria-label="Route sketch">
       <defs>
@@ -64,11 +77,14 @@ function RouteSketch({ trip }: { trip: Trip }) {
       </defs>
       <rect width={pts.W} height={pts.H} rx="14" fill="url(#grid)" className="sk-bg" />
       {pts.track && <polyline points={pts.track} className="sk-track" />}
-      {!pts.track && trip.waypoints.length > 1 && <polyline points={pts.line} className="sk-line" />}
+      {!pts.track && pts.links.map(([a, b], i) => <line key={'l' + i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} className="sk-line" />)}
+      {pts.roads.map((p, i) => (
+        <polyline key={'r' + i} points={p} className="sk-road" />
+      ))}
       {pts.wps.map((w, i) => (
         <g key={i}>
           <circle cx={w.xy[0]} cy={w.xy[1]} r={i === 0 || i === pts.wps.length - 1 ? 6 : 4.5} className={i === 0 ? 'sk-start' : i === pts.wps.length - 1 ? 'sk-end' : 'sk-pt'} />
-          <text x={w.xy[0] + 9} y={w.xy[1] - 8} className="sk-label">
+          <text x={w.xy[0] + (w.left ? -10 : 10)} y={w.xy[1] - 9} textAnchor={w.left ? 'end' : 'start'} className="sk-label">
             {w.n}
           </text>
         </g>
@@ -76,6 +92,9 @@ function RouteSketch({ trip }: { trip: Trip }) {
     </svg>
   )
 }
+
+/** Straßenabschnitt nur behalten, wenn Start (· A) und Ziel (· B) noch direkt hintereinander stehen */
+const fixVia = (w: Waypoint[]) => w.map((p, i) => (p.via && !(i > 0 && w[i - 1].road === p.via) ? { ...p, via: undefined } : p))
 
 export default function Builder({ tripId }: { tripId?: string }) {
   return tripId ? <Editor id={tripId} /> : <TripList />
@@ -97,15 +116,16 @@ function TripList() {
         eyebrow="Drive · Roadtrip-Builder"
         title={
           <>
-            {tx('Deine Route. ', 'Your route. ')}<em>{tx('Deine Regeln.', 'Your rules.')}</em>
+            {tx('Eine Zeile. ', 'One line. ')}<em>{tx('Ein Roadtrip.', 'One road trip.')}</em>
           </>
         }
-        sub={tx('Wegpunkte setzen, Straßen aus dem Explorer übernehmen, GPX-Dateien aus Navi oder App einlesen und wieder ausgeben. Alles bleibt auf deinem Gerät.', 'Set waypoints, take roads from the explorer, read GPX files from your sat nav or app and write them back out. Everything stays on your device.')}
+        sub={tx('Sag, wohin und wie lange. Straßen, Reihenfolge, Tagesetappen und Kosten plant die Seite.', 'Say where and for how long. The site plans roads, order, daily stages and costs.')}
         image={roadImg('atlantic')}
       >
-        <div className="row gap wrap">
-          <button className="btn primary" onClick={() => create(newTrip())}>
-            <Plus size={16} /> {tx('Neuer Roadtrip', 'New road trip')}
+        <TripQuick />
+        <div className="row gap wrap quick-alt">
+          <button className="btn" onClick={() => create(newTrip())}>
+            <Plus size={16} /> {tx('Leer beginnen', 'Start empty')}
           </button>
           <button className="btn" onClick={() => file.current?.click()}>
             <FileUp size={16} /> {tx('GPX importieren', 'Import GPX')}
@@ -146,7 +166,7 @@ function TripList() {
               return (
                 <a key={tr.id} className="trip" href={href('drive/builder/' + tr.id)}>
                   <div className="trip-img">
-                    <img src={tr.roadId ? roadImg(tr.roadId) : img('fuji')} alt="" loading="lazy" />
+                    <img src={tr.roadId ? roadThumb(tr.roadId) : small(img('fuji'))} alt="" loading="lazy" />
                   </div>
                   <div>
                     <h3>{tr.name}</h3>
@@ -166,24 +186,55 @@ function TripList() {
 }
 
 function Editor({ id }: { id: string }) {
-  const { tx, locale } = useT()
+  const { tx, L, locale } = useT()
   const trip = useStore((s) => s.trips.find((t) => t.id === id))
   const vehicles = useStore((s) => s.vehicles)
   const [wp, setWp] = useState({ name: '', lat: '', lon: '' })
   const [roadPick, setRoadPick] = useState('')
   const [msg, setMsg] = useState('')
   const file = useRef<HTMLInputElement>(null)
+  const geo = useRoadGeo(trip?.waypoints ?? [])
+  const [stop, setStop] = useState('')
+  const [places, setPlaces] = useState<Place[]>([])
+  useEffect(() => {
+    let alive = true
+    loadPlaces().then((p) => alive && setPlaces(p))
+    return () => {
+      alive = false
+    }
+  }, [])
   if (!trip) return <NotFound />
   const save = (patch: Partial<Trip>) => upsertTrip({ ...trip, ...patch })
+  /** Vorschlag übernehmen: Straße mit Verlauf, Ort als Punkt. Bei Rundreisen vor der Rückkehr. */
+  const addStop = async (sid: string) => {
+    const w = trip.waypoints
+    const round = w.length > 2 && w[0].name === w[w.length - 1].name
+    const head = round ? w.slice(0, -1) : w
+    const key = sid.slice(1)
+    let add: Waypoint[] = []
+    if (sid[0] === 'r') add = await roadWaypoints(key, head[head.length - 1])
+    if (sid[0] === 'p') {
+      const p = places.find((x) => x.n + x.cc === key)
+      if (p) add = [{ name: p.n, lat: p.lat, lon: p.lon }]
+    }
+    if (sid[0] === 'a' || sid[0] === 'c') {
+      const r = await autoTrip(stop, roadWaypoints)
+      add = r.waypoints
+    }
+    setStop('')
+    if (add.length) save({ waypoints: fixVia([...head, ...add, ...(round ? [w[w.length - 1]] : [])]) })
+  }
   const move = (i: number, d: number) => {
     const w = [...trip.waypoints]
     const j = i + d
     if (j < 0 || j >= w.length) return
     ;[w[i], w[j]] = [w[j], w[i]]
-    save({ waypoints: w })
+    save({ waypoints: fixVia(w) })
   }
   const lat = parseFloat(wp.lat.replace(',', '.'))
   const lon = parseFloat(wp.lon.replace(',', '.'))
+  // Nur Weltreisen auf dem Globus; alles andere als Streckenbild mit echtem Straßenverlauf
+  const far = trip.waypoints.length > 1 && Math.max(...trip.waypoints.map((w) => haversineKm(trip.waypoints[0], w))) > 3500
   const okPt = Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
   const km = pathKm(trip.track?.length ? trip.track.map(([la, lo]) => ({ lat: la, lon: lo })) : trip.waypoints)
   const road = ROADS.find((r) => r.id === trip.roadId)
@@ -194,7 +245,42 @@ function Editor({ id }: { id: string }) {
       <PageHead eyebrow="Roadtrip-Builder" title={trip.name || 'Roadtrip'} back={{ to: 'drive/builder', label: tx('Alle Roadtrips', 'All road trips') }} sub={road ? tx(`Basiert auf ${road.name}.`, `Based on ${road.name}.`) : tx('Eigene Route.', 'Custom route.')} />
       <section className="section builder">
         <div className="builder-main">
-          <div className="gcard">
+          {far ? (
+            <div className="trip-globe">
+              <Suspense fallback={<div className="globe-ph" aria-hidden />}>
+                <Globe3D
+                  theme="stone"
+                  autoRotate={false}
+                  focus={[trip.waypoints[0].lat, trip.waypoints[0].lon]}
+                  points={trip.waypoints.map((w, i) => ({ id: 'w' + i, lat: w.lat, lon: w.lon, label: `${i + 1}. ${w.name}`, kind: i === 0 ? 'home' : 'stop' }))}
+                  routes={trip.waypoints.slice(1).map((w, i) => ({ from: [trip.waypoints[i].lat, trip.waypoints[i].lon] as [number, number], to: [w.lat, w.lon] as [number, number], kind: 'trip' as const }))}
+                />
+              </Suspense>
+            </div>
+          ) : (
+            <RouteSketch trip={trip} lines={geo.line} />
+          )}
+          <p className="muted small">
+            {trip.waypoints.length} {tx('Wegpunkte', 'waypoints')}{trip.track?.length ? `, ${trip.track.length.toLocaleString(locale)} ${tx('Spurpunkte aus GPX', 'track points from GPX')}` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} {tx('km Luftlinie (keine Straßenlänge)', 'km straight-line (not road distance)')}
+          </p>
+
+          <QuickInput
+            value={stop}
+            onChange={setStop}
+            suggestions={placeSuggestions(stop, places, L)}
+            onPick={(x) => addStop(x.id)}
+            onSubmit={() => {
+              const first = placeSuggestions(stop, places, L)[0]
+              if (first) addStop(first.id)
+            }}
+            label={tx('Stopp hinzufügen', 'Add a stop')}
+            placeholder={tx('Stopp oder Straße hinzufügen …', 'Add a stop or road …')}
+            button={tx('Hinzufügen', 'Add')}
+          />
+
+          <TripPlan trip={trip} vehicle={v} save={save} />
+
+          <Details title={tx('Alles selbst einstellen: Name, Datum, Auto, Wegpunkte', 'Set everything yourself: name, date, car, waypoints')} open={trip.waypoints.length === 0}>
             <div className="fields two">
               <label className="field">
                 <span className="f-label">Name</span>
@@ -210,29 +296,7 @@ function Editor({ id }: { id: string }) {
                 <input className="input" value={trip.notes ?? ''} onChange={(e) => save({ notes: e.target.value.slice(0, 4000) })} placeholder={tx('Tankstopps, Hotels, Fähren …', 'Fuel stops, hotels, ferries …')} />
               </label>
             </div>
-          </div>
-
-          {trip.waypoints.length > 0 ? (
-            <div className="trip-globe">
-              <Suspense fallback={<div className="globe-ph" aria-hidden />}>
-                <Globe3D
-                  theme="stone"
-                  autoRotate={false}
-                  focus={[trip.waypoints[0].lat, trip.waypoints[0].lon]}
-                  points={trip.waypoints.map((w, i) => ({ id: 'w' + i, lat: w.lat, lon: w.lon, label: `${i + 1}. ${w.name}`, kind: i === 0 ? 'home' : 'stop' }))}
-                  routes={trip.waypoints.slice(1).map((w, i) => ({ from: [trip.waypoints[i].lat, trip.waypoints[i].lon] as [number, number], to: [w.lat, w.lon] as [number, number], kind: 'trip' as const }))}
-                />
-              </Suspense>
-            </div>
-          ) : (
-            <RouteSketch trip={trip} />
-          )}
-          <p className="muted small">
-            {trip.waypoints.length} {tx('Wegpunkte', 'waypoints')}{trip.track?.length ? `, ${trip.track.length.toLocaleString(locale)} ${tx('Spurpunkte aus GPX', 'track points from GPX')}` : ''} · {km.toLocaleString(locale, { maximumFractionDigits: 0 })} {tx('km Luftlinie (keine Straßenlänge)', 'km straight-line (not road distance)')}
-          </p>
-
-          <div className="gcard">
-            <h3>{tx('Wegpunkte', 'Waypoints')}</h3>
+          <h3>{tx('Wegpunkte', 'Waypoints')}</h3>
             {trip.waypoints.length === 0 && <p className="muted">{tx('Noch keine Wegpunkte. Füge unten Koordinaten hinzu oder übernimm Punkte einer Straße.', 'No waypoints yet. Add coordinates below or take the points of a road.')}</p>}
             <ol className="wps edit">
               {trip.waypoints.map((w, i) => (
@@ -248,7 +312,7 @@ function Editor({ id }: { id: string }) {
                     <button className="icon-btn" onClick={() => move(i, 1)} aria-label={tx('Nach unten', 'Move down')} disabled={i === trip.waypoints.length - 1}>
                       <ArrowDown size={15} />
                     </button>
-                    <button className="icon-btn" onClick={() => save({ waypoints: trip.waypoints.filter((_, k) => k !== i) })} aria-label={tx('Entfernen', 'Remove')}>
+                    <button className="icon-btn" onClick={() => save({ waypoints: fixVia(trip.waypoints.filter((_, k) => k !== i)) })} aria-label={tx('Entfernen', 'Remove')}>
                       <Trash2 size={15} />
                     </button>
                   </span>
@@ -282,9 +346,9 @@ function Editor({ id }: { id: string }) {
               <button
                 className="btn"
                 disabled={!roadPick}
-                onClick={() => {
-                  const r = ROADS.find((x) => x.id === roadPick)!
-                  save({ waypoints: [...trip.waypoints, ...r.waypoints], roadId: trip.roadId ?? r.id })
+                onClick={async () => {
+                  const add = await roadWaypoints(roadPick, trip.waypoints[trip.waypoints.length - 1])
+                  save({ waypoints: [...trip.waypoints, ...add], roadId: trip.roadId ?? roadPick })
                   setRoadPick('')
                 }}
               >
@@ -292,14 +356,14 @@ function Editor({ id }: { id: string }) {
               </button>
             </div>
             <p className="muted small">{tx('Koordinaten findest du z. B. per Rechtsklick in OpenStreetMap oder Google Maps.', 'You can get coordinates e.g. by right-clicking in OpenStreetMap or Google Maps.')}</p>
-          </div>
+          </Details>
         </div>
 
         <aside className="builder-side">
           <div className="gcard">
             <h3>{tx('Mitnehmen', 'Take along')}</h3>
             <div className="stack-btns">
-              <button className="btn" disabled={!trip.waypoints.length && !trip.track?.length} onClick={() => downloadFile(`${(trip.name || 'roadtrip').replace(/[^\w-]+/g, '_')}.gpx`, toGpx(trip.name, trip.waypoints, trip.track ?? [], BRAND.ascii), 'application/gpx+xml')}>
+              <button className="btn" disabled={!trip.waypoints.length && !trip.track?.length} onClick={() => downloadFile(`${(trip.name || 'roadtrip').replace(/[^\w-]+/g, '_')}.gpx`, toGpx(trip.name, trip.waypoints, trip.track ?? [], BRAND.ascii, trip.waypoints.map((w) => (w.via ? geo.line[w.via] : undefined)).filter((x) => !!x)), 'application/gpx+xml')}>
                 <Download size={15} /> {tx('GPX exportieren', 'Export GPX')}
               </button>
               <button className="btn" onClick={() => file.current?.click()}>
@@ -325,10 +389,10 @@ function Editor({ id }: { id: string }) {
               />
               {trip.waypoints.length > 0 && (
                 <>
-                  <a className="btn" href={mapsDirections(trip.waypoints)} target="_blank" rel="noopener noreferrer">
+                  <a className="btn" href={mapsDirections(withVia(trip.waypoints, geo.line))} target="_blank" rel="noopener noreferrer">
                     Google Maps <ArrowUpRight size={14} />
                   </a>
-                  <a className="btn" href={osmDirections(trip.waypoints)} target="_blank" rel="noopener noreferrer">
+                  <a className="btn" href={osmDirections(withVia(trip.waypoints, geo.line))} target="_blank" rel="noopener noreferrer">
                     OpenStreetMap <ArrowUpRight size={14} />
                   </a>
                 </>

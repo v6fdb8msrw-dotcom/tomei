@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { landedCost } from '../lib/calc.ts'
 import { buildScenarios, range3 } from '../lib/scenarios.ts'
+import { legsOf, splitDays, tripCost, withVia } from '../lib/tripplan.ts'
+import { parseCar, parseTrip } from '../lib/quick.ts'
+import { chooseRoads } from '../lib/autotrip.ts'
+import { ROADS } from '../data/roads.ts'
+import { COUNTRIES } from '../data/countries.ts'
+import { winAnsi } from '../lib/dossier.ts'
 import { parseGpx, toGpx, pathKm, mapsDirections } from '../lib/gpx.ts'
 import { simulateOwnership, EMPTY_OWNERSHIP } from '../lib/ownership.ts'
 import { addMonths, dueState, nextDue, toIcs } from '../lib/maintenance.ts'
@@ -160,5 +166,79 @@ describe('Events der Woche', () => {
       expect(e.b >= e.a).toBe(true)
       expect(e.s.startsWith('https://')).toBe(true)
     }
+  })
+})
+
+describe('Roadtrip-Planung', () => {
+  const a = { name: 'A', lat: 46, lon: 10 }
+  const b = { name: 'B', lat: 46.5, lon: 10, via: 'x' }
+  const c = { name: 'C', lat: 47, lon: 10 }
+  it('nimmt echte Straßenlängen und schätzt Verbindungen', () => {
+    const l = legsOf([a, b, c], { x: 80 }, 1.35)
+    expect(l[0]).toMatchObject({ km: 80, exact: true })
+    expect(l[1].exact).toBe(false)
+    expect(l[1].km).toBeCloseTo(55.6 * 1.35, 0)
+  })
+  it('teilt in Tage und rechnet Kosten', () => {
+    const l = legsOf([a, b, c], { x: 80 }, 1.35)
+    expect(splitDays(l, 100)).toHaveLength(2)
+    expect(splitDays(l, 500)).toHaveLength(1)
+    expect(tripCost(200, { consumption: 10, fuelPrice: 2, nights: 1, hotel: 90, tolls: 10 }).total).toBe(140)
+  })
+  it('setzt Zwischenpunkte auf der Straße', () => {
+    const g: [number, number][] = [[46.5, 10], [46.4, 10.1], [46.2, 10.1], [46, 10]]
+    const w = withVia([a, b], { x: g })
+    expect(w).toHaveLength(4)
+    expect(w[1].lat).toBe(46.2)
+  })
+})
+
+describe('PDF-Text', () => {
+  it('ersetzt Zeichen, die die PDF-Schrift nicht kennt', () => {
+    expect(winAnsi('Größe 5 € – „gut“')).toBe('Größe 5 € – „gut“')
+    expect(winAnsi('Transfăgărășan → 峠')).toBe('Transfagarasan -> ?')
+  })
+})
+
+describe('Ein Feld: Auto', () => {
+  const all = [
+    { id: 'a', n: 'Mazda MX-5', mk: 'Mazda', md: 'MX-5', y0: 1989, cc: 'jp' },
+    { id: 'b', n: 'Porsche 911 (964)', mk: 'Porsche', md: '911 (964)', y0: 1989, y1: 1994, cc: 'de' },
+    { id: 'c', n: 'Porsche 911 (993)', mk: 'Porsche', md: '911 (993)', y0: 1994, y1: 1998, cc: 'de' },
+    { id: 'd', n: 'BMW M3', mk: 'BMW', md: 'M3', y0: 1986, cc: 'de' },
+    { id: 'e', n: 'Nissan Skyline (R34)', mk: 'Nissan', md: 'Skyline', y0: 1998, y1: 2002, cc: 'jp' },
+  ]
+  it('liest Jahr, Kilometer und Preis', () => {
+    expect(parseCar('Mazda MX-5 1994 98.000 km 7.500 €', all)).toMatchObject({ modelId: 'a', year: 1994, mileageKm: 98000, price: { amount: 7500, cur: 'EUR' }, market: 'jp' })
+    expect(parseCar('Nissan Skyline R34 8 Mio Yen', all)).toMatchObject({ modelId: 'e', price: { amount: 8000000, cur: 'JPY' } })
+    expect(parseCar('bmw m3 120 tkm', all)).toMatchObject({ modelId: 'd', mileageKm: 120000 })
+  })
+  it('wählt die Generation nach Baujahr und lässt Unbekanntes stehen', () => {
+    expect(parseCar('Porsche 911 1996', all)?.modelId).toBe('c')
+    expect(parseCar('Porsche 911 (964) 1990', all)?.modelId).toBe('b')
+    expect(parseCar('Trabant 601 1975', all)).toMatchObject({ make: 'Trabant', model: '601', year: 1975 })
+    expect(parseCar('Trabant 601', all)?.modelId).toBeUndefined()
+  })
+})
+
+describe('Ein Feld: Roadtrip', () => {
+  const places = [
+    { n: 'München', en: 'Munich', cc: 'de', lat: 48.14, lon: 11.58, pop: 1500 },
+    { n: 'Zürich', cc: 'ch', lat: 47.37, lon: 8.54, pop: 430 },
+  ]
+  const parse = (t: string) => parseTrip(t, ROADS, places, COUNTRIES)
+  it('erkennt Start, Ziel und Tage', () => {
+    const w = parse('München nach Stilfser Joch, 2 Tage')
+    expect(w.from?.n).toBe('München')
+    expect(w.targets).toEqual([expect.objectContaining({ kind: 'road', id: 'stelvio' })])
+    expect(w.days).toBe(2)
+    expect(parse('Dolomiten, Wochenende')).toMatchObject({ days: 2, targets: [{ kind: 'area', id: 'dolomiten' }] })
+    expect(parse('from Munich to Dolomites, one week')).toMatchObject({ days: 7, from: { n: 'München' } })
+  })
+  it('wählt passende Straßen und bleibt im Zeitrahmen', () => {
+    const r = chooseRoads(parse('München nach Dolomiten, 3 Tage'))
+    expect(r.roads.length).toBeGreaterThan(2)
+    expect(r.roads.every((x) => x.country === 'it' || x.country === 'at')).toBe(true)
+    expect(chooseRoads(parse('München nach Stilfser Joch')).roads.map((x) => x.id)).toEqual(['stelvio'])
   })
 })

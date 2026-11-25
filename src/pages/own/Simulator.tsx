@@ -3,14 +3,16 @@ import { Check, Save } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { Badge, EASE, Note, PageHead, SourceLink, VehicleSelect, fmtMoney, img, vehicleTitle } from '../../components/ui.tsx'
-import { EMPTY_OWNERSHIP, H_PLATE_TAX, simulateOwnership } from '../../lib/ownership.ts'
+import { H_PLATE_TAX, simulateOwnership } from '../../lib/ownership.ts'
+import { FUEL } from '../../components/TripPlan.tsx'
+import { Details } from '../../components/QuickInput.tsx'
 import { href } from '../../lib/router.ts'
 import { updateVehicle, useStore } from '../../store/store.ts'
 import type { OwnershipInput } from '../../store/schema.ts'
 import { useT } from '../../i18n/i18n.ts'
 
-/** Klar gekennzeichnete Beispielwerte zum Ausprobieren, keine Marktdaten */
-const DEMO: OwnershipInput = { years: 5, kmPerYear: 6000, consumption: 11, fuelPrice: 1.8, insurance: 600, tax: H_PLATE_TAX.eur, maintenance: 1200, other: 600, valueChangePct: 0, purchase: 40000 }
+/** Annahmen, mit denen der Simulator startet; als „Annahmen“ gekennzeichnet und änderbar, keine Marktdaten */
+const DEMO: OwnershipInput = { years: 5, kmPerYear: 6000, consumption: 11, fuelPrice: FUEL.eur, insurance: 600, tax: H_PLATE_TAX.eur, maintenance: 1200, other: 600, valueChangePct: 0, purchase: 40000 }
 
 type Tx = { de: string; en: string }
 const YR: Tx = { de: '€/Jahr', en: '€/year' }
@@ -32,13 +34,13 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
   const vehicles = useStore((s) => s.vehicles)
   const [sel, setSel] = useState(vehicleId ?? vehicles.find((v) => v.status === 'owned' || v.status === 'planned')?.id ?? '')
   const v = vehicles.find((x) => x.id === sel)
-  const initial = (): OwnershipInput => v?.ownership ?? { ...EMPTY_OWNERSHIP, purchase: v?.landed && v.landed.cur === 'EUR' ? v.landed.amount : v?.price?.cur === 'EUR' ? v.price.amount : 0 }
+  const initial = (): OwnershipInput => v?.ownership ?? { ...DEMO, tax: v?.year && new Date().getFullYear() - v.year >= 30 ? DEMO.tax : 0, purchase: v?.landed && v.landed.cur === 'EUR' ? v.landed.amount : v?.price?.cur === 'EUR' ? v.price.amount : 0 }
   const [inp, setInp] = useState<OwnershipInput>(initial)
-  const [demo, setDemo] = useState(false)
+  const [demo, setDemo] = useState(!v?.ownership)
   const [saved, setSaved] = useState(false)
   useEffect(() => {
     setInp(initial())
-    setDemo(false)
+    setDemo(!v?.ownership)
     setSaved(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel])
@@ -56,7 +58,7 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
             {tx('Was es kostet, ', 'What it costs ')}<em>{tx('es zu behalten.', 'to keep it.')}</em>
           </>
         }
-        sub={tx('Sprit, Versicherung, Steuer, Wartung und Wertänderung über die Haltedauer. Der Simulator rechnet nur mit deinen Zahlen; Versicherung und Steuer hängen von Fahrzeug, Wohnort und Tarif ab.', 'Fuel, insurance, tax, maintenance and change in value over the holding period. The simulator only uses your numbers; insurance and tax depend on vehicle, location and policy.')}
+        sub={tx('Sprit, Versicherung, Steuer, Wartung und Wertänderung über die Haltedauer. Er startet mit gekennzeichneten Annahmen; Versicherung und Steuer hängen von Fahrzeug, Wohnort und Tarif ab.', 'Fuel, insurance, tax, maintenance and change in value over the holding period. It starts with labelled assumptions; insurance and tax depend on vehicle, location and policy.')}
         image={img('cars/fd')}
       />
       <section className="section sim">
@@ -68,6 +70,17 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
               {v.landed.cur !== 'EUR' && tx(' (nicht in Euro, bitte umrechnen)', ' (not in euros, please convert)')}
             </p>
           )}
+          <label className="field">
+            <span className="f-label">{tx('Wie viel fährst du im Jahr?', 'How much do you drive per year?')}</span>
+            <span className="sim-km">
+              <input type="range" min={0} max={30000} step={500} value={inp.kmPerYear} onChange={(e) => (setInp({ ...inp, kmPerYear: +e.target.value }), setSaved(false))} />
+              <b className="mono">{inp.kmPerYear.toLocaleString(locale)} km</b>
+            </span>
+          </label>
+          <p className="small muted">
+            {tx('Den Rest füllt der Simulator mit Annahmen', 'The simulator fills in the rest with assumptions')}: {inp.consumption.toLocaleString(locale)} l/100 km, {inp.fuelPrice.toLocaleString(locale)} €/l, {m(inp.insurance)} {tx('Versicherung', 'insurance')}, {m(inp.maintenance)} {tx('Wartung', 'service')}, {inp.tax ? `${m(inp.tax)} ${tx('Steuer (H-Kennzeichen)', 'tax (H plate)')}` : tx('ohne Kfz-Steuer (hängt vom Motor ab)', 'without vehicle tax (depends on the engine)')}. {tx('Spritpreis', 'Fuel price')}: {FUEL.label}, {FUEL.date}.
+          </p>
+          <Details title={tx('Genauer rechnen', 'Be more precise')}>
           <div className="fields two">
             {FIELDS.map((f) => (
               <label key={f.k} className="field">
@@ -103,17 +116,18 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
                 setDemo(true)
               }}
             >
-              {tx('Beispielwerte laden', 'Load example values')}
+              {tx('Annahmen zurücksetzen', 'Reset assumptions')}
             </button>
           </div>
           <p className="small muted">
             {tx('Kfz-Steuer mit H-Kennzeichen', 'German vehicle tax with H plate')}: {H_PLATE_TAX.eur.toLocaleString(locale)} {tx('€ pauschal', '€ flat rate')} (<SourceLink url={H_PLATE_TAX.source}>{H_PLATE_TAX.label}</SourceLink>). {tx('Sonst die Steuer beim Zoll berechnen lassen', 'Otherwise calculate the tax with the official tool')}: <SourceLink url="https://www.bundesfinanzministerium.de/Web/DE/Service/Apps_Rechner/KfzRechner/KfzRechner.html">{tx('Kfz-Steuer-Rechner des BMF', 'BMF vehicle tax calculator')}</SourceLink>.
           </p>
+          </Details>
         </div>
 
         <div className="sim-out">
           <div className="gcard sim-total">
-            {demo && <Badge kind="demo">{tx('Beispielwerte, keine Marktdaten', 'Example values, not market data')}</Badge>}
+            {demo && <Badge kind="demo">{tx('Mit Annahmen gerechnet, keine Marktdaten', 'Calculated with assumptions, not market data')}</Badge>}
             <span className="muted">{tx(`Kosten über ${r.years} Jahre`, `Cost over ${r.years} years`)}</span>
             <b className="mono">{m(r.total)}</b>
             <div className="sim-kpis">

@@ -11,7 +11,7 @@ import { useT } from '../i18n/i18n.ts'
 import { DATA_EN } from '../i18n/data_en.ts'
 import { landedCost, money } from '../lib/calc.ts'
 
-const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
+const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.webp`
 
 const STEPS = [
   { icon: FileSearch, title: 'Finden', en: ['Find', 'We search for your car in Japan, Korea and the other markets, including dealer auctions.'], text: 'Wir suchen dein Auto in Japan, Korea und den anderen Märkten, auch auf den Händlerauktionen.' },

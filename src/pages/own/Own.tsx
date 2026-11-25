@@ -1,5 +1,5 @@
 // OWN: Übersicht und Garage (Liste nach Status + Fahrzeugdetail). Alle Fahrzeuge kommen aus dem gemeinsamen Speicher.
-import { ArrowRight, Calculator, ExternalLink, Plus, Trash2 } from 'lucide-react'
+import { ArrowRight, Calculator, ExternalLink, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { MARKETS, sendToCalc } from '../../data.ts'
@@ -8,6 +8,8 @@ import { WorldHub } from '../../components/WorldHub.tsx'
 import { VehicleExtras } from './VehicleExtras.tsx'
 import { removeVehiclePhotos } from '../../lib/photos.ts'
 import { EmptyState, EASE, NotFound, PageHead, StatusPill, VehicleVisual, fmtMoney, img, vehicleTitle } from '../../components/ui.tsx'
+import { CarQuick } from '../../components/CarQuick.tsx'
+import { Details } from '../../components/QuickInput.tsx'
 import { useT, type TKey } from '../../i18n/i18n.ts'
 import { href, navigate } from '../../lib/router.ts'
 import { addVehicle, removeVehicle, updateVehicle, useStore } from '../../store/store.ts'
@@ -51,35 +53,31 @@ const STATUS_HINT: Record<VehicleStatus, { de: string; en: string }> = {
 }
 
 function AddVehicle({ onDone }: { onDone?: (v: Vehicle) => void }) {
-  const [f, setF] = useState({ make: '', model: '', year: '', status: 'dream' as VehicleStatus })
-  const { t, tx } = useT()
-  const ok = f.make.trim() || f.model.trim()
+  const { tx } = useT()
+  const [q, setQ] = useState('')
+  const [status, setStatus] = useState<VehicleStatus>('owned')
   return (
-    <form
-      className="add-veh"
-      onSubmit={(e) => {
-        e.preventDefault()
-        if (!ok) return
-        const y = parseInt(f.year, 10)
-        const v = addVehicle({ make: f.make.trim(), model: f.model.trim(), year: y > 1885 && y < 2100 ? y : undefined, status: f.status, source: 'manual' })
-        setF({ make: '', model: '', year: '', status: f.status })
-        onDone?.(v)
-      }}
-    >
-      <input className="input" placeholder={tx('Marke', 'Make')} value={f.make} onChange={(e) => setF({ ...f, make: e.target.value })} aria-label={tx('Marke', 'Make')} />
-      <input className="input" placeholder={tx('Modell', 'Model')} value={f.model} onChange={(e) => setF({ ...f, model: e.target.value })} aria-label={tx('Modell', 'Model')} />
-      <input className="input short" placeholder={tx('Baujahr', 'Year')} inputMode="numeric" value={f.year} onChange={(e) => setF({ ...f, year: e.target.value.replace(/\D/g, '').slice(0, 4) })} aria-label={tx('Baujahr', 'Year')} />
-      <select className="input" value={f.status} onChange={(e) => setF({ ...f, status: e.target.value as VehicleStatus })} aria-label="Status">
-        {VEHICLE_STATUS.map((s) => (
-          <option key={s} value={s}>
-            {t(('status.' + s) as TKey)}
-          </option>
-        ))}
-      </select>
-      <button className="btn primary" disabled={!ok}>
-        <Plus size={16} /> {tx('Anlegen', 'Add')}
-      </button>
-    </form>
+    <div className="add-quick">
+      <div className="seg">
+        <button type="button" className={status === 'owned' ? 'on' : ''} onClick={() => setStatus('owned')}>
+          {tx('Gehört mir', 'I own it')}
+        </button>
+        <button type="button" className={status === 'dream' ? 'on' : ''} onClick={() => setStatus('dream')}>
+          {tx('Traumauto', 'Dream car')}
+        </button>
+      </div>
+      <CarQuick
+        value={q}
+        onValue={setQ}
+        button={tx('In die Garage', 'Add')}
+        examples={[tx('Porsche 911 (964) 1990 140.000 km', 'Porsche 911 (964) 1990 140,000 km'), 'BMW M3 2003', 'Mazda MX-5 1994']}
+        onCar={(c) => {
+          const v = addVehicle({ make: c.make, model: c.model, year: c.year, market: c.market, modelId: c.modelId, mileageKm: c.mileageKm, price: c.price, status: c.status ?? status, source: 'manual' })
+          setQ('')
+          onDone?.(v)
+        }}
+      />
+    </div>
   )
 }
 
@@ -136,7 +134,7 @@ function GarageList() {
           <div className="garage">
             {list.map((v, k) => (
               <motion.a key={v.id} href={href('own/garage/' + v.id)} className="veh" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: Math.min(k, 8) * 0.04, ease: EASE }}>
-                <div className="veh-img" style={{ viewTransitionName: 'veh-' + v.id }}>
+                <div className="veh-img" data-vt={'veh-' + v.id}>
                   <VehicleVisual v={v} />
                 </div>
                 <div className="veh-body">
@@ -168,7 +166,7 @@ function VehiclePage({ id }: { id: string }) {
   return (
     <>
       <section className="veh-hero">
-        <div className="veh-hero-img" style={{ viewTransitionName: 'veh-' + v.id }}>
+        <div className="veh-hero-img" data-vt={'veh-' + v.id}>
           <VehicleVisual v={v} big />
         </div>
         <div className="veh-hero-text">
@@ -232,8 +230,7 @@ function VehiclePage({ id }: { id: string }) {
             </a>
           </p>
         )}
-        <div className="gcard">
-          <h3>{tx('Daten', 'Details')}</h3>
+        <Details title={tx('Daten ändern: Baujahr, Status, Kilometer, Preis, Notizen', 'Edit details: year, status, mileage, price, notes')}>
           <div className="fields two">
             <label className="field">
               <span className="f-label">{tx('Marke', 'Make')}</span>
@@ -308,7 +305,7 @@ function VehiclePage({ id }: { id: string }) {
             <textarea className="input" rows={4} value={v.notes ?? ''} onChange={(e) => set({ notes: e.target.value.slice(0, 4000) || undefined })} />
           </label>
           <p className="muted small">{tx('Nur https-Links werden gespeichert. Änderungen speichern sich sofort auf diesem Gerät.', 'Only https links are saved. Changes are saved instantly on this device.')}</p>
-        </div>
+        </Details>
 
         <VehicleExtras v={v} />
 

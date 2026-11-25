@@ -6,6 +6,7 @@ import { EmptyState, PageHead, VehicleSelect, fmtDate, fmtMoney, img, today, veh
 import { dueState, nextDue, toIcs } from '../../lib/maintenance.ts'
 import { addPassportEntry, downloadFile, removeMaintenance, uid, updateVehicle, upsertMaintenance, useStore } from '../../store/store.ts'
 import type { MaintenanceItem, MaintenanceKind } from '../../store/schema.ts'
+import { Details } from '../../components/QuickInput.tsx'
 import { useT } from '../../i18n/i18n.ts'
 
 const KINDS: { k: MaintenanceKind; l: { de: string; en: string } }[] = [
@@ -16,6 +17,15 @@ const KINDS: { k: MaintenanceKind; l: { de: string; en: string } }[] = [
   { k: 'repair', l: { de: 'Reparatur', en: 'Repair' } },
   { k: 'other', l: { de: 'Sonstiges', en: 'Other' } },
 ]
+/** Üblicher Grundplan als Startpunkt. Maßgeblich ist das Serviceheft; HU-Frist: § 29 StVZO (Pkw alle 24 Monate). */
+const BASIC: { de: string; en: string; kind: MaintenanceKind; months: number; km?: number }[] = [
+  { de: 'Ölwechsel mit Filter', en: 'Oil and filter change', kind: 'service', months: 12, km: 10000 },
+  { de: 'Hauptuntersuchung (HU)', en: 'Roadworthiness test (HU)', kind: 'inspection', months: 24 },
+  { de: 'Bremsflüssigkeit', en: 'Brake fluid', kind: 'service', months: 24 },
+  { de: 'Reifen prüfen und wechseln', en: 'Check and change tyres', kind: 'tyres', months: 6 },
+  { de: 'Batterie und Frostschutz vor dem Winter', en: 'Battery and antifreeze before winter', kind: 'season', months: 12 },
+]
+
 const STATE_L = {
   overdue: { de: 'Überfällig', en: 'Overdue' },
   soon: { de: 'Bald fällig', en: 'Due soon' },
@@ -43,6 +53,16 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
     const item: MaintenanceItem = { id: uid(), vehicleId: v.id, title: f.title.trim().slice(0, 200), kind: f.kind, ...base, ...nextDue(base), history: [] }
     upsertMaintenance(item)
     setF({ ...f, title: '' })
+  }
+  const addBasic = () => {
+    if (!v) return
+    for (const b of BASIC) {
+      const title = L(b)
+      if (items.some((x) => x.title === title)) continue
+      const base = { intervalMonths: b.months, intervalKm: b.km, lastDate: today(), lastKm: b.km ? v.mileageKm : undefined }
+      const hu = b.kind === 'inspection' && v.huDue ? { dueDate: v.huDue + '-28' } : {}
+      upsertMaintenance({ id: uid(), vehicleId: v.id, title, kind: b.kind, ...base, ...nextDue(base), ...hu, history: [] })
+    }
   }
   const book = () => {
     if (!done || !v) return
@@ -90,52 +110,14 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
                 <CalendarPlus size={16} /> {tx('Alle Termine als .ics', 'All due dates as .ics')}
               </button>
             </div>
-            {v && (
-              <form
-                className="gcard maint-add"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  add()
-                }}
-              >
-                <h3>{tx('Neuer Eintrag', 'New entry')}</h3>
-                <div className="fields three">
-                  <label className="field">
-                    <span className="f-label">{tx('Was', 'What')}</span>
-                    <input className="input" value={f.title} placeholder={tx('z. B. Ölwechsel', 'e.g. oil change')} onChange={(e) => setF({ ...f, title: e.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span className="f-label">{tx('Art', 'Type')}</span>
-                    <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as MaintenanceKind })}>
-                      {KINDS.map((k) => (
-                        <option key={k.k} value={k.k}>
-                          {L(k.l)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="field">
-                    <span className="f-label">{tx('Zuletzt am', 'Last done')}</span>
-                    <input className="input" type="date" value={f.lastDate} onChange={(e) => setF({ ...f, lastDate: e.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span className="f-label">{tx('Alle … Monate', 'Every … months')}</span>
-                    <input className="input" inputMode="numeric" value={f.months} onChange={(e) => setF({ ...f, months: e.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span className="f-label">{tx('oder alle … km', 'or every … km')}</span>
-                    <input className="input" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} />
-                  </label>
-                  <label className="field">
-                    <span className="f-label">{tx('Stand zuletzt (km)', 'Mileage last time (km)')}</span>
-                    <input className="input" inputMode="numeric" value={f.lastKm} placeholder={v.mileageKm ? String(v.mileageKm) : ''} onChange={(e) => setF({ ...f, lastKm: e.target.value })} />
-                  </label>
-                </div>
-                <p className="muted small">{tx(`Intervalle stehen in der Betriebsanleitung oder im Serviceheft deines Autos. ${BRAND.name} gibt keine vor.`, `Intervals are in your car’s owner’s manual or service book. ${BRAND.name} does not prescribe any.`)}</p>
-                <button className="btn primary" disabled={!f.title.trim()}>
-                  <Plus size={16} /> {tx('Anlegen', 'Add')}
+            {v && items.length === 0 && (
+              <div className="gcard maint-auto">
+                <h3>{tx('Plan automatisch anlegen', 'Create the plan automatically')}</h3>
+                <p>{tx('Öl, HU, Bremsflüssigkeit, Reifen und Winter: übliche Intervalle ab heute. Was dein Serviceheft anders vorgibt, änderst du später.', 'Oil, inspection, brake fluid, tyres and winter: common intervals from today. Change anything your service book says differently.')}</p>
+                <button className="btn primary" onClick={addBasic}>
+                  <Check size={16} /> {tx('Grundplan anlegen', 'Create basic plan')}
                 </button>
-              </form>
+              </div>
             )}
             {sorted.length === 0 ? (
               <p className="muted">{tx('Für dieses Auto ist noch nichts geplant.', 'Nothing planned for this car yet.')}</p>
@@ -184,6 +166,54 @@ export default function Maintenance({ vehicleId }: { vehicleId?: string }) {
                   )
                 })}
               </ul>
+            )}
+            {v && (
+              <Details title={tx('Eigenen Eintrag hinzufügen', 'Add your own entry')}>
+              <form
+                className="maint-add"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  add()
+                }}
+              >
+                <div className="fields three">
+                  <label className="field">
+                    <span className="f-label">{tx('Was', 'What')}</span>
+                    <input className="input" value={f.title} placeholder={tx('z. B. Ölwechsel', 'e.g. oil change')} onChange={(e) => setF({ ...f, title: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span className="f-label">{tx('Art', 'Type')}</span>
+                    <select className="input" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as MaintenanceKind })}>
+                      {KINDS.map((k) => (
+                        <option key={k.k} value={k.k}>
+                          {L(k.l)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span className="f-label">{tx('Zuletzt am', 'Last done')}</span>
+                    <input className="input" type="date" value={f.lastDate} onChange={(e) => setF({ ...f, lastDate: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span className="f-label">{tx('Alle … Monate', 'Every … months')}</span>
+                    <input className="input" inputMode="numeric" value={f.months} onChange={(e) => setF({ ...f, months: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span className="f-label">{tx('oder alle … km', 'or every … km')}</span>
+                    <input className="input" inputMode="numeric" value={f.km} onChange={(e) => setF({ ...f, km: e.target.value })} />
+                  </label>
+                  <label className="field">
+                    <span className="f-label">{tx('Stand zuletzt (km)', 'Mileage last time (km)')}</span>
+                    <input className="input" inputMode="numeric" value={f.lastKm} placeholder={v.mileageKm ? String(v.mileageKm) : ''} onChange={(e) => setF({ ...f, lastKm: e.target.value })} />
+                  </label>
+                </div>
+                <p className="muted small">{tx(`Intervalle stehen in der Betriebsanleitung oder im Serviceheft deines Autos. Der Grundplan ist nur ein üblicher Startpunkt.`, `Intervals are in your car’s owner’s manual or service book. The basic plan is only a common starting point.`)}</p>
+                <button className="btn primary" disabled={!f.title.trim()}>
+                  <Plus size={16} /> {tx('Anlegen', 'Add')}
+                </button>
+              </form>
+              </Details>
             )}
           </>
         )}

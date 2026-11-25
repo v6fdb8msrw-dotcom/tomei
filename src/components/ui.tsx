@@ -3,12 +3,15 @@ import { AlertTriangle, ArrowLeft, ArrowRight, ArrowUpRight, Info, RefreshCw } f
 import { AnimatePresence, motion } from 'motion/react'
 import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from 'react'
 import { translate, useT, type TKey } from '../i18n/i18n.ts'
+import { modelImg, modelThumb } from '../lib/modelimg.ts'
 import { href } from '../lib/router.ts'
 import { getState } from '../store/store.ts'
 import type { Vehicle, VehicleStatus } from '../store/schema.ts'
 
 export const EASE = [0.22, 1, 0.36, 1] as const
-export const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.jpg`
+export const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}.webp`
+/** Kleine Fassung (640 px) eines Fotos aus public/images für Kacheln */
+export const small = (src: string) => src.replace(/(?<!-s)\.webp$/, '-s.webp')
 
 // Standardbilder für Seitenköpfe ohne eigenes Bild (echte, lizenzierte Fotos)
 const HEAD_DEFAULTS = ['roads/shimanami', 'roads/atlantic', 'roads/glockner', 'roads/izu', 'fuji-lakes']
@@ -24,7 +27,7 @@ export function PageHead({ eyebrow, title, sub, back, children, image, images, v
   }, [list.length])
   return (
     <header className="phead with-img">
-      <div className="phead-img" style={vt ? { viewTransitionName: vt } : undefined}>
+      <div className="phead-img" data-vt={vt}>
         <AnimatePresence initial={false}>
           <motion.img key={list[i]} src={list[i]} alt="" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2 }} />
         </AnimatePresence>
@@ -254,7 +257,10 @@ export const today = () => new Date().toISOString().slice(0, 10)
 
 /** Kopfbild eines Fahrzeugs: nur lizenzierte Fotos, sonst eine typografische Karte */
 export function VehicleVisual({ v, big }: { v: Vehicle; big?: boolean }) {
+  const [bad, setBad] = useState(false)
   if (v.image) return <img className="veh-photo" src={img(v.image)} alt={vehicleTitle(v)} loading={big ? undefined : 'lazy'} />
+  // Foto aus dem Modell-Katalog, wenn das Auto von dort stammt
+  if (v.modelId && !bad) return <img className="veh-photo" src={(big ? modelImg : modelThumb)(v.modelId)} alt={vehicleTitle(v)} loading={big ? undefined : 'lazy'} onError={() => setBad(true)} />
   return (
     <div className={'veh-type' + (big ? ' big' : '')} aria-hidden>
       <span>{v.make}</span>

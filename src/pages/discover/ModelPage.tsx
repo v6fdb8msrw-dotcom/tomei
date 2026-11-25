@@ -1,18 +1,20 @@
 // Modellseite: Beschreibung (Wikipedia), Import ins eigene Land, wo suchen, passende Teile, Straßen im
 // Herkunftsland und die Besichtigungs-Checkliste. Erreichbar über #/discover/models/<id>.
-import { ArrowRight, ArrowUpRight, Calculator, Check, ClipboardCheck, Plus, Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowRight, ArrowLeft, ArrowUpRight, Calculator, Check, ClipboardCheck, Plus, Search, TriangleAlert, X } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { PRICE_SOURCE } from '../../classics.ts'
 import { MARKETS, sendToCalc } from '../../data.ts'
 import { DIR_COUNTRY } from '../../data/directory.ts'
 import { IMPORT_RULES, ruleById } from '../../data/importRules.ts'
 import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
-import { ROADS, roadImg } from '../../data/roads.ts'
-import { CURATED_PHOTO, loadCatalogue, loadPhotos, type CarModel, type ModelPhotos } from '../../components/ModelFinder.tsx'
+import { ROADS, roadImg, roadThumb } from '../../data/roads.ts'
+import { catalogueIfLoaded, loadCatalogue, loadPhotos, modelImg, modelThumb, photosIfLoaded, type CarModel, type ModelPhotos, type Photo } from '../../components/ModelFinder.tsx'
 import { ProviderGrid } from '../../components/motion.tsx'
-import { Badge, EmptyState, NotFound, PageHead, SourceLink, img } from '../../components/ui.tsx'
+import { Badge, EmptyState, NotFound, SourceLink } from '../../components/ui.tsx'
 import { useT } from '../../i18n/i18n.ts'
 import { href, navigate } from '../../lib/router.ts'
+import { genName, loadSpecs, specsIfLoaded, rangeText, specText, type Spec } from '../../lib/specs.ts'
+import { weakSpotsFor } from '../../data/weakspots.ts'
 import { addVehicle, setSettings, useStore } from '../../store/store.ts'
 import { ALL_SHOPS, fits } from '../Parts.tsx'
 import { CLASS_LABEL } from '../../components/ModelFinder.tsx'
@@ -26,16 +28,25 @@ let textCache: Promise<Texts> | null = null
 const loadTexts = () => (textCache ??= import('../../data/models_text.json').then((m) => m.default as Texts))
 
 export function ModelPage({ id }: { id: string }) {
-  const { tx, L, d, lang } = useT()
-  const [m, setM] = useState<CarModel | null | undefined>(undefined)
+  const { tx, L, d, lang, locale } = useT()
+  const [m, setM] = useState<CarModel | null | undefined>(() => catalogueIfLoaded()?.find((x) => x.id === id))
   const [txt, setTxt] = useState<{ en?: string; de?: string }>({})
   const home = useStore((s) => s.settings.homeCountry) || 'de'
   const vehicles = useStore((s) => s.vehicles)
-  const [pics, setPics] = useState<ModelPhotos>({})
+  const [pics, setPics] = useState<ModelPhotos>(photosIfLoaded() ?? {})
+  const [spec, setSpec] = useState<Spec | undefined>(() => specsIfLoaded()?.[id])
+  const [byName, setByName] = useState<Map<string, string>>(new Map())
 
   useEffect(() => {
     let alive = true
-    loadCatalogue().then((all) => alive && setM(all.find((x) => x.id === id) ?? null))
+    setM(catalogueIfLoaded()?.find((x) => x.id === id))
+    setSpec(specsIfLoaded()?.[id])
+    loadCatalogue().then((all) => {
+      if (!alive) return
+      setM(all.find((x) => x.id === id) ?? null)
+      setByName(new Map(all.filter((x) => x.wp).map((x) => [x.n.toLowerCase(), x.id])))
+    })
+    loadSpecs().then((s) => alive && setSpec(s[id]))
     loadPhotos().then((x) => alive && setPics(x))
     loadTexts().then((t) => alive && setTxt(t[id] ?? {}))
     return () => {
@@ -57,90 +68,100 @@ export function ModelPage({ id }: { id: string }) {
   const checks = checklistFor({ age, origin: m.cc })
   const have = vehicles.find((v) => v.modelId === m.id)
   const text = (lang === 'de' && txt.de) || txt.en
-  const pic = pics[m.id]
+  const shots = pics[m.id] ?? []
   const textLang = lang === 'de' && txt.de ? 'de' : 'en'
-  const photo = CURATED_PHOTO[m.id]
-  const cover = photo ? img(photo) : roads[0] ? roadImg(roads[0].id) : roadImg('stelvio')
+  const cover = shots.length ? modelImg(m.id) : roads[0] ? roadImg(roads[0].id) : roadImg('stelvio')
+  const weak = weakSpotsFor(m)
+  const wikiUrl = m.wp ?? spec?.wp?.replace(/ /g, '_')
   const ageOk = rule.age && age !== undefined ? age >= rule.age.years : undefined
 
   const save = () => {
-    const v = have ?? addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, modelId: m.id, image: photo, source: 'finder' })
+    const v = have ?? addVehicle({ make: m.mk, model: m.md, year: m.y0, status: 'dream', market: m.cc, modelId: m.id, source: 'finder' })
     navigate('own/garage/' + v.id)
   }
 
   return (
     <>
-      <PageHead
-        eyebrow={`${c?.flag ?? '🌍'} ${c ? L(c.name) : ''} · ${m.cl && CLASS_LABEL[m.cl] ? L(CLASS_LABEL[m.cl]) : m.mk}`}
-        title={
-          <>
-            {m.mk} <em>{m.md}</em>
-          </>
-        }
-        sub={m.y0 ? tx(`Gebaut ab ${m.y0}${m.y1 ? ` bis ${m.y1}` : ''}.`, `Built from ${m.y0}${m.y1 ? ` to ${m.y1}` : ''}.`) : undefined}
-        back={{ to: 'discover/search/modelle', label: tx('Modell-Katalog', 'Model catalogue') }}
-        image={cover}
-      >
-        <div className="row gap wrap">
-          <button className="btn primary" onClick={save}>
-            {have ? <Check size={16} /> : <Plus size={16} />} {have ? tx('In der Garage öffnen', 'Open in garage') : tx('In die Garage', 'Add to garage')}
-          </button>
-          {CALC_ORIGINS.has(m.cc) && (
-            <button className="btn" onClick={() => sendToCalc({ id: 'mp-' + m.id, title: m.n, url: '', price: m.usd ?? 0, cur: 'USD', market: m.usd ? 'jp' : m.cc, added: new Date().toISOString() })}>
-              <Calculator size={16} /> {tx('Import durchrechnen', 'Calculate import')}
+      <header className="mag-hero">
+        <div className="mag-hero-img" data-vt={'model-' + m.id} style={shots.length ? { backgroundImage: `url(${modelThumb(m.id)})` } : undefined}>
+          <img src={cover} alt={shots.length ? m.n : ''} onError={(e) => shots.length && (e.currentTarget.src = modelThumb(m.id))} />
+        </div>
+        <div className="mag-hero-text">
+          <a className="phead-back" href={href('discover/search/modelle')}>
+            <ArrowLeft size={15} /> {tx('Modell-Katalog', 'Model catalogue')}
+          </a>
+          <p className="eyebrow">
+            {c?.flag} {c ? L(c.name) : ''} · {m.cl && CLASS_LABEL[m.cl] ? L(CLASS_LABEL[m.cl]) : m.mk}
+          </p>
+          <h1>
+            <small>{m.mk}</small>
+            {m.n.startsWith(m.mk + ' ') ? m.n.slice(m.mk.length + 1) : m.md}
+          </h1>
+          <div className="row gap wrap">
+            <button className="btn primary" onClick={save}>
+              {have ? <Check size={16} /> : <Plus size={16} />} {have ? tx('In der Garage öffnen', 'Open in garage') : tx('In die Garage', 'Add to garage')}
             </button>
-          )}
+            {CALC_ORIGINS.has(m.cc) && (
+              <button className="btn" onClick={() => sendToCalc({ id: 'mp-' + m.id, title: m.n, url: '', price: m.usd ?? 0, cur: 'USD', market: m.usd ? 'jp' : m.cc, added: new Date().toISOString() })}>
+                <Calculator size={16} /> {tx('Import durchrechnen', 'Calculate import')}
+              </button>
+            )}
+          </div>
         </div>
-      </PageHead>
+        {shots[0] && <p className="mag-credit">{<Credit p={shots[0]} />}</p>}
+      </header>
 
-      <section className="section narrow">
-        {pic && (
-          <figure className="mp-photo">
-            <img src={img('models/' + m.id)} alt={m.n} />
-            <figcaption className="muted small">
-              {tx('Foto', 'Photo')}: {pic.a},{' '}
-              <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(pic.f)}`} target="_blank" rel="noopener noreferrer">
-                Wikimedia Commons
-              </a>
-              , {pic.u ? <a href={pic.u} target="_blank" rel="noopener noreferrer">{pic.l}</a> : pic.l} {tx('(verkleinert)', '(resized)')}
-            </figcaption>
-          </figure>
-        )}
-        <div className="mp-facts">
-          <div>
-            <span>{tx('Bauzeit', 'Production')}</span>
-            <b className="mono">{m.y0 ? `${m.y0}–${m.y1 ?? tx('heute', 'today')}` : '–'}</b>
-          </div>
-          <div>
-            <span>{tx('Herkunft', 'Origin')}</span>
-            <b>
-              {c?.flag} {c ? L(c.name) : m.cc.toUpperCase()}
-            </b>
-          </div>
-          <div>
-            <span>{tx('Oldtimer (30 Jahre)', 'Classic (30 years)')}</span>
-            <b>{m.y0 ? (age! >= 30 ? tx('ja, erste Baujahre', 'yes, early years') : tx(`ab ${m.y0 + 30}`, `from ${m.y0 + 30}`)) : '–'}</b>
-          </div>
-          {m.usd ? (
-            <div>
-              <span>
-                {tx('Median Angebotspreis Japan', 'Median asking price Japan')} · {PRICE_SOURCE.name}, {PRICE_SOURCE.date}
-              </span>
-              <b className="mono">$ {m.usd.toLocaleString('de-DE')}</b>
-            </div>
-          ) : null}
-        </div>
+      <BigNumbers m={m} spec={spec} />
+
+      <section className="section narrow mag-story">
+        {m.why && <p className="mag-quote">{d(m.why)}</p>}
         {text && (
-          <div className="gcard mp-text">
-            <p>{text}</p>
+          <>
+            <p className="mag-lead">{text}</p>
             <p className="muted small">
-              {tx('Text: Wikipedia', 'Text: Wikipedia')} ({textLang === 'de' ? 'de' : 'en'}), CC BY-SA 4.0 ·{' '}
-              {m.wp && <SourceLink url={`https://en.wikipedia.org/wiki/${m.wp}`}>{tx('Artikel', 'Article')}</SourceLink>}
+              {tx('Text: Wikipedia', 'Text: Wikipedia')} ({textLang}), CC BY-SA 4.0{wikiUrl && ' · '}
+              {wikiUrl && <SourceLink url={`https://en.wikipedia.org/wiki/${wikiUrl}`}>{tx('Artikel', 'Article')}</SourceLink>}
             </p>
-          </div>
+          </>
         )}
-        {m.why && <p className="cf-why">{d(m.why)}</p>}
+        {m.usd ? (
+          <p className="mag-price">
+            <b className="mono">$ {m.usd.toLocaleString(locale)}</b> {tx('Median Angebotspreis Japan', 'Median asking price Japan')} · {PRICE_SOURCE.name}, {PRICE_SOURCE.date}, {PRICE_SOURCE.licence}
+          </p>
+        ) : null}
       </section>
+
+      {shots.length > 1 && <Gallery id={m.id} name={m.n} shots={shots} />}
+
+      {spec && <SpecSheet spec={spec} byName={byName} wiki={wikiUrl} />}
+      {spec?.gen && <Generations spec={spec} />}
+
+      {weak && (
+        <section className="section narrow">
+          <div className="sec-head">
+            <p className="eyebrow">{tx('Schwachstellen', 'Weak spots')} · {weak.scope}</p>
+            <h2>
+              {tx('Was bei diesem Modell ', 'What tends to ')}
+              <em>{tx('gern kaputtgeht.', 'go wrong here.')}</em>
+            </h2>
+            <p className="sec-text">{tx('Erfahrungswerte aus Kaufberatungen, sinngemäß zusammengefasst. Keine Ausfallquoten: ob dein Auto betroffen ist, zeigt nur die Besichtigung.', 'Experience from buying guides, summarised. Not failure rates: only an inspection shows whether a given car is affected.')}</p>
+          </div>
+          <ul className="weak">
+            {weak.points.map((w) => (
+              <li key={w.de}>
+                <TriangleAlert size={17} /> <span>{L(w)}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="row gap wrap">
+            {weak.sources.map((q2) => (
+              <SourceLink key={q2.url} url={q2.url}>
+                {q2.label}
+              </SourceLink>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="section narrow">
         <div className="sec-head">
@@ -255,7 +276,7 @@ export function ModelPage({ id }: { id: string }) {
             {roads.map((r) => (
               <a key={r.id} className="road" href={href('drive/roads/' + r.id)}>
                 <div className="road-img">
-                  <img src={roadImg(r.id)} alt={r.name} loading="lazy" />
+                  <img src={roadThumb(r.id)} alt={r.name} loading="lazy" />
                 </div>
                 <div className="road-body">
                   <h3>{d(r.name)}</h3>
@@ -280,5 +301,169 @@ export function ModelPage({ id }: { id: string }) {
         </p>
       </section>
     </>
+  )
+}
+
+function Credit({ p }: { p: Photo }) {
+  const { tx } = useT()
+  return (
+    <>
+      {tx('Foto', 'Photo')}: {p.a},{' '}
+      <a href={`https://commons.wikimedia.org/wiki/File:${encodeURIComponent(p.f)}`} target="_blank" rel="noopener noreferrer">
+        Wikimedia Commons
+      </a>
+      , {p.u ? <a href={p.u} target="_blank" rel="noopener noreferrer">{p.l}</a> : p.l} {tx('(verkleinert)', '(resized)')}
+    </>
+  )
+}
+
+/** Große Zahlen quer über die Seite */
+function BigNumbers({ m, spec }: { m: CarModel; spec?: Spec }) {
+  const { tx, locale } = useT()
+  const y0 = m.y0 ?? spec?.y?.[0]
+  const y1 = m.y0 ? m.y1 : spec?.y?.[1] || undefined
+  const items = [
+    y0 && { v: `${y0}–${y1 ?? tx('heute', 'today')}`, u: '', l: tx('Bauzeit', 'Production') },
+    spec?.cc && { v: rangeText(spec.cc, locale, (x) => x / 1000, 1)!, u: tx('Liter', 'litres'), l: tx('Hubraum', 'Displacement') },
+    spec?.kg && { v: rangeText(spec.kg, locale)!, u: 'kg', l: tx('Gewicht', 'Weight') },
+    spec?.l && { v: rangeText(spec.l, locale, (x) => x / 1000, 2)!, u: 'm', l: tx('Länge', 'Length') },
+    y0 && { v: String(y0 + 30), u: '', l: YEAR >= y0 + 30 ? tx('Oldtimer seit (erste Baujahre)', 'Classic since (early years)') : tx('Oldtimer ab', 'Classic from') },
+  ].filter(Boolean) as { v: string; u: string; l: string }[]
+  return (
+    <section className="mag-nums">
+      {items.map((x) => (
+        <div key={x.l}>
+          <b className="mono">
+            {x.v}
+            {x.u && <i>{x.u}</i>}
+          </b>
+          <span>{x.l}</span>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+function Gallery({ id, name, shots }: { id: string; name: string; shots: Photo[] }) {
+  const { tx } = useT()
+  const [open, setOpen] = useState<number | null>(null)
+  const dlg = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    if (open !== null) dlg.current?.showModal()
+    else dlg.current?.close()
+  }, [open])
+  return (
+    <section className={'mag-gallery n' + shots.length}>
+      {shots.map((p, k) => (
+        <figure key={p.f}>
+          <button onClick={() => setOpen(k)} aria-label={tx(`Foto ${k + 1} vergrößern`, `Enlarge photo ${k + 1}`)}>
+            <img src={modelImg(id, k)} alt={`${name}, ${tx('Foto', 'photo')} ${k + 1}`} loading="lazy" onError={(e) => (e.currentTarget.closest('figure')!.hidden = true)} />
+          </button>
+          <figcaption>
+            <Credit p={p} />
+          </figcaption>
+        </figure>
+      ))}
+      <dialog ref={dlg} className="mag-dialog" onClose={() => setOpen(null)} onClick={(e) => e.target === e.currentTarget && setOpen(null)}>
+        {open !== null && (
+          <>
+            <img src={modelImg(id, open)} alt={name} />
+            <p className="small">
+              <Credit p={shots[open]} />
+            </p>
+            <button className="icon-btn" onClick={() => setOpen(null)} aria-label={tx('Schließen', 'Close')}>
+              <X size={18} />
+            </button>
+          </>
+        )}
+      </dialog>
+    </section>
+  )
+}
+
+function SpecSheet({ spec, byName, wiki }: { spec: Spec; byName: Map<string, string>; wiki?: string }) {
+  const { tx, lang, locale } = useT()
+  const mm = (r: Spec['l']) => rangeText(r, locale) && `${rangeText(r, locale)} mm`
+  const list = (a?: string[]) =>
+    a && (
+      <ul>
+        {a.map((x) => (
+          <li key={x}>{specText(x, lang)}</li>
+        ))}
+      </ul>
+    )
+  const links = (a?: string[]) =>
+    a && (
+      <ul>
+        {a.map((x) => {
+          const to = byName.get(x.toLowerCase())
+          return <li key={x}>{to ? <a href={href('discover/models/' + to)}>{x}</a> : x}</li>
+        })}
+      </ul>
+    )
+  const rows: [string, ReactNode][] = [
+    [tx('Motoren', 'Engines'), list(spec.eng)],
+    [tx('Getriebe', 'Gearbox'), list(spec.tr)],
+    [tx('Antrieb', 'Layout'), list(spec.lay)],
+    [tx('Karosserie', 'Body'), list(spec.body)],
+    [tx('Radstand', 'Wheelbase'), mm(spec.wb)],
+    [tx('Breite', 'Width'), mm(spec.w)],
+    [tx('Höhe', 'Height'), mm(spec.h)],
+    [tx('Design', 'Design'), list(spec.des)],
+    [tx('Vorgänger', 'Predecessor'), links(spec.pre)],
+    [tx('Nachfolger', 'Successor'), links(spec.suc)],
+  ]
+  const have = rows.filter((r) => r[1])
+  if (!have.length) return null
+  return (
+    <section className="section narrow">
+      <div className="sec-head">
+        <p className="eyebrow">{tx('Technik', 'Specs')}</p>
+        <h2>
+          {tx('Unter ', 'Under ')}
+          <em>{tx('dem Blech.', 'the skin.')}</em>
+        </h2>
+      </div>
+      <dl className="specs">
+        {have.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="muted small">
+        {tx('Werte aus der Infobox der englischen Wikipedia, automatisch ausgelesen (CC BY-SA 4.0). Spannen umfassen Varianten; einzelne Motoren können fehlen.', 'Values read automatically from the English Wikipedia infobox (CC BY-SA 4.0). Ranges cover variants; individual engines may be missing.')}{' '}
+        {wiki && <SourceLink url={`https://en.wikipedia.org/wiki/${wiki}`}>Wikipedia</SourceLink>}
+      </p>
+    </section>
+  )
+}
+
+function Generations({ spec }: { spec: Spec }) {
+  const { tx, lang, locale } = useT()
+  const g = [...(spec.gen ?? [])].sort((a, b) => a.y![0] - b.y![0])
+  return (
+    <section className="section gens-sec">
+      <div className="sec-head">
+        <p className="eyebrow">{tx('Zeitstrahl', 'Timeline')}</p>
+        <h2>
+          {g.length} <em>{tx('Generationen und Varianten.', 'generations and variants.')}</em>
+        </h2>
+      </div>
+      <ol className="gens" tabIndex={0} aria-label={tx('Zeitstrahl der Generationen', 'Timeline of generations')}>
+        {g.map((x, k) => (
+          <li key={x.n + k}>
+            <span className="gens-y mono">
+              {x.y![0]}
+              {x.y![1] !== x.y![0] && <>–{x.y![1] || tx('heute', 'today')}</>}
+            </span>
+            <b>{genName(x.n, lang)}</b>
+            {x.eng?.[0] && <span>{specText(x.eng[0], lang)}</span>}
+            <span className="muted small mono">{[x.kg && `${rangeText(x.kg, locale)} kg`, x.l && `${rangeText(x.l, locale, (v) => v / 1000, 2)} m`].filter(Boolean).join(' · ')}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   )
 }

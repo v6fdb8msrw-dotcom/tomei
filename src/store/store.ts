@@ -122,7 +122,7 @@ function sanitizePassport(p: unknown, ids: Set<string>): PassportEntry | null {
 
 function sanitizeTrip(t: unknown): Trip | null {
   if (!isObj(t)) return null
-  const pt = (w: unknown) => (isObj(w) && num(w.lat) !== undefined && num(w.lon) !== undefined && Math.abs(w.lat as number) <= 90 && Math.abs(w.lon as number) <= 180 ? { name: str(w.name, 120) ?? '', lat: w.lat as number, lon: w.lon as number } : null)
+  const pt = (w: unknown) => (isObj(w) && num(w.lat) !== undefined && num(w.lon) !== undefined && Math.abs(w.lat as number) <= 90 && Math.abs(w.lon as number) <= 180 ? { name: str(w.name, 120) ?? '', lat: w.lat as number, lon: w.lon as number, ...(str(w.via, 60) ? { via: str(w.via, 60) } : {}), ...(str(w.road, 60) ? { road: str(w.road, 60) } : {}) } : null)
   const now = nowIso()
   return clean({
     id: str(t.id, 80) || uid(),
@@ -133,6 +133,7 @@ function sanitizeTrip(t: unknown): Trip | null {
     track: arr(t.track)
       .filter((p): p is [number, number] => Array.isArray(p) && num(p[0]) !== undefined && num(p[1]) !== undefined)
       .slice(0, 20000),
+    plan: isObj(t.plan) ? clean(Object.fromEntries((['days', 'maxKm', 'detour', 'consumption', 'fuelPrice', 'hotel', 'tolls'] as const).map((k) => [k, num((t.plan as Record<string, unknown>)[k])]))) : undefined,
     notes: str(t.notes, 4000),
     date: str(t.date, 30),
     createdAt: str(t.createdAt, 40) ?? now,

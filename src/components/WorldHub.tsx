@@ -4,7 +4,7 @@ import { motion } from 'motion/react'
 import type { ReactNode } from 'react'
 import { href } from '../lib/router.ts'
 import { useT } from '../i18n/i18n.ts'
-import { EASE, PageHead } from './ui.tsx'
+import { EASE, PageHead, small } from './ui.tsx'
 
 export type Tool = { to: string; title: string; text: string; img: string; meta?: string }
 
@@ -27,7 +27,7 @@ export function WorldHub({ eyebrow, title, sub, image, tools, children }: { eyeb
               transition={{ duration: 0.7, delay: (k % 3) * 0.07, ease: EASE }}
             >
               <div className="tool-img">
-                <img src={t.img} alt="" loading="lazy" />
+                <img src={small(t.img)} alt="" loading="lazy" />
               </div>
               <div className="tool-body">
                 {t.meta && <span className="tool-meta">{t.meta}</span>}

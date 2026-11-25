@@ -7,6 +7,7 @@ import { Badge, PageHead, img } from '../components/ui.tsx'
 import { ScenarioPanel } from '../components/ScenarioPanel.tsx'
 import { range3 } from '../lib/scenarios.ts'
 import { int, landedCost, money, yen } from '../lib/calc.ts'
+import { CarQuick } from '../components/CarQuick.tsx'
 import { useT } from '../i18n/i18n.ts'
 import { useFx } from '../lib/fx.ts'
 
@@ -162,6 +163,10 @@ export function Import() {
   const [agent, setAgent] = useState<string>('avg')
   const [find, setFind] = useState<Find | null>(null)
   const [finds] = useState<Find[]>(loadFinds)
+
+  const [quick, setQuick] = useState('')
+  const [quickNote, setQuickNote] = useState('')
+  const [adv, setAdv] = useState(false)
 
   const origCur = O ? O.cur : 'JPY'
   const osym = SYM[origCur]
@@ -400,12 +405,12 @@ export function Import() {
       <section className="section narrow" id="rechner">
         <SectionHead eyebrow={tx('Rechner', 'Calculator')} title={<>{tx('Jeder Yen ', 'Every yen ')}<em>{tx('sichtbar.', 'visible.')}</em></>} />
 
-        <Reveal className="calc glass">
+        <Reveal className={'calc glass' + (adv ? '' : ' simple')}>
           <div className="car-stage">
             <AnimatePresence>
               <motion.img
                 key={(find || O) && !carId ? 'find' : shownCar.id}
-                src={(find || O) && !carId ? `${import.meta.env.BASE_URL}images/import-port.jpg` : shownCar.img}
+                src={(find || O) && !carId ? `${import.meta.env.BASE_URL}images/import-port.webp` : shownCar.img}
                 alt={find && !carId ? find.title : O && !carId ? tx('Dein Auto', 'Your car') : shownCar.model}
                 initial={{ opacity: 0, scale: 1.12 }}
                 animate={{ opacity: 1, scale: 1.02 }}
@@ -427,6 +432,25 @@ export function Import() {
             </AnimatePresence>
           </div>
 
+          <div className="calc-quick">
+            <CarQuick
+              value={quick}
+              onValue={setQuick}
+              button={tx('Rechnen', 'Calculate')}
+              examples={[tx('Nissan Skyline R34 8 Mio Yen', 'Nissan Skyline R34 8 million yen'), tx('Ford Mustang 1967 45.000 Dollar', 'Ford Mustang 1967 45,000 dollars')]}
+              onCar={(c) => {
+                const usd = c.hit?.usd
+                const market = c.price?.cur === 'JPY' ? 'jp' : c.price?.cur === 'USD' ? 'us' : c.price?.cur === 'GBP' ? 'uk' : (c.market ?? 'jp')
+                const p = c.price ?? (usd ? { amount: usd, cur: 'USD' } : null)
+                setQuickNote(!p ? tx('Schreib den Preis dazu, z. B. „8 Mio Yen“. Für dieses Modell gibt es keine freie Preisquelle.', 'Add the price, e.g. “8 million yen”. There is no free price source for this model.') : c.price ? '' : tx('Gerechnet mit dem Median der Angebotspreise in Japan (JDMBUYSELL, 17.11.2026).', 'Calculated with the median asking price in Japan (JDMBUYSELL, 17 Nov 2026).'))
+                if (p) loadFind({ id: 'q-' + (c.modelId ?? 'x'), title: c.hit?.n ?? [c.make, c.model].join(' '), url: '', price: p.amount, cur: p.cur, market: c.price ? market : 'jp', added: '' })
+              }}
+            />
+            {quickNote && <p className="small">{quickNote}</p>}
+            <button type="button" className="linkish small" onClick={() => setAdv(!adv)} aria-expanded={adv}>
+              {adv ? tx('Weniger anzeigen', 'Show less') : tx('Herkunft, Zielland, Agent und alle Kosten selbst einstellen', 'Set origin, destination, agent and all costs yourself')}
+            </button>
+          </div>
           <p className="cars-note">
             <Badge kind="demo">{tx('Beispielautos', 'Example cars')}</Badge> {tx('Preise zur Orientierung, keine echten Inserate. Eigene Fundstücke kommen aus der Fahrzeugsuche oder der Garage.', 'Prices for orientation only, not real listings. Your own finds come from the vehicle search or the garage.')}
           </p>

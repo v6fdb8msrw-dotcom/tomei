@@ -1,7 +1,7 @@
 {
   "name": "tomei",
   "private": true,
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
     "d3-geo": "^3.1.2",
     "lucide-react": "^1.63.0",
     "motion": "^14.7.1",
+    "pdf-lib": "^1.17.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.172.0",

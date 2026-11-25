@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarPlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import data from '../../data/events.json'
 import { BRAND } from '../../config/brand.ts'
-import { ROADS, roadImg } from '../../data/roads.ts'
+import { ROADS, roadImg, roadThumb } from '../../data/roads.ts'
 import { EmptyState, Note, PageHead, SourceLink, fmtDate, img } from '../../components/ui.tsx'
 import { useT } from '../../i18n/i18n.ts'
 import { eventsBetween, iso, shiftDays, weekOf, type CarEvent, type EventKind } from '../../lib/events.ts'
@@ -123,7 +123,7 @@ export function Events() {
           {tracks.map((r) => (
             <a key={r.id} className="road" href={href('drive/roads/' + r.id)}>
               <div className="road-img">
-                <img src={roadImg(r.id)} alt={r.name} loading="lazy" />
+                <img src={roadThumb(r.id)} alt={r.name} loading="lazy" />
               </div>
               <div className="road-body">
                 <h3>{r.name}</h3>

@@ -1,13 +1,15 @@
 // Automotive Passport: die Geschichte eines Autos auf einer Zeitleiste. Druckbar und als Datei exportierbar.
-import { Download, Plus, Printer, Trash2 } from 'lucide-react'
+import { Download, FileText, Plus, Printer, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
 import { countryById } from '../../data/countries.ts'
 import { EmptyState, EASE, PageHead, StatusPill, VehicleSelect, VehicleVisual, fmtDate, fmtMoney, img, today, vehicleTitle } from '../../components/ui.tsx'
+import { loadPhotos } from '../../components/ModelFinder.tsx'
+import { modelImg } from '../../lib/modelimg.ts'
 import { addPassportEntry, downloadFile, nowIso, removePassportEntry, useStore } from '../../store/store.ts'
 import type { PassportKind } from '../../store/schema.ts'
-import { useT } from '../../i18n/i18n.ts'
+import { useT, type TKey } from '../../i18n/i18n.ts'
 
 const KIND: Record<PassportKind, { de: string; en: string }> = {
   purchase: { de: 'Kauf', en: 'Purchase' },
@@ -21,7 +23,7 @@ const KIND: Record<PassportKind, { de: string; en: string }> = {
 }
 
 export default function Passport({ vehicleId }: { vehicleId?: string }) {
-  const { tx, L, locale } = useT()
+  const { t, tx, L, locale } = useT()
   const vehicles = useStore((s) => s.vehicles)
   const passport = useStore((s) => s.passport)
   const maintenance = useStore((s) => s.maintenance)
@@ -36,6 +38,41 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
     if (!v) return
     const data = { app: BRAND.ascii, kind: 'passport', exportedAt: nowIso(), vehicle: v, passport: entries, maintenance: maintenance.filter((m) => m.vehicleId === v.id), trips: trips.filter((t) => t.vehicleId === v.id) }
     downloadFile(`${BRAND.ascii.toLowerCase()}-passport-${[v.make, v.model].join('-').replace(/[^\w-]+/g, '_')}.json`, JSON.stringify(data, null, 2))
+  }
+
+  const [pdf, setPdf] = useState<'idle' | 'busy' | 'error'>('idle')
+  const [pdfNote, setPdfNote] = useState('')
+  const exportPdf = async () => {
+    if (!v) return
+    setPdf('busy')
+    setPdfNote('')
+    try {
+      const { buildDossier } = await import('../../lib/dossier.ts')
+      const c = v.market ? countryById(v.market) : undefined
+      const shot = v.modelId && !v.image ? (await loadPhotos())[v.modelId]?.[0] : undefined
+      const r = await buildDossier({
+        v,
+        passport: entries,
+        maintenance: maintenance.filter((m) => m.vehicleId === v.id),
+        kinds: Object.fromEntries(Object.entries(KIND).map(([k, x]) => [k, L(x)])),
+        status: t(('status.' + v.status) as TKey),
+        origin: c ? L(c.name) : v.market?.toUpperCase(),
+        tx,
+        locale,
+        cover: v.image ? img(v.image) : shot ? modelImg(v.modelId!) : undefined,
+        coverCredit: shot ? `${tx('Symbolfoto des Modells', 'Stock photo of the model')}: ${shot.a}, Wikimedia Commons, ${shot.l}` : v.image ? tx('Symbolfoto des Modells, Nachweis in der App unter „Daten“', 'Stock photo of the model, credits in the app under “Data”') : undefined,
+      })
+      const url = URL.createObjectURL(r.blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${BRAND.ascii.toLowerCase()}-${[v.make, v.model].join('-').replace(/[^\w-]+/g, '_')}.pdf`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 20000)
+      setPdf('idle')
+      setPdfNote(r.skipped ? tx(`${r.skipped} Fotos sind nicht in der Mappe (höchstens 13, oder nicht lesbar).`, `${r.skipped} photos are not in the dossier (13 at most, or unreadable).`) : '')
+    } catch {
+      setPdf('error')
+    }
   }
 
   return (
@@ -58,14 +95,19 @@ export default function Passport({ vehicleId }: { vehicleId?: string }) {
             <div className="build-head no-print">
               <VehicleSelect vehicles={vehicles} value={sel} onChange={setSel} />
               <div className="row gap">
+                <button className="btn primary" onClick={exportPdf} disabled={!v || pdf === 'busy'}>
+                  <FileText size={16} /> {pdf === 'busy' ? tx('PDF entsteht …', 'Creating PDF …') : tx('Fahrzeugmappe (PDF)', 'Vehicle dossier (PDF)')}
+                </button>
                 <button className="btn" onClick={() => print()} disabled={!v}>
-                  <Printer size={16} /> {tx('Drucken / PDF', 'Print / PDF')}
+                  <Printer size={16} /> {tx('Drucken', 'Print')}
                 </button>
                 <button className="btn" onClick={exportOne} disabled={!v}>
                   <Download size={16} /> Export
                 </button>
               </div>
             </div>
+            {pdf === 'error' && <p className="small">{tx('Die Mappe konnte nicht erstellt werden.', 'The dossier could not be created.')}</p>}
+            {pdfNote && <p className="small muted">{pdfNote}</p>}
             {v && (
               <article className="passport">
                 <header className="pp-head">

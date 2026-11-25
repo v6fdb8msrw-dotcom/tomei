@@ -22,7 +22,9 @@ const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
 const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
 const Events = named(() => import('./pages/drive/Events.tsx'), 'Events')
 const PartsPage = named(() => import('./pages/Parts.tsx'), 'PartsPage')
-const ModelPage = named(() => import('./pages/discover/ModelPage.tsx'), 'ModelPage')
+const modelPage = () => import('./pages/discover/ModelPage.tsx')
+const ModelPage = named(modelPage, 'ModelPage')
+const MatchPage = named(() => import('./pages/discover/Match.tsx'), 'MatchPage')
 const RulesPage = named(() => import('./pages/discover/Rules.tsx'), 'RulesPage')
 const DiscoverHub = named(discover, 'DiscoverHub')
 const Auctions = named(discover, 'Auctions')
@@ -40,6 +42,12 @@ const BuildStudio = lazy(() => import('./pages/own/BuildStudio.tsx'))
 const Maintenance = lazy(() => import('./pages/own/Maintenance.tsx'))
 const Passport = lazy(() => import('./pages/own/Passport.tsx'))
 
+// Detailseiten in einer ruhigen Minute vorladen, damit das Bild beim Öffnen ohne Pause weiterwächst
+if (typeof window !== 'undefined')
+  setTimeout(() => {
+    for (const load of [modelPage, drive, own]) load().catch(() => {})
+  }, 2500)
+
 type World = 'discover' | 'drive' | 'own'
 
 function useSub(world: World): SubItem[] {
@@ -49,6 +57,7 @@ function useSub(world: World): SubItem[] {
     return [
       { to: 'discover', label: en ? 'Overview' : 'Übersicht' },
       { to: 'discover/search', label: en ? 'Vehicle search' : 'Fahrzeugsuche' },
+      { to: 'discover/match', label: en ? 'Car matcher' : 'Autofinder' },
       { to: 'discover/auctions', label: en ? 'Auction houses' : 'Auktionshäuser' },
       { to: 'discover/partners', label: en ? 'Import partners' : 'Import-Partner' },
       { to: 'discover/calculator', label: en ? 'Calculator' : 'Importrechner' },
@@ -89,6 +98,7 @@ function Page({ path }: { path: string[] }): ReactNode {
     if (sub === 'calculator') return <Import />
     if (sub === 'journey') return <Journey vehicleId={id} />
     if (sub === 'models' && id) return <ModelPage id={id} />
+    if (sub === 'match') return <MatchPage />
     if (sub === 'rules') return <RulesPage id={id} />
     if (sub === 'service') return <Service />
   }
@@ -195,6 +205,7 @@ export default function App() {
           <nav>
             <b>Discover</b>
             <a href="#/discover/search">{lang === 'en' ? 'Vehicle search' : 'Fahrzeugsuche'}</a>
+            <a href="#/discover/match">{lang === 'en' ? 'Car matcher' : 'Autofinder'}</a>
             <a href="#/discover/auctions">{lang === 'en' ? 'Auction houses' : 'Auktionshäuser'}</a>
             <a href="#/discover/partners">{lang === 'en' ? 'Import partners' : 'Import-Partner'}</a>
             <a href="#/discover/calculator">{lang === 'en' ? 'Import calculator' : 'Importrechner'}</a>
