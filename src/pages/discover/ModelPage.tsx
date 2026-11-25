@@ -230,7 +230,7 @@ export function ModelPage({ id }: { id: string }) {
         <div className="sec-head">
           <p className="eyebrow">{tx('Werkstätten', 'Workshops')}</p>
           <h2>
-            {tx('Spezialisten für ', 'Specialists for ')}
+            {tx('Werkstätten für ', 'Workshops for ')}
             <em>{m.mk}.</em>
           </h2>
         </div>

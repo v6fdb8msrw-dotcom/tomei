@@ -32,9 +32,9 @@ export function Workshops({ make, year, limit = 9 }: { make?: string; year?: num
   }, [all, home, make, year])
   const label = (h: Hit) =>
     h.why === 'make'
-      ? tx(make ? `Spezialist ${make}` : 'Markenwerkstatt', make ? `${make} specialist` : 'Marque workshop')
+      ? tx(make ? `Werkstatt für ${make}` : 'Markenwerkstatt', make ? `${make} workshop` : 'Marque workshop')
       : h.why === 'dealer'
-        ? tx(`Vertragspartner ${make}`, `${make} dealer`)
+        ? tx(`Markenbetrieb ${make}`, `${make} brand workshop`)
         : h.why === 'family'
           ? tx('Spezialist für ähnliche Marken', 'Specialist for related makes')
           : tx('Oldtimer-Werkstatt', 'Classic car workshop')

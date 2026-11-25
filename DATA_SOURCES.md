@@ -41,7 +41,7 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 - **Straßenverläufe**: © OpenStreetMap-Mitwirkende (ODbL), geladen am 25.11.2026 über Overpass und OpenFreeMap-Kacheln (© OpenMapTiles). Einmalig beim Erstellen; die Webseite fragt keinen Kartendienst. Die daraus abgeleiteten Verläufe stehen unter der ODbL.
 - **Orte** (`src/data/places.json`): 3.325 Städte, OpenStreetMap (ODbL) über OpenFreeMap-Kacheln, 25.11.2026.
 - **Spritpreis**: EU-Durchschnitt Super 95, 1,83 €/l, EU Weekly Oil Bulletin vom 16.11.2026 (abgelesen über fuel-prices.eu). Von Hand aktualisieren (`FUEL` in `TripPlan.tsx`).
-- **Werkstätten** (`public/data/shops.json`): OpenStreetMap (ODbL) über Overpass, einmalig; Auswahl nach Name, Marke und Oldtimer-Bezug (wird nach und nach vollständig geladen).
+- **Werkstätten** (`public/data/shops.json`): OpenStreetMap (ODbL) über Overpass, einmalig; Auswahl nach Name, Marke und Oldtimer-Bezug (119 Kartenabschnitte, 25.11.2026).
 - **Portale** (`src/data/portals.ts`): Direktlinks, am 25.11.2026 von Hand im Browser geprüft; keine Inserate ausgelesen. eBay- und Yahoo-Links, Bring-a-Trailer-Suche: bekanntes Format, nicht einzeln geöffnet.
 
 ## Annahmen (in der Oberfläche als „Annahme“ markiert, änderbar)
