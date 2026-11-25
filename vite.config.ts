@@ -15,4 +15,8 @@ export default defineConfig({
     },
   ],
   server: { port: 5193 },
+  // Fassung für das Claude-Artifact: eine JS-Datei mit festen Namen (siehe tools/build-artifact.mjs)
+  ...(process.env.ARTIFACT
+    ? { build: { outDir: 'artifact-build', copyPublicDir: false, rolldownOptions: { output: { codeSplitting: false, entryFileNames: 'assets/app.js', assetFileNames: 'assets/[name][extname]' } } } }
+    : {}),
 })

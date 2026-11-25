@@ -2,13 +2,14 @@
 // Aufruf: node tools/build-artifact.mjs <zielordner>
 import fs from 'node:fs'
 import path from 'node:path'
+// vorher: npm run build (für dist/) und ARTIFACT=1 npx vite build (eine JS-Datei in artifact-build/)
 const out = process.argv[2]
 fs.rmSync(out, { recursive: true, force: true })
 const w = (p, d) => (fs.mkdirSync(path.dirname(path.join(out, p)), { recursive: true }), fs.writeFileSync(path.join(out, p), d))
-for (const f of fs.readdirSync('dist/assets')) {
+for (const f of fs.readdirSync('artifact-build/assets')) {
   if (/\.woff$/.test(f) || (/\.woff2$/.test(f) && !/-latin-/.test(f))) continue
   // Das Ersatzzeichen U+FFFD (pdf-lib) lässt Claude nicht als Klartext zu
-  w('assets/' + f, f.endsWith('.js') ? fs.readFileSync('dist/assets/' + f, 'utf8').replaceAll('\uFFFD', '\\uFFFD') : fs.readFileSync('dist/assets/' + f))
+  w('assets/' + f, f.endsWith('.js') ? fs.readFileSync('artifact-build/assets/' + f, 'utf8').replaceAll('\uFFFD', '\\uFFFD') : fs.readFileSync('artifact-build/assets/' + f))
 }
 const cat = JSON.parse(fs.readFileSync('src/data/models.json'))
 const photos = JSON.parse(fs.readFileSync('src/data/models_photos.json'))
@@ -36,17 +37,18 @@ function pack(list, max) {
 }
 const b64 = (f) => fs.readFileSync(f).toString('base64')
 const m = (n) => 'dist/images/m/' + n
-pack(ids.map((i) => `${i}-0.webp`).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 1.1e6)
-pack(ids.flatMap((i) => photos[i].map((_, k) => `${i}-${k}.avif`)).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 2.4e6)
+pack(ids.map((i) => `${i}-0.webp`).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 2e6)
+pack(ids.flatMap((i) => photos[i].map((_, k) => `${i}-${k}.avif`)).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 3.6e6)
 const imgs = ['', 'cars/', 'roads/'].flatMap((d) => fs.readdirSync('dist/images/' + d).filter((f) => f.endsWith('.webp')).map((f) => 'images/' + d + f))
 const pics = (l) => l.map((n) => [n, b64('dist/' + n)])
-pack(pics(imgs.filter((n) => n.endsWith('-s.webp'))), 1.5e6)
-pack(pics(imgs.filter((n) => !n.endsWith('-s.webp'))), 1.5e6)
-pack(fs.readdirSync('dist/data/terrain').map((f) => ['data/terrain/' + f, fs.readFileSync('dist/data/terrain/' + f, 'utf8')]), 6e5)
+pack(pics(imgs.filter((n) => n.endsWith('-s.webp'))), 3e6)
+pack(pics(imgs.filter((n) => !n.endsWith('-s.webp'))), 3e6)
+pack(fs.readdirSync('dist/data/terrain').map((f) => ['data/terrain/' + f, fs.readFileSync('dist/data/terrain/' + f, 'utf8')]), 1.2e6)
+pack([['data/shops.json', fs.readFileSync('dist/data/shops.json', 'utf8')]], 9e6)
 w('packs/index.json', JSON.stringify(index))
-const html = fs.readFileSync('dist/index.html', 'utf8')
-const js = html.match(/src="\.\/(assets\/index-[^"]+\.js)"/)[1]
-const css = html.match(/href="\.\/(assets\/index-[^"]+\.css)"/)[1]
+const html = fs.readFileSync('artifact-build/index.html', 'utf8')
+const js = html.match(/src="\.\/(assets\/[^"]+\.js)"/)[1]
+const css = html.match(/href="\.\/(assets\/[^"]+\.css)"/)[1]
 w(
   'page.html',
   `<title>TOMEI</title>
@@ -66,7 +68,7 @@ w(
     if (!packs.has(n)) packs.set(n, realFetch('packs/p' + n + '.json').then((r) => r.json()).catch(() => (packs.delete(n), {})))
     return packs.get(n)
   }
-  const keyOf = (u) => (String(u).match(/(?:images|data\\/terrain)\\/[^?#]+$/) || [])[0]
+  const keyOf = (u) => (String(u).match(/(?:images|data)\\/[^?#]+$/) || [])[0]
   const entry = async (key) => {
     const n = (await getIndex())[key]
     return n === undefined ? undefined : (await getPack(n))[key]
