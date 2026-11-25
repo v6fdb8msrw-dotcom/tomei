@@ -6,6 +6,7 @@ import { Note, PageHead } from '../components/ui.tsx'
 import { downloadFile, getState, isStorageOk, makeBackup, mergeStores, parseBackup, replaceAll, wipeAll, useStore, STORE_KEY } from '../store/store.ts'
 import { SCHEMA_VERSION } from '../store/schema.ts'
 import { useT } from '../i18n/i18n.ts'
+import { setHome } from '../lib/home.ts'
 import { wipePhotos } from '../lib/photos.ts'
 
 export function DataPage() {
@@ -105,7 +106,8 @@ export function DataPage() {
             onClick={() => {
               if (confirm(tx('Wirklich alle Daten löschen? Exportiere vorher eine Sicherung, wenn du sie behalten willst.', 'Really delete all data? Export a backup first if you want to keep it.'))) {
                 wipeAll()
-                void (setHome(null), wipePhotos())
+                setHome(null)
+                void wipePhotos()
                 setMsg({ t: 'ok', m: tx('Alle Daten wurden gelöscht.', 'All data has been deleted.') })
               }
             }}
