@@ -159,4 +159,6 @@ export const DATA_EN: Record<string, string> = {
   "Circuit Gilles-Villeneuve": "Circuit Gilles Villeneuve",
   "Circuit of The Americas": "Circuit of the Americas",
   "Phillip Island Circuit": "Phillip Island Grand Prix Circuit",
+  "Australiens eigenes Muscle-Car, in Europa praktisch nicht zu finden.": "Australia’s own muscle car, practically impossible to find in Europe.",
+  "JDM-Vermietung in Tokio: GT-R, Supra, GR Yaris. IDP wird akzeptiert.": "JDM rentals in Tokyo: GT-R, Supra, GR Yaris. IDP accepted.",
 }

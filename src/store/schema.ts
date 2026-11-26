@@ -64,6 +64,8 @@ export type Vehicle = {
   modelId?: string
   /** abgehakte Punkte der Kauf-Checkliste */
   checks?: string[]
+  /** eigene Notizen zur Besichtigung */
+  checkNote?: string
   /** eigener Wertverlauf (Schätzung, Gutachten, Angebot) */
   values?: { date: string; amount: number; cur: string; note?: string }[]
   /** nächste Hauptuntersuchung (YYYY-MM) */

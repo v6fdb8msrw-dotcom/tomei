@@ -401,7 +401,7 @@ function GarageSection() {
       <Reveal className="sec-head">
         <p className="eyebrow">{t('home.garage.eyebrow')}</p>
         <h2>
-          {t('home.garage.title')} <em>{vehicles.length ? `${vehicles.length} ${vehicles.length === 1 ? 'Fahrzeug' : 'Fahrzeuge'}.` : 'Noch leer.'}</em>
+          {t('home.garage.title')} <em>{vehicles.length ? `${vehicles.length} ${vehicles.length === 1 ? tx('Fahrzeug', 'vehicle') : tx('Fahrzeuge', 'vehicles')}.` : tx('Noch leer.', 'Still empty.')}</em>
         </h2>
       </Reveal>
       <div className="hgarage">

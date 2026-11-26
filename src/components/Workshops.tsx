@@ -9,7 +9,7 @@ import { HomeField } from './HomeField.tsx'
 const COVERED = new Set(['de', 'at', 'ch', 'li', 'lu', 'nl', 'be', 'fr', 'it', 'uk', ''])
 
 export function Workshops({ make, year, limit = 9 }: { make?: string; year?: number; limit?: number }) {
-  const { tx, locale } = useT()
+  const { tx, L, locale } = useT()
   const home = useHome()
   const [all, setAll] = useState<Shop[] | null>(null)
   const [n, setN] = useState(limit)
@@ -31,7 +31,9 @@ export function Workshops({ make, year, limit = 9 }: { make?: string; year?: num
     return []
   }, [all, home, make, year])
   const label = (h: Hit) =>
-    h.why === 'make'
+    h.why === 'spec' && h.s.x
+      ? L(h.s.x)
+      : h.why === 'make'
       ? tx(make ? `Werkstatt für ${make}` : 'Markenwerkstatt', make ? `${make} workshop` : 'Marque workshop')
       : h.why === 'dealer'
         ? tx(`Markenbetrieb ${make}`, `${make} brand workshop`)
@@ -50,6 +52,14 @@ export function Workshops({ make, year, limit = 9 }: { make?: string; year?: num
               <article key={h.s.n + h.s.la} className="ws-card">
                 <span className={'ws-tag ' + h.why}>{label(h)}</span>
                 <h3>{h.s.n}</h3>
+                {h.s.s && (
+                  <p className="muted small">
+                    {tx('Von Hand geprüft, ', 'Checked by hand, ')}
+                    <a className="link" href={h.s.s} target="_blank" rel="noopener noreferrer">
+                      {tx('Quelle', 'source')}
+                    </a>
+                  </p>
+                )}
                 <p className="muted small">
                   <MapPin size={13} /> {[h.s.a, h.s.c].filter(Boolean).join(', ') || tx('Lage auf der Karte', 'See map')} · <b className="mono">{h.km.toLocaleString(locale, { maximumFractionDigits: h.km < 10 ? 1 : 0 })} km</b>
                 </p>

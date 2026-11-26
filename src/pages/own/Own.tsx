@@ -11,6 +11,8 @@ import { EmptyState, EASE, NotFound, PageHead, StatusPill, VehicleVisual, fmtMon
 import { addBasicPlan } from '../../lib/basicplan.ts'
 import { Workshops } from '../../components/Workshops.tsx'
 import { CarQuick } from '../../components/CarQuick.tsx'
+import { ShareLink } from '../../components/ShareLink.tsx'
+import { encodeShare, vehicleForShare } from '../../lib/share.ts'
 import { Details } from '../../components/QuickInput.tsx'
 import { useT, type TKey } from '../../i18n/i18n.ts'
 import { href, navigate } from '../../lib/router.ts'
@@ -316,6 +318,12 @@ function VehiclePage({ id }: { id: string }) {
         </Details>
 
         <VehicleExtras v={v} />
+
+        <ShareLink
+          title={vehicleTitle(v)}
+          make={async () => ({ code: await encodeShare({ t: 'v', v: vehicleForShare(v) }) })}
+          hint={tx('Schickt Modell, Baujahr, Laufleistung und Umbauten. Preise, Notizen und Fotos bleiben auf deinem Gerät.', 'Sends model, year, mileage and modifications. Prices, notes and photos stay on your device.')}
+        />
 
         <div className="row gap wrap">
           <a className="btn" href={href('own/garage')}>

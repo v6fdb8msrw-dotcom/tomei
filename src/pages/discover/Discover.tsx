@@ -62,7 +62,8 @@ export function Auctions() {
   const all = useMemo(
     () => [
       ...AUCTIONS.map((a) => ({ name: a.name, country: d(a.country), text: d(a.text), url: a.url, open: !!a.open })),
-      ...AUCTIONS_MORE.map((a) => ({ name: a.name, country: `${DIR_COUNTRY[a.cc].flag} ${L(DIR_COUNTRY[a.cc].name)}`, text: L(a.text), url: a.url, open: !!a.open })),
+      // doppelte Häuser (in beiden Listen) nur einmal
+      ...AUCTIONS_MORE.filter((a) => !AUCTIONS.some((b) => b.name === a.name)).map((a) => ({ name: a.name, country: `${DIR_COUNTRY[a.cc].flag} ${L(DIR_COUNTRY[a.cc].name)}`, text: L(a.text), url: a.url, open: !!a.open })),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [lang],
@@ -139,7 +140,7 @@ export function Auctions() {
 /* ------------------------------------------------------------------ Import-Partner */
 
 type PartnerRole = 'agent' | 'complete' | 'shipping'
-type Partner = { id: string; name: string; url: string; origins: string[]; roles: PartnerRole[]; text: string | { de: string; en: string }; price?: string; source?: string }
+type Partner = { id: string; name: string; url: string; origins: string[]; roles: PartnerRole[]; text: string | { de: string; en: string }; price?: string | { de: string; en: string }; source?: string }
 
 const ROLE: Record<PartnerRole, { de: string; en: string }> = {
   agent: { de: 'Kauf vor Ort / Agent', en: 'Local purchase / agent' },
@@ -157,9 +158,9 @@ function buildPartners(): Partner[] {
   }
   const list: Partner[] = AGENTS.map((a) => {
     const at = agentTotal(a, 1500000)
-    return { id: a.id, name: a.name, url: a.url, origins: ['jp'], roles: ['agent' as PartnerRole], text: a.text, price: at === null ? 'auf Anfrage' : `${yen(at)} bei 1,5 Mio. ¥ Zuschlag (inkl. fester Posten und Hafentransport)`, source: a.source }
+    return { id: a.id, name: a.name, url: a.url, origins: ['jp'], roles: ['agent' as PartnerRole], text: a.text, price: at === null ? undefined : { de: `${yen(at)} bei 1,5 Mio. ¥ Zuschlag (inkl. fester Posten und Hafentransport)`, en: `${yen(at)} on a ¥1.5m hammer price (incl. fixed items and port transport)` }, source: a.source }
   })
-  for (const f of IMPORT_FLAT) list.push({ id: f.id, name: f.name, url: f.url, origins: ['jp'], roles: ['complete'], text: f.text, price: `${f.eur.toLocaleString('de-DE')} € Service-Pauschale`, source: f.source })
+  for (const f of IMPORT_FLAT) list.push({ id: f.id, name: f.name, url: f.url, origins: ['jp'], roles: ['complete'], text: f.text, price: { de: `${f.eur.toLocaleString('de-DE')} € Service-Pauschale`, en: `€${f.eur.toLocaleString('en-GB')} service flat fee` }, source: f.source })
   for (const p of IMPORTERS) {
     if (list.some((x) => x.name === p.name)) continue
     const r = roleOf[p.name] ?? { origins: ['jp'], roles: ['complete'] }
@@ -171,7 +172,7 @@ function buildPartners(): Partner[] {
     if (!m.source || seen.has(new URL(m.source).hostname)) continue
     seen.add(new URL(m.source).hostname)
     const host = new URL(m.source).hostname.replace(/^www\./, '')
-    list.push({ id: host, name: host === 'wcshipping.com' ? 'West Coast Shipping' : host === 'alltransportdepot.com' ? 'All Transport Depot' : host, url: 'https://' + host + '/', origins: ['us'], roles: ['shipping'], text: m.text, price: `ab ${m.cost?.toLocaleString('de-DE')} $`, source: m.source })
+    list.push({ id: host, name: host === 'wcshipping.com' ? 'West Coast Shipping' : host === 'alltransportdepot.com' ? 'All Transport Depot' : host, url: 'https://' + host + '/', origins: ['us'], roles: ['shipping'], text: m.text, price: { de: `ab ${m.cost?.toLocaleString('de-DE')} $`, en: `from $${m.cost?.toLocaleString('en-GB')}` }, source: m.source })
   }
   // Reedereien, Terminal und Speditionen aus dem erweiterten Verzeichnis
   const ALL_ORIGINS = ['jp', 'us', 'uk', 'ca', 'au']
@@ -251,7 +252,7 @@ export function Partners() {
                   {p.price ? <Badge kind="ok">{tx('Preis veröffentlicht', 'Price published')}</Badge> : <Badge kind="warn">{tx('Preis auf Anfrage', 'Price on request')}</Badge>}
                 </div>
                 <p>{typeof p.text === 'string' ? d(p.text) : L(p.text)}</p>
-                {p.price && <p className="partner-price mono">{p.price}</p>}
+                {p.price && <p className="partner-price mono">{typeof p.price === 'string' ? p.price : L(p.price)}</p>}
                 {p.source && <SourceLink url={p.source}>{tx('Preisquelle', 'Price source')}</SourceLink>}
               </motion.article>
             ))}

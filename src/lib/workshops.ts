@@ -1,12 +1,14 @@
 // Werkstätten aus OpenStreetMap (public/data/shops.json, einmalig beim Erstellen geladen). Sortiert nach Passung und Entfernung.
 import { haversineKm } from './gpx.ts'
+import { SPECIALISTS } from '../data/specialists.ts'
 
 /** n Name, la/lo Lage, c Ort, w Webseite, t Telefon, m Marken (Kürzel), o Oldtimer-Bezug, i frei/unabhängig */
-export type Shop = { n: string; la: number; lo: number; c?: string; a?: string; w?: string; t?: string; m?: string[]; o?: 1; d?: 1 }
+export type Shop = { n: string; la: number; lo: number; c?: string; a?: string; w?: string; t?: string; m?: string[]; o?: 1; d?: 1; /** von Hand geprüfter Spezialist: Schwerpunkt und Quelle */ x?: { de: string; en: string }; s?: string }
 let cache: Promise<Shop[]> | null = null
 export const loadShops = () =>
   (cache ??= fetch(`${import.meta.env.BASE_URL}data/shops.json`)
     .then((r) => (r.ok ? (r.json() as Promise<Shop[]>) : []))
+    .then((l) => [...SPECIALISTS, ...l])
     .catch(() => ((cache = null), [])))
 
 export const makeKey = (s: string) => s.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')
@@ -17,7 +19,7 @@ const FAMILY: Record<string, RegExp> = {
   italian: /^(ferrari|lamborghini|maserati|alfaromeo|fiat|lancia|abarth|detomaso|autobianchi|iso|bizzarrini|dino)$/,
   british: /^(mg|triumph|jaguar|lotus|austin|rover|mini|morris|tvr|astonmartin|bentley|rollsroyce|landrover|rangerover|ac|bmc|talbot)$/,
 }
-export type Hit = { s: Shop; km: number; why: 'make' | 'family' | 'classic' | 'dealer' }
+export type Hit = { s: Shop; km: number; why: 'spec' | 'make' | 'family' | 'classic' | 'dealer' }
 
 export function findShops(all: Shop[], o: { make?: string; year?: number; lat: number; lon: number; maxKm?: number; now?: number }): Hit[] {
   const mk = o.make ? makeKey(o.make) : ''
@@ -27,8 +29,13 @@ export function findShops(all: Shop[], o: { make?: string; year?: number; lat: n
   const out: Hit[] = []
   for (const s of all) {
     const km = haversineKm({ lat: o.lat, lon: o.lon }, { lat: s.la, lon: s.lo })
-    if (km > (o.maxKm ?? 150)) continue
     const m = s.m ?? []
+    // Spezialisten lohnen auch eine weitere Anfahrt (doppelter Umkreis)
+    if (s.x) {
+      if (km <= (o.maxKm ?? 150) * 2 && mk && (m.some((x) => keys.has(x)) || fam.some((f) => m.includes(f)))) out.push({ s, km, why: 'spec' })
+      continue
+    }
+    if (km > (o.maxKm ?? 150)) continue
     const make = m.some((x) => keys.has(x))
     const family = fam.some((f) => m.includes(f)) || (mk !== '' && FAMILY.italian.test(mk) && !s.d && m.some((x) => FAMILY.italian.test(x)))
     if (make) out.push({ s, km, why: s.d ? 'dealer' : 'make' })
@@ -37,6 +44,6 @@ export function findShops(all: Shop[], o: { make?: string; year?: number; lat: n
     else if (!mk && (s.o || m.length)) out.push({ s, km, why: s.o ? 'classic' : 'make' })
   }
   // Spezialisten dürfen weiter weg sein als der Vertragshändler; bei alten Autos zählt Klassik-Erfahrung mehr
-  const bonus = (h: Hit) => (h.why === 'make' ? 45 : h.why === 'family' ? 30 : h.why === 'classic' ? 25 : 0) + (old && h.s.o ? 25 : 0) - (old && h.why === 'dealer' ? 20 : 0)
+  const bonus = (h: Hit) => (h.why === 'spec' ? 120 : h.why === 'make' ? 45 : h.why === 'family' ? 30 : h.why === 'classic' ? 25 : 0) + (old && h.s.o ? 25 : 0) - (old && h.why === 'dealer' ? 20 : 0)
   return out.sort((a, b) => a.km - bonus(a) - (b.km - bonus(b)))
 }

@@ -1,4 +1,5 @@
 import { getState } from './store/store.ts'
+import FX_SNAPSHOT from './data/fx_snapshot.json'
 // Alle Inhalte an einer Stelle: Texte, Links und Bilder lassen sich hier tauschen.
 // [REPLACE] markiert Stellen, an denen eigene Fotos oder Videos hingehören.
 
@@ -285,8 +286,10 @@ export const ORIGIN: Record<Exclude<OriginKey, 'jp'>, OriginDef> = {
 
 // JPY → Zielwährung (EZB-Kurs vom 27.10.2026), wird beim Laden durch den Tageskurs ersetzt (Frankfurter-API)
 // Ersatzkurse (1 ¥ = …), EZB vom 16.11.2026; AED über die feste Bindung 3,6725 AED je USD
-export const FX_FALLBACK: Record<string, number> = { EUR: 0.0056889, USD: 0.0062658, GBP: 0.0047474, AUD: 0.0092735, CAD: 0.008951, NZD: 0.011361, KRW: 8.364, THB: 0.21234, MYR: 0.025658, SGD: 0.0080754, HKD: 0.049168, AED: 0.0062658 * 3.6725 }
 export const AED_PER_USD = 3.6725
+// EZB-Kurse vom letzten Build (tools/fx-snapshot.mjs), falls der Live-Abruf nicht klappt
+export const FX_DATE: string = FX_SNAPSHOT.date
+export const FX_FALLBACK: Record<string, number> = { ...FX_SNAPSHOT.rates, AED: FX_SNAPSHOT.rates.USD * AED_PER_USD }
 
 export type Car = { id: string; model: string; chassis: string; year: number; grade: string; km: number; jpy: number; img: string; tag: string }
 

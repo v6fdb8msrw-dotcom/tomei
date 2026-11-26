@@ -68,6 +68,7 @@ export function sanitizeVehicle(v: unknown): Vehicle | null {
     journey: arr(v.journey).filter((x): x is string => typeof x === 'string').slice(0, 50),
     modelId: str(v.modelId, 40),
     checks: v.checks === undefined ? undefined : arr(v.checks).filter((x): x is string => typeof x === 'string').slice(0, 100),
+    checkNote: str(v.checkNote, 2000),
     values:
       v.values === undefined
         ? undefined

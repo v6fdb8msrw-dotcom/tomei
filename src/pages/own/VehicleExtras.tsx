@@ -1,15 +1,17 @@
 // Zusatzbereiche auf der Fahrzeugseite: Kauf-Checkliste, Wertverlauf, eigene Fotos, Erinnerungen (HU, Saison).
-import { Bell, Camera, CalendarPlus, ClipboardCheck, LineChart, Plus, Trash2 } from 'lucide-react'
+import { Bell, BookPlus, Camera, CalendarPlus, ClipboardCheck, LineChart, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
-import { CHECK_SOURCES, checklistFor } from '../../data/checklist.ts'
+import { CHECK_SOURCES, checklistFor, type CheckGroup } from '../../data/checklist.ts'
+import { weakSpotsFor, type WeakSpots } from '../../data/weakspots.ts'
+import { loadCatalogue } from '../../components/ModelFinder.tsx'
 import { SourceLink, fmtDate, fmtMoney, today, vehicleTitle } from '../../components/ui.tsx'
 import { QuickInput } from '../../components/QuickInput.tsx'
 import { parseNote } from '../../lib/quick.ts'
 import { useT } from '../../i18n/i18n.ts'
 import { toIcs } from '../../lib/maintenance.ts'
 import { addPhotos, listPhotos, removePhoto, type Photo } from '../../lib/photos.ts'
-import { downloadFile, updateVehicle } from '../../store/store.ts'
+import { addPassportEntry, downloadFile, updateVehicle } from '../../store/store.ts'
 import type { Vehicle } from '../../store/schema.ts'
 
 const YEAR = new Date().getFullYear()
@@ -27,17 +29,47 @@ export function VehicleExtras({ v }: { v: Vehicle }) {
   )
 }
 
+// Schwachstellen des Katalogmodells (falls es dazu eine Kaufberatung gibt)
+function useWeakSpots(modelId?: string) {
+  const [w, setW] = useState<{ id: string; ws?: WeakSpots } | null>(null)
+  useEffect(() => {
+    if (!modelId) return
+    let alive = true
+    loadCatalogue().then((all) => {
+      const m = all.find((x) => x.id === modelId)
+      if (alive) setW({ id: modelId, ws: m ? weakSpotsFor(m) : weakSpotsFor({ id: modelId }) })
+    })
+    return () => {
+      alive = false
+    }
+  }, [modelId])
+  return w && w.id === modelId ? w.ws : undefined
+}
+
 function Checklist({ v }: { v: Vehicle }) {
-  const { tx, L } = useT()
-  const groups = checklistFor({ age: v.year ? YEAR - v.year : undefined, origin: v.market })
+  const { tx, L, locale } = useT()
+  const ws = useWeakSpots(v.modelId)
+  const groups: CheckGroup[] = [
+    ...(ws ? [{ id: 'model', title: { de: `Typisch für ${ws.scope}`, en: `Typical of ${ws.scope}` }, items: ws.points.map((t, k) => ({ id: `w${k}`, t })) }] : []),
+    ...checklistFor({ age: v.year ? YEAR - v.year : undefined, origin: v.market }),
+  ]
   const done = new Set(v.checks ?? [])
   const total = groups.reduce((a, g) => a + g.items.length, 0)
   const n = groups.reduce((a, g) => a + g.items.filter((i) => done.has(i.id)).length, 0)
+  const [note, setNote] = useState(v.checkNote ?? '')
+  const [saved, setSaved] = useState(false)
   const toggle = (id: string) => {
     const next = new Set(done)
     if (next.has(id)) next.delete(id)
     else next.add(id)
     updateVehicle(v.id, { checks: [...next] })
+  }
+  // Ergebnis der Besichtigung als Eintrag in den Passport übernehmen
+  const toPassport = () => {
+    const open = groups.flatMap((g) => g.items.filter((i) => !done.has(i.id)).map((i) => '– ' + L(i.t)))
+    const notes = [note.trim() && tx('Notizen: ', 'Notes: ') + note.trim(), open.length ? tx('Nicht geprüft oder offen:', 'Not checked or open:') + '\n' + open.join('\n') : tx('Alle Punkte geprüft.', 'All points checked.')].filter(Boolean).join('\n\n')
+    addPassportEntry({ vehicleId: v.id, date: today(), kind: 'note', title: tx(`Besichtigung: ${n} von ${total} Punkten geprüft`, `Inspection: ${n} of ${total} points checked`), notes, km: v.mileageKm })
+    setSaved(true)
   }
   return (
     <div className="gcard vx-card">
@@ -58,9 +90,26 @@ function Checklist({ v }: { v: Vehicle }) {
           ))}
         </div>
       ))}
+      <label className="vx-note">
+        <span className="f-label">{tx('Deine Notizen zur Besichtigung', 'Your inspection notes')}</span>
+        <textarea
+          className="input"
+          rows={3}
+          value={note}
+          placeholder={tx('z. B. Rost hinten links, Kupplung greift spät', 'e.g. rust rear left, clutch bites late')}
+          onChange={(e) => (setNote(e.target.value), setSaved(false))}
+          onBlur={() => note !== (v.checkNote ?? '') && updateVehicle(v.id, { checkNote: note.slice(0, 2000) || undefined })}
+        />
+      </label>
+      <div className="vx-actions">
+        <button className="btn small" onClick={toPassport} disabled={!n && !note.trim()}>
+          <BookPlus size={14} /> {saved ? tx('Im Passport gespeichert', 'Saved to passport') : tx('Ergebnis in den Passport', 'Save result to passport')}
+        </button>
+        <span className="muted small">{fmtDate(today(), locale)}</span>
+      </div>
       <p className="muted small">
         {tx('Nach den Ratgebern von', 'Based on the guides by')}{' '}
-        {CHECK_SOURCES.map((s, k) => (
+        {[...(ws?.sources ?? []), ...CHECK_SOURCES].map((s, k) => (
           <span key={s.url}>
             {k > 0 && ' · '}
             <SourceLink url={s.url}>{s.label}</SourceLink>

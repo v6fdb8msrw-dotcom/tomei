@@ -6,12 +6,14 @@ Jede Zahl in TŌMEI hat eine Quelle, ist als Schätzwert/Annahme gekennzeichnet 
 
 | Daten | Quelle | Nutzung |
 |---|---|---|
-| Wechselkurse (EZB-Referenzkurse) | https://api.frankfurter.dev (öffentlich, ohne Schlüssel) | Rechner, Merkliste, Startseite; Ersatzkurse in `src/data.ts` (`FX_FALLBACK`, Stand 16.11.2026) |
+| Wechselkurse (EZB-Referenzkurse) | https://api.frankfurter.dev (öffentlich, ohne Schlüssel) | Rechner, Merkliste, Startseite; Ersatzkurse: EZB-Kurse vom letzten Build in `src/data/fx_snapshot.json` (`tools/fx-snapshot.mjs`, läuft vor jedem `npm run build`) |
 
 ## Statisch im Code
 
 | Daten | Datei | Quelle | Stand |
 |---|---|---|---|
+| Spezialwerkstätten (JDM, GT-R), von Hand geprüft | `src/data/specialists.ts` | eigene Webseiten der Betriebe, Classic & Sports Car (Link je Eintrag im Feld `s`) | 26.11.2026 |
+| Strecken Dalton Highway, Natchez Trace, Cabot Trail, Carretera Austral, Great Alpine Road | `public/data/terrain/*.json` | OpenFreeMap-Vektorkacheln (OpenStreetMap, ODbL), Höhen: Terrain Tiles (AWS Open Data) | 26.11.2026 |
 | Gebühren der Export-Agenten in Japan | `src/data.ts` → `AGENTS` | Preisseiten der Firmen (Link je Agent im Feld `source`) | 17.11.2026 |
 | Pauschale JP-Importcars.de | `src/data.ts` → `IMPORT_FLAT` | https://www.jp-importcars.de/?lang=en | 17.11.2026 |
 | Aufgeld der Auktionshäuser USA/UK/AU | `src/data.ts` → `ORIGIN.*.houses` | https://support.classic.com/auction-fees-and-prices bzw. Bedingungen des Hauses | 18.11.2026 |

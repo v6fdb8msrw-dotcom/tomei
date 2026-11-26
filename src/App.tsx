@@ -20,6 +20,7 @@ const Service = named(() => import('./pages/Service.tsx'), 'Service')
 const Rent = named(() => import('./pages/Rent.tsx'), 'Rent')
 const DataPage = named(() => import('./pages/DataPage.tsx'), 'DataPage')
 const Legal = named(() => import('./pages/Legal.tsx'), 'Legal')
+const SharePage = named(() => import('./pages/SharePage.tsx'), 'SharePage')
 const Events = named(() => import('./pages/drive/Events.tsx'), 'Events')
 const PartsPage = named(() => import('./pages/Parts.tsx'), 'PartsPage')
 const modelPage = () => import('./pages/discover/ModelPage.tsx')
@@ -89,6 +90,7 @@ function Page({ path }: { path: string[] }): ReactNode {
   const [w, sub, id] = path
   if (!w) return <Home />
   if (w === 'data' && !sub) return <DataPage />
+  if (w === 'share' && sub) return <SharePage code={sub} />
   if ((w === 'privacy' || w === 'imprint') && !sub) return <Legal kind={w} />
   if (w === 'discover') {
     if (!sub) return <DiscoverHub />
@@ -142,7 +144,7 @@ export default function App() {
   useAnchor(anchorOf(route.path))
 
   useEffect(() => {
-    const names: Record<string, string> = { discover: 'Discover', drive: 'Drive', own: 'Own', data: t('nav.data'), privacy: lang === 'en' ? 'Privacy' : 'Datenschutz', imprint: lang === 'en' ? 'Imprint' : 'Impressum' }
+    const names: Record<string, string> = { discover: 'Discover', drive: 'Drive', own: 'Own', data: t('nav.data'), privacy: lang === 'en' ? 'Privacy' : 'Datenschutz', imprint: lang === 'en' ? 'Imprint' : 'Impressum', share: lang === 'en' ? 'Shared' : 'Geteilt' }
     document.title = route.path[0] ? `${names[route.path[0]] ?? '404'} · ${BRAND.name}` : `${BRAND.name} · ${BRAND.claim}`
   }, [route.path, t, lang])
 

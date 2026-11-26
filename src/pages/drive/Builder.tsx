@@ -1,4 +1,6 @@
 // Roadtrip-Builder: eigene Routen aus Wegpunkten, GPX-Import und -Export, verknüpft mit Garage und Passport.
+import { ShareLink } from '../../components/ShareLink.tsx'
+import { tripCode } from '../../lib/share.ts'
 import { ArrowDown, ArrowUp, ArrowUpRight, BookPlus, Download, FileUp, Plus, Trash2 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { BRAND } from '../../config/brand.ts'
@@ -366,6 +368,13 @@ function Editor({ id }: { id: string }) {
               <button className="btn" disabled={!trip.waypoints.length && !trip.track?.length} onClick={() => downloadFile(`${(trip.name || 'roadtrip').replace(/[^\w-]+/g, '_')}.gpx`, toGpx(trip.name, trip.waypoints, trip.track ?? [], BRAND.ascii, trip.waypoints.map((w) => (w.via ? geo.line[w.via] : undefined)).filter((x) => !!x)), 'application/gpx+xml')}>
                 <Download size={15} /> {tx('GPX exportieren', 'Export GPX')}
               </button>
+              <ShareLink
+                title={trip.name || 'Roadtrip'}
+                make={async () => {
+                  const r = await tripCode(trip)
+                  return { code: r.code, note: r.trackCut ? tx('Die GPX-Spur ist im Link vereinfacht.', 'The GPX track is simplified in the link.') : undefined }
+                }}
+              />
               <button className="btn" onClick={() => file.current?.click()}>
                 <FileUp size={15} /> {tx('GPX hinzuladen', 'Add GPX')}
               </button>

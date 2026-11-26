@@ -15,6 +15,7 @@ import { useT } from '../../i18n/i18n.ts'
 const DEMO: OwnershipInput = { years: 5, kmPerYear: 6000, consumption: 11, fuelPrice: FUEL.eur, insurance: 600, tax: H_PLATE_TAX.eur, maintenance: 1200, other: 600, valueChangePct: 0, purchase: 40000 }
 
 type Tx = { de: string; en: string }
+const THIS_YEAR = new Date().getFullYear()
 const YR: Tx = { de: '€/Jahr', en: '€/year' }
 const FIELDS: { k: keyof OwnershipInput; l: Tx; unit: Tx; step?: number; hint?: Tx }[] = [
   { k: 'purchase', l: { de: 'Kaufpreis bzw. Importkosten', en: 'Purchase or landed cost' }, unit: { de: '€', en: '€' }, step: 500 },
@@ -193,6 +194,80 @@ export default function Simulator({ vehicleId }: { vehicleId?: string }) {
           )}
         </div>
       </section>
+      <Compare years={r.years} />
     </>
+  )
+}
+
+// Garagenautos nebeneinander: gleiche Haltedauer, eigene gespeicherte Werte oder gekennzeichnete Annahmen
+function Compare({ years }: { years: number }) {
+  const { tx, locale } = useT()
+  const vehicles = useStore((s) => s.vehicles)
+  const [pick, setPick] = useState<string[]>(() => vehicles.slice(0, 3).map((v) => v.id))
+  if (vehicles.length < 2) return null
+  const m = (x: number) => fmtMoney(x, 'EUR', locale)
+  const cols = vehicles
+    .filter((v) => pick.includes(v.id))
+    .map((v) => {
+      const own = !!v.ownership
+      const purchase = v.landed?.cur === 'EUR' ? v.landed.amount : v.price?.cur === 'EUR' ? v.price.amount : 0
+      const inp: OwnershipInput = { ...(v.ownership ?? { ...DEMO, tax: v.year && THIS_YEAR - v.year >= 30 ? DEMO.tax : 0, purchase }), years }
+      return { v, own, inp, r: simulateOwnership(inp) }
+    })
+  const best = cols.length > 1 ? Math.min(...cols.map((c) => c.r.total)) : NaN
+  const toggle = (id: string) => setPick((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id].slice(-3)))
+  const rows: { l: string; f: (c: (typeof cols)[number]) => string }[] = [
+    { l: tx('Kaufpreis bzw. Importkosten', 'Purchase or landed cost'), f: (c) => (c.inp.purchase ? m(c.inp.purchase) : '–') },
+    { l: tx('Laufend pro Jahr', 'Running per year'), f: (c) => m(c.r.runningPerYear) },
+    { l: tx('davon Sprit', 'of which fuel'), f: (c) => m(c.r.fuelPerYear) },
+    { l: tx('Wertänderung', 'Change in value'), f: (c) => (Math.round(c.r.valueDelta) === 0 ? m(0) : c.r.valueDelta > 0 ? '−' + m(c.r.valueDelta) : '+' + m(-c.r.valueDelta)) },
+    { l: tx(`Gesamt über ${years} Jahre`, `Total over ${years} years`), f: (c) => m(c.r.total) },
+    { l: tx('Pro Monat', 'Per month'), f: (c) => m(c.r.perMonth) },
+  ]
+  return (
+    <section className="section">
+      <div className="gcard cmp">
+        <h3>{tx('Garagenautos vergleichen', 'Compare garage cars')}</h3>
+        <p className="small muted">{tx(`Bis zu drei Autos über dieselbe Haltedauer (${years} Jahre, oben einstellbar).`, `Up to three cars over the same holding period (${years} years, set above).`)}</p>
+        <div className="chips">
+          {vehicles.map((v) => (
+            <button key={v.id} className={'chip' + (pick.includes(v.id) ? ' on' : '')} aria-pressed={pick.includes(v.id)} onClick={() => toggle(v.id)}>
+              {vehicleTitle(v)}
+            </button>
+          ))}
+        </div>
+        {cols.length > 0 && (
+          <div className="cmp-scroll">
+            <table className="cmp-table">
+              <thead>
+                <tr>
+                  <th />
+                  {cols.map((c) => (
+                    <th key={c.v.id}>
+                      {vehicleTitle(c.v)}
+                      <br />
+                      {c.own ? <Badge kind="ok">{tx('eigene Werte', 'your values')}</Badge> : <Badge kind="assumption" />}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, k) => (
+                  <tr key={row.l} className={k === 4 ? 'cmp-total' : ''}>
+                    <th scope="row">{row.l}</th>
+                    {cols.map((c) => (
+                      <td key={c.v.id} className={'mono' + (k === 4 && c.r.total === best ? ' cmp-best' : '')}>
+                        {row.f(c)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <p className="small muted">{tx('Wo „Annahmen“ steht, rechnet der Vergleich mit den Startwerten des Simulators. Wähl das Auto oben aus und speichere deine eigenen Werte.', 'Where it says “assumptions”, the comparison uses the simulator’s starting values. Select the car above and save your own values.')}</p>
+      </div>
+    </section>
   )
 }
