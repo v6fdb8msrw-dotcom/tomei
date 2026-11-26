@@ -38,7 +38,8 @@ function pack(list, max) {
 const b64 = (f) => fs.readFileSync(f).toString('base64')
 const m = (n) => 'dist/images/m/' + n
 pack(ids.map((i) => `${i}-0.webp`).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 2e6)
-pack(ids.flatMap((i) => photos[i].map((_, k) => `${i}-${k}.avif`)).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 3.6e6)
+// Claude erlaubt höchstens 256 MB je Fassung: Titelfoto und ein Galeriebild (das dritte blendet die Seite aus)
+pack(ids.flatMap((i) => photos[i].slice(0, 2).map((_, k) => `${i}-${k}.avif`)).filter((n) => fs.existsSync(m(n))).map((n) => ['images/m/' + n, b64(m(n))]), 3.6e6)
 const imgs = ['', 'cars/', 'roads/'].flatMap((d) => fs.readdirSync('dist/images/' + d).filter((f) => f.endsWith('.webp')).map((f) => 'images/' + d + f))
 const pics = (l) => l.map((n) => [n, b64('dist/' + n)])
 pack(pics(imgs.filter((n) => n.endsWith('-s.webp'))), 3e6)
